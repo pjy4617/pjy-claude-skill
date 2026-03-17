@@ -1,0 +1,84 @@
+{
+    // STM32F4 VS Code 빌드/플래싱 태스크 템플릿
+    // Agent 4가 프로젝트에 맞게 치환한다.
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-j$(nproc)",
+                "DEBUG=1"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "Build (Release)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-j$(nproc)",
+                "DEBUG=0"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Flash",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "flash"
+            ],
+            "dependsOn": "Build",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always"
+            }
+        },
+        {
+            "label": "Reset",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "reset"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Memory Usage",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "size"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always"
+            }
+        }
+    ]
+}

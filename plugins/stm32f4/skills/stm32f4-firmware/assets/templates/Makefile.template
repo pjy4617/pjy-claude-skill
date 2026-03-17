@@ -1,0 +1,181 @@
+######################################################################
+# STM32F4 Makefile Template
+#
+# Agent 4가 이 템플릿을 기반으로 프로젝트별 Makefile을 생성한다.
+# {{PLACEHOLDER}} 형식의 값을 프로젝트에 맞게 치환할 것.
+#
+# 사용법:
+#   make          — 빌드
+#   make flash    — OpenOCD로 플래싱
+#   make clean    — 빌드 산출물 삭제
+#   make size     — 메모리 사용량 출력
+#   make debug    — GDB 서버 시작
+######################################################################
+
+##############################
+# 타겟 설정
+##############################
+TARGET = {{PROJECT_NAME}}
+
+##############################
+# 빌드 디렉토리
+##############################
+BUILD_DIR = build
+
+##############################
+# 소스 파일
+##############################
+# C 소스
+C_SOURCES = \
+Core/Src/main.c \
+Core/Src/stm32f4xx_it.c \
+Core/Src/stm32f4xx_hal_msp.c \
+Core/Src/system_stm32f4xx.c \
+{{ADDITIONAL_C_SOURCES}}
+
+# ASM 소스 (스타트업)
+ASM_SOURCES = \
+Startup/{{STARTUP_FILE}}
+
+##############################
+# 툴체인
+##############################
+PREFIX = arm-none-eabi-
+CC = $(PREFIX)gcc
+AS = $(PREFIX)gcc -x assembler-with-cpp
+CP = $(PREFIX)objcopy
+SZ = $(PREFIX)size
+GDB = $(PREFIX)gdb
+
+HEX = $(CP) -O ihex
+BIN = $(CP) -O binary -S
+
+##############################
+# MCU 설정
+##############################
+# Cortex-M4 + FPU (hard float)
+CPU = -mcpu=cortex-m4
+FPU = -mfpu=fpv4-sp-d16
+FLOAT-ABI = -mfloat-abi=hard
+MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
+
+##############################
+# 컴파일 플래그
+##############################
+# MCU 디바이스 정의 — Agent 4가 MCU에 맞게 설정
+# 예: STM32F407xx, STM32F401xE, STM32F411xE, STM32F429xx, STM32F446xx
+C_DEFS = \
+-D{{MCU_DEFINE}} \
+-DUSE_HAL_DRIVER
+
+# 인클루드 경로
+C_INCLUDES = \
+-ICore/Inc \
+-IDrivers/BSP/Inc \
+-IDrivers/Device/Inc \
+{{ADDITIONAL_INCLUDES}} \
+-I{{HAL_DRIVER_PATH}}/Inc \
+-I{{CMSIS_DEVICE_PATH}}/Include \
+-I{{CMSIS_CORE_PATH}}/Include
+
+# 최적화: 디버그=-O0 (변수 추적 완전 보장), 릴리스=-Os (사이즈 최적화)
+ifdef DEBUG
+OPT = -O0 -g3 -gdwarf-2
+else
+OPT = -Os -g0
+endif
+
+CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT)
+CFLAGS += -Wall -Wextra -Werror=return-type
+CFLAGS += -fdata-sections -ffunction-sections
+CFLAGS += -std=c11
+
+# 디버그 빌드를 기본으로
+DEBUG ?= 1
+
+# 의존성 자동 생성
+CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+
+##############################
+# 어셈블러 플래그
+##############################
+ASFLAGS = $(MCU) $(C_DEFS) $(OPT)
+
+##############################
+# 링커 플래그
+##############################
+LDSCRIPT = Linker/{{LINKER_SCRIPT}}
+
+LDFLAGS = $(MCU)
+LDFLAGS += -specs=nano.specs
+LDFLAGS += -T$(LDSCRIPT)
+LDFLAGS += -lc -lm -lnosys
+LDFLAGS += -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref
+LDFLAGS += -Wl,--gc-sections
+# 스택 오버플로우 감지 (개발 중)
+ifdef DEBUG
+LDFLAGS += -Wl,--defsym=__stack_chk=1
+endif
+
+##############################
+# 빌드 규칙
+##############################
+# 오브젝트 파일 목록
+OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
+vpath %.c $(sort $(dir $(C_SOURCES)))
+
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
+vpath %.s $(sort $(dir $(ASM_SOURCES)))
+
+all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin size
+
+$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
+	$(AS) -c $(ASFLAGS) $< -o $@
+
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+
+$(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
+	$(HEX) $< $@
+
+$(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
+	$(BIN) $< $@
+
+$(BUILD_DIR):
+	mkdir -p $@
+
+##############################
+# 유틸리티
+##############################
+size: $(BUILD_DIR)/$(TARGET).elf
+	$(SZ) $<
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+# OpenOCD 플래싱
+flash: $(BUILD_DIR)/$(TARGET).bin
+	openocd -f openocd.cfg \
+		-c "program $(BUILD_DIR)/$(TARGET).bin verify reset exit 0x08000000"
+
+# GDB 디버그 서버
+debug: $(BUILD_DIR)/$(TARGET).elf
+	openocd -f openocd.cfg &
+	$(GDB) $< \
+		-ex "target remote localhost:3333" \
+		-ex "monitor reset halt" \
+		-ex "load"
+
+# 리셋만
+reset:
+	openocd -f openocd.cfg -c "init; reset run; exit"
+
+##############################
+# 의존성 포함
+##############################
+-include $(wildcard $(BUILD_DIR)/*.d)
+
+.PHONY: all clean flash debug reset size

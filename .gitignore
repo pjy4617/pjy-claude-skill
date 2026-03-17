@@ -1,0 +1,32 @@
+# 빌드 출력
+build/
+
+# 임시 디렉토리
+_extract/
+temp/
+
+# OMC 상태
+.omc/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vivado 생성 파일
+*.jou
+*.log
+*.str
+*.bit
+*.mcs
+*.dcp
+*.wdb
+*.vcd
+webtalk*/
+.Xil/
+vivado*.backup/
+NA/
+
+# KiCad 임시
+*-backups/
+*.kicad_sch-bak
+fp-info-cache

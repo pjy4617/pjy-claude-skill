@@ -1,0 +1,147 @@
+# STM32F4 CMakeLists.txt 템플릿
+#
+# Agent 4가 이 템플릿을 기반으로 프로젝트별 CMakeLists.txt를 생성한다.
+# {{PLACEHOLDER}} 형식의 값을 프로젝트에 맞게 치환할 것.
+#
+# 사용법:
+#   cmake --preset debug && cmake --build --preset debug
+#   cmake --preset release && cmake --build --preset release
+
+cmake_minimum_required(VERSION 3.22)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 프로젝트 설정
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+project({{PROJECT_NAME}} C ASM)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# MCU 설정
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+set(MCU_FAMILY STM32F4xx)
+set(MCU_MODEL {{MCU_DEFINE}})
+set(CPU_FLAGS "-mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard")
+set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/Linker/{{LINKER_SCRIPT}})
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 소스 파일
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Core 소스
+file(GLOB_RECURSE CORE_SOURCES "Core/Src/*.c")
+
+# 드라이버 소스
+file(GLOB_RECURSE DRIVER_SOURCES
+    "Drivers/BSP/Src/*.c"
+    "Drivers/Device/Src/*.c"
+)
+
+# HAL 드라이버 소스 — 사용하는 모듈만 포함
+set(HAL_SOURCES
+    {{HAL_DRIVER_PATH}}/Src/stm32f4xx_hal.c
+    {{HAL_DRIVER_PATH}}/Src/stm32f4xx_hal_cortex.c
+    {{HAL_DRIVER_PATH}}/Src/stm32f4xx_hal_gpio.c
+    {{HAL_DRIVER_PATH}}/Src/stm32f4xx_hal_rcc.c
+    {{HAL_DRIVER_PATH}}/Src/stm32f4xx_hal_rcc_ex.c
+    {{HAL_DRIVER_PATH}}/Src/stm32f4xx_hal_pwr.c
+    {{HAL_DRIVER_PATH}}/Src/stm32f4xx_hal_pwr_ex.c
+    {{ADDITIONAL_HAL_SOURCES}}
+)
+
+# 미들웨어 소스 (사용 시)
+{{MIDDLEWARE_SOURCES}}
+
+# 스타트업 어셈블리
+set(STARTUP_SOURCE Startup/{{STARTUP_FILE}})
+
+# 전체 소스 취합
+set(PROJECT_SOURCES
+    ${CORE_SOURCES}
+    ${DRIVER_SOURCES}
+    ${HAL_SOURCES}
+    ${STARTUP_SOURCE}
+)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 실행 파일 타겟
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 인클루드 경로
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+target_include_directories(${PROJECT_NAME} PRIVATE
+    Core/Inc
+    Drivers/BSP/Inc
+    Drivers/Device/Inc
+    {{HAL_DRIVER_PATH}}/Inc
+    {{CMSIS_DEVICE_PATH}}/Include
+    {{CMSIS_CORE_PATH}}/Include
+    {{ADDITIONAL_INCLUDES}}
+)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 전처리기 매크로
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    ${MCU_MODEL}
+    USE_HAL_DRIVER
+    $<$<CONFIG:Debug>:DEBUG>
+)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 컴파일 플래그
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 공통
+set(COMMON_FLAGS "${CPU_FLAGS} -Wall -Wextra -Werror=return-type -fdata-sections -ffunction-sections")
+
+# Debug: -O0 (최적화 없음, 디버거에서 변수 완전 추적 가능)
+set(CMAKE_C_FLAGS_DEBUG "${COMMON_FLAGS} -O0 -g3 -gdwarf-2")
+set(CMAKE_ASM_FLAGS_DEBUG "${CPU_FLAGS} -O0 -g3")
+
+# Release: -Os + 디버그 심볼 제거
+set(CMAKE_C_FLAGS_RELEASE "${COMMON_FLAGS} -Os -g0")
+set(CMAKE_ASM_FLAGS_RELEASE "${CPU_FLAGS} -Os")
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 링커 플래그
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+target_link_options(${PROJECT_NAME} PRIVATE
+    ${CPU_FLAGS}
+    -specs=nano.specs
+    -T${LINKER_SCRIPT}
+    -lc -lm -lnosys
+    -Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map,--cref
+    -Wl,--gc-sections
+    -Wl,--print-memory-usage
+)
+
+# ASM 파일 속성
+set_source_files_properties(${STARTUP_SOURCE} PROPERTIES
+    LANGUAGE ASM
+    COMPILE_FLAGS "${CPU_FLAGS}"
+)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 빌드 후 처리: .hex, .bin 생성 + 메모리 사용량 출력
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+set(ELF_FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.elf)
+set(HEX_FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.hex)
+set(BIN_FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.bin)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex ${ELF_FILE} ${HEX_FILE}
+    COMMAND ${CMAKE_OBJCOPY} -O binary -S ${ELF_FILE} ${BIN_FILE}
+    COMMAND ${CMAKE_SIZE} ${ELF_FILE}
+    COMMENT "빌드 완료: .elf, .hex, .bin 생성"
+)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 플래싱 타겟
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+add_custom_target(flash
+    COMMAND openocd -f ${CMAKE_SOURCE_DIR}/openocd.cfg
+        -c "program ${BIN_FILE} verify reset exit 0x08000000"
+    DEPENDS ${PROJECT_NAME}
+    COMMENT "OpenOCD로 플래싱 중..."
+)

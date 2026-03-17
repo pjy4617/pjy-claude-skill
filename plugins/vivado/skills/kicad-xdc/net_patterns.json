@@ -1,0 +1,73 @@
+{
+  "clock": {
+    "patterns": ["*CLK*", "*CLOCK*", "*SYSCLK*", "*GCLK*", "*MCLK*", "*REFCLK*"],
+    "xdc_action": "create_clock",
+    "notes": "MRCC/SRCC 전용 핀에 할당되었는지 확인 필요"
+  },
+  "reset": {
+    "patterns": ["*RST*", "*RESET*", "*RSTN*", "*NRST*", "*POR*"],
+    "xdc_action": "set_false_path",
+    "notes": "active-low 여부 확인 (_N, _n, N 접미사)"
+  },
+  "button": {
+    "patterns": ["*BTN*", "*BUTTON*", "*KEY*", "*SW*", "*SWITCH*", "*PUSH*"],
+    "xdc_action": "set_false_path",
+    "notes": "비동기 입력, 디바운스 필요"
+  },
+  "led": {
+    "patterns": ["*LED*"],
+    "xdc_action": "none",
+    "notes": "타이밍 제약 불필요"
+  },
+  "spi": {
+    "patterns": ["*SPI*", "*SCLK*", "*MOSI*", "*MISO*", "*SDIN*", "*SDOUT*", "*SS*", "*CSN*", "*CS_N*"],
+    "xdc_action": "group_comment",
+    "group_label": "SPI"
+  },
+  "uart": {
+    "patterns": ["*UART*", "*TXD*", "*RXD*", "*TX*", "*RX*"],
+    "xdc_action": "group_comment",
+    "group_label": "UART"
+  },
+  "i2c": {
+    "patterns": ["*I2C*", "*SDA*", "*SCL*", "*TWI*"],
+    "xdc_action": "group_comment",
+    "group_label": "I2C"
+  },
+  "differential_pair": {
+    "patterns": ["*_P", "*_N", "*_DP", "*_DN"],
+    "xdc_action": "pair_check",
+    "notes": "P/N 페어가 모두 존재하는지 확인"
+  },
+  "power_exclude": {
+    "patterns": ["GND", "VCC*", "VDD*", "VBAT*", "PWR*", "+3V3", "+5V", "+1V8", "+1V2", "+1V0"],
+    "xdc_action": "exclude",
+    "notes": "전원/그라운드 핀은 XDC에서 제외"
+  },
+  "no_connect_exclude": {
+    "patterns": ["NC", "DNC", "NO_CONNECT", "UNCONNECTED", "N/C"],
+    "xdc_action": "exclude",
+    "notes": "미연결 핀은 XDC에서 제외"
+  },
+  "oled": {
+    "patterns": ["*OLED*", "*DISP*", "*DISPLAY*"],
+    "xdc_action": "group_comment",
+    "group_label": "OLED Display"
+  },
+  "ddr": {
+    "patterns": ["*DDR*", "*DQ*", "*DQS*", "*DM*", "*CKE*", "*ODT*", "*RAS*", "*CAS*", "*WE*"],
+    "xdc_action": "group_comment",
+    "group_label": "DDR Memory",
+    "notes": "DDR 인터페이스는 수동 타이밍 제약 필요"
+  },
+  "jtag": {
+    "patterns": ["*TCK*", "*TDI*", "*TDO*", "*TMS*", "*JTAG*"],
+    "xdc_action": "exclude",
+    "notes": "JTAG은 전용 핀, XDC 불필요"
+  },
+  "config": {
+    "patterns": ["*DONE*", "*PROG*", "*INIT*", "*CCLK*", "*M0*", "*M1*", "*M2*"],
+    "xdc_action": "exclude",
+    "notes": "Configuration 핀은 전용, XDC 불필요"
+  }
+}

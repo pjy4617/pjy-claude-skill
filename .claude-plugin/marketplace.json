@@ -1,0 +1,20 @@
+{
+  "name": "pjy-skills",
+  "owner": {
+    "name": "pjy4617"
+  },
+  "plugins": [
+    {
+      "name": "vivado",
+      "source": "./plugins/vivado",
+      "description": "Vivado FPGA 풀스택 개발 도구: 11개 스킬 + 6개 에이전트. RTL 설계, 시뮬레이션, 합성, Implementation, Bitstream, 코드 리뷰, 핀 배치 검증, KiCad 연동을 한 번에 설치합니다.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "stm32f4",
+      "source": "./plugins/stm32f4",
+      "description": "STM32F4 펌웨어 풀스택 개발: 5단계 에이전트 파이프라인(요구사항→아키텍처→코드→빌드→검토) + KiCad 회로도 핀/페리페럴 검증(42항목) + 호스트 기반 TDD(Unity+FFF). 3개 스킬 + 2개 에이전트.",
+      "version": "1.0.0"
+    }
+  ]
+}

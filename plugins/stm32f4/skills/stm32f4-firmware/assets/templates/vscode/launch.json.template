@@ -1,0 +1,97 @@
+{
+    // STM32F4 VS Code 디버그 설정 템플릿
+    // Agent 4가 MCU와 디버거에 맞게 치환한다.
+    //
+    // 두 가지 디버거 옵션:
+    //   1. cortex-debug (marus25) — 커뮤니티 표준, OpenOCD 기반, 다양한 프로브 지원
+    //   2. stlinkgdbtarget (ST 공식) — STM32 VS Code Extension, ST-LINK/J-Link 전용
+    // Agent 4는 사용자 환경에 맞는 설정을 선택한다.
+    "version": "0.2.0",
+    "configurations": [
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 옵션 A: cortex-debug (OpenOCD)
+        // 확장: marus25.cortex-debug
+        // 프로브: ST-Link, J-Link, CMSIS-DAP 모두 지원
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        {
+            "name": "Debug (cortex-debug + OpenOCD)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/{{PROJECT_NAME}}.elf",
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/{{INTERFACE}}.cfg",
+                "target/stm32f4x.cfg"
+            ],
+            "svdFile": "{{SVD_FILE_PATH}}",
+            "device": "{{MCU_DEVICE}}",
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "none",
+            "preLaunchTask": "Build",
+            "swoConfig": {
+                "enabled": true,
+                "cpuFrequency": {{SYSCLK_HZ}},
+                "swoFrequency": 2000000,
+                "source": "probe",
+                "decoders": [
+                    {
+                        "type": "console",
+                        "label": "ITM",
+                        "port": 0
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Attach (cortex-debug + OpenOCD)",
+            "type": "cortex-debug",
+            "request": "attach",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/{{PROJECT_NAME}}.elf",
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/{{INTERFACE}}.cfg",
+                "target/stm32f4x.cfg"
+            ],
+            "svdFile": "{{SVD_FILE_PATH}}",
+            "device": "{{MCU_DEVICE}}"
+        },
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 옵션 B: ST 공식 확장 (STM32 VS Code Extension)
+        // 확장: stmicroelectronics.stm32-vscode-extension
+        // 프로브: ST-LINK, J-Link
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        {
+            "name": "Debug (ST Extension + ST-LINK)",
+            "type": "stlinkgdbtarget",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "preBuild": true,
+            "imagesAndSymbols": [
+                {
+                    "file": "${workspaceFolder}/build/{{PROJECT_NAME}}.elf",
+                    "textAddress": "0x08000000"
+                }
+            ],
+            "runEntry": {
+                "function": "main"
+            },
+            "serverPort": {
+                "gdbServer": 61234,
+                "swo": 61235
+            }
+        },
+        {
+            "name": "Attach (ST Extension + ST-LINK)",
+            "type": "stlinkgdbtarget",
+            "request": "attach",
+            "cwd": "${workspaceFolder}",
+            "imagesAndSymbols": [
+                {
+                    "file": "${workspaceFolder}/build/{{PROJECT_NAME}}.elf"
+                }
+            ]
+        }
+    ]
+}

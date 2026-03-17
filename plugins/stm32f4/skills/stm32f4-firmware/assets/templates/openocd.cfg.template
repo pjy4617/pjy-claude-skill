@@ -1,0 +1,66 @@
+# STM32F4 OpenOCD 설정 템플릿
+#
+# Agent 4가 디버거와 MCU에 맞게 설정한다.
+# {{PLACEHOLDER}}를 실제 값으로 치환할 것.
+#
+# 사용법:
+#   openocd -f openocd.cfg                    — 서버 시작
+#   openocd -f openocd.cfg -c "program build/project.bin verify reset exit 0x08000000"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 디버거 인터페이스
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Agent 4가 사용자의 프로브에 맞는 블록만 남기고 나머지는 삭제할 것.
+#
+# ── ST-Link v2 (Nucleo, Discovery 보드 내장 구형) ──
+#   source [find interface/stlink.cfg]
+#   transport select hla_swd
+#   adapter speed 4000
+#
+# ── ST-Link v3 (최신 Nucleo, STLINK-V3SET) ──
+#   source [find interface/stlink.cfg]
+#   transport select dapdirect_swd
+#   adapter speed 8000
+#
+# ── J-Link ──
+#   source [find interface/jlink.cfg]
+#   transport select swd
+#   adapter speed 4000
+#
+# ── CMSIS-DAP (DAPLink, 기타 DAP 프로브) ──
+#   source [find interface/cmsis-dap.cfg]
+#   transport select swd
+#   adapter speed 4000
+
+source [find interface/{{INTERFACE}}.cfg]
+transport select {{TRANSPORT}}
+adapter speed {{ADAPTER_SPEED}}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 타겟 MCU
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 모든 STM32F4 시리즈가 동일한 설정 파일 사용
+source [find target/stm32f4x.cfg]
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 리셋 설정
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# srst_only: NRST 핀으로 리셋 (대부분의 보드에서 동작)
+# connect_assert_srst: 연결 시 리셋 상태 유지 (잠긴 칩 복구 시 필요)
+reset_config srst_only srst_nogate
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 초기화 후 실행 (선택)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+init
+reset halt
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 프로브별 플레이스홀더 매핑 참고:
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# | 프로브         | {{INTERFACE}} | {{TRANSPORT}}     | {{ADAPTER_SPEED}} |
+# |---------------|---------------|-------------------|-------------------|
+# | ST-Link v2    | stlink        | hla_swd           | 4000              |
+# | ST-Link v3    | stlink        | dapdirect_swd     | 8000              |
+# | J-Link        | jlink         | swd               | 4000              |
+# | CMSIS-DAP     | cmsis-dap     | swd               | 4000              |

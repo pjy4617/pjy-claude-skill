@@ -1,0 +1,84 @@
+{
+  "boards": {
+    "arty_a7_35": {
+      "part": "xc7a35ticsg324-1L",
+      "family": "Artix-7",
+      "xdc": "constraints/arty_a7.xdc",
+      "clock_freq_mhz": 100,
+      "clock_pin": "E3",
+      "notes": "Digilent Arty A7-35T",
+      "bank_vcco": {
+        "14": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "Pmod JA/JB" },
+        "15": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "LED, Switch, Button" },
+        "16": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "Pmod JC/JD" },
+        "34": { "voltage": 1.8, "iostandard": "LVCMOS18", "notes": "ChipKit outer digital" },
+        "35": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "ChipKit inner, Analog" }
+      },
+      "master_xdc_url": "https://github.com/Digilent/digilent-xdc/blob/master/Arty-A7-35-Master.xdc"
+    },
+    "arty_a7_100": {
+      "part": "xc7a100tcsg324-1",
+      "family": "Artix-7",
+      "xdc": "constraints/arty_a7.xdc",
+      "clock_freq_mhz": 100,
+      "clock_pin": "E3",
+      "notes": "Digilent Arty A7-100T",
+      "bank_vcco": {
+        "14": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "Pmod JA/JB" },
+        "15": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "LED, Switch, Button" },
+        "16": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "Pmod JC/JD" },
+        "34": { "voltage": 1.8, "iostandard": "LVCMOS18", "notes": "ChipKit outer digital" },
+        "35": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "ChipKit inner, Analog" }
+      },
+      "master_xdc_url": "https://github.com/Digilent/digilent-xdc/blob/master/Arty-A7-100-Master.xdc"
+    },
+    "nexys4_ddr": {
+      "part": "xc7a100tcsg324-1",
+      "family": "Artix-7",
+      "xdc": "constraints/nexys4.xdc",
+      "clock_freq_mhz": 100,
+      "clock_pin": "E3",
+      "notes": "Digilent Nexys 4 DDR",
+      "bank_vcco": {
+        "14": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "Pmod, USB" },
+        "15": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "LED, 7-Seg, Button" },
+        "16": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "Pmod, VGA" },
+        "34": { "voltage": 1.8, "iostandard": "LVCMOS18", "notes": "DDR2" },
+        "35": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "Analog, Temp sensor" }
+      },
+      "master_xdc_url": "https://github.com/Digilent/digilent-xdc/blob/master/Nexys-4-DDR-Master.xdc"
+    },
+    "zedboard": {
+      "part": "xc7z020clg484-1",
+      "family": "Zynq-7000",
+      "xdc": "constraints/zedboard.xdc",
+      "clock_freq_mhz": 100,
+      "clock_pin": "Y9",
+      "notes": "Avnet ZedBoard",
+      "bank_vcco": {
+        "13": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "PS MIO" },
+        "33": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "PL I/O: Button, LED, OLED, Pmod" },
+        "34": { "voltage": 1.8, "iostandard": "LVCMOS18", "notes": "HDMI, Audio codec" },
+        "35": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "FMC LPC (LA00-LA16)" }
+      },
+      "pin_bank_map_notes": "U로 시작하는 핀은 33/34 경계. 핀별로 뱅크가 다를 수 있으므로 패키지 핀아웃 파일로 확인 필요.",
+      "master_xdc_url": "https://github.com/Digilent/digilent-xdc/blob/master/Zedboard-Master.xdc"
+    },
+    "zybo_z7_20": {
+      "part": "xc7z020clg400-1",
+      "family": "Zynq-7000",
+      "xdc": "constraints/zybo_z7.xdc",
+      "clock_freq_mhz": 125,
+      "clock_pin": "K17",
+      "notes": "Digilent Zybo Z7-20",
+      "bank_vcco": {
+        "13": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "PS MIO" },
+        "33": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "PL I/O: Button, LED, Pmod" },
+        "34": { "voltage": 1.8, "iostandard": "LVCMOS18", "notes": "HDMI" },
+        "35": { "voltage": 3.3, "iostandard": "LVCMOS33", "notes": "Pmod, Audio" }
+      },
+      "master_xdc_url": "https://github.com/Digilent/digilent-xdc/blob/master/Zybo-Z7-Master.xdc"
+    }
+  },
+  "_usage": "보드 추가 시 part, family, xdc, clock_freq_mhz, clock_pin, bank_vcco 필수. bank_vcco는 뱅크번호→전압/IOSTANDARD 매핑."
+}

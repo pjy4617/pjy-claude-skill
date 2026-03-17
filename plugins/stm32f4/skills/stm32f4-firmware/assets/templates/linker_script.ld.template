@@ -1,0 +1,175 @@
+/*
+ * STM32F4 링커 스크립트 템플릿
+ *
+ * Agent 4가 MCU에 맞게 MEMORY 영역을 설정한다.
+ * {{PLACEHOLDER}}를 실제 값으로 치환할 것.
+ *
+ * MCU별 메모리 크기 참조 (references/mcu-selection.md):
+ *   F401: FLASH=256K, RAM=64K,  CCM=없음
+ *   F411: FLASH=512K, RAM=128K, CCM=없음
+ *   F407: FLASH=1M,   RAM=128K(SRAM1=112K+SRAM2=16K), CCM=64K
+ *   F429: FLASH=2M,   RAM=256K, CCM=64K
+ *   F446: FLASH=512K, RAM=128K, CCM=없음
+ */
+
+/* 엔트리 포인트 */
+ENTRY(Reset_Handler)
+
+/* 스택/힙 크기 — Agent 4가 프로젝트 요구사항에 맞게 조정
+ * USB 사용 시 _Min_Stack_Size >= 0x800 (2KB) 권장
+ * RTOS 사용 시 _Min_Stack_Size는 ISR 전용, 태스크 스택은 RTOS가 관리 */
+_estack = ORIGIN(RAM) + LENGTH(RAM);
+_Min_Heap_Size  = {{HEAP_SIZE}};   /* 기본: 0x200 (512B) */
+_Min_Stack_Size = {{STACK_SIZE}};  /* 기본: 0x400 (1KB), USB: 0x800 */
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 메모리 영역 — MCU에 맞게 치환
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+MEMORY
+{
+    FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = {{FLASH_SIZE}}
+    RAM (xrw)   : ORIGIN = 0x20000000, LENGTH = {{RAM_SIZE}}
+    /* CCM이 있는 MCU만 (F407, F429) — 없으면 아래 CCMRAM 줄을 삭제할 것 */
+    /* {{HAS_CCM_START}} */
+    CCMRAM (rw) : ORIGIN = 0x10000000, LENGTH = 64K
+    /* {{HAS_CCM_END}} */
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * 섹션 정의
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+SECTIONS
+{
+    /* 벡터 테이블 — Flash 시작 위치에 배치 */
+    .isr_vector :
+    {
+        . = ALIGN(4);
+        KEEP(*(.isr_vector))
+        . = ALIGN(4);
+    } >FLASH
+
+    /* 코드 (.text) */
+    .text :
+    {
+        . = ALIGN(4);
+        *(.text)
+        *(.text*)
+        *(.glue_7)
+        *(.glue_7t)
+        *(.eh_frame)
+
+        KEEP(*(.init))
+        KEEP(*(.fini))
+        . = ALIGN(4);
+        _etext = .;
+    } >FLASH
+
+    /* 읽기 전용 데이터 */
+    .rodata :
+    {
+        . = ALIGN(4);
+        *(.rodata)
+        *(.rodata*)
+        . = ALIGN(4);
+    } >FLASH
+
+    /* ARM 예외 처리 테이블 */
+    .ARM.extab :
+    {
+        *(.ARM.extab* .gnu.linkonce.armextab.*)
+    } >FLASH
+
+    .ARM :
+    {
+        __exidx_start = .;
+        *(.ARM.exidx*)
+        __exidx_end = .;
+    } >FLASH
+
+    /* init/fini 배열 */
+    .preinit_array :
+    {
+        PROVIDE_HIDDEN(__preinit_array_start = .);
+        KEEP(*(.preinit_array*))
+        PROVIDE_HIDDEN(__preinit_array_end = .);
+    } >FLASH
+
+    .init_array :
+    {
+        PROVIDE_HIDDEN(__init_array_start = .);
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array*))
+        PROVIDE_HIDDEN(__init_array_end = .);
+    } >FLASH
+
+    .fini_array :
+    {
+        PROVIDE_HIDDEN(__fini_array_start = .);
+        KEEP(*(SORT(.fini_array.*)))
+        KEEP(*(.fini_array*))
+        PROVIDE_HIDDEN(__fini_array_end = .);
+    } >FLASH
+
+    /* 초기화 데이터 (.data) — Flash에서 RAM으로 복사 */
+    _sidata = LOADADDR(.data);
+    .data :
+    {
+        . = ALIGN(4);
+        _sdata = .;
+        *(.data)
+        *(.data*)
+        . = ALIGN(4);
+        _edata = .;
+    } >RAM AT> FLASH
+
+    /* {{HAS_CCM_START}} — CCM이 없는 MCU(F401, F411, F446)에서는 아래 블록을 삭제할 것 */
+    /* CCM RAM 섹션 — DMA 접근 불가, 고속 연산용 데이터 배치
+     * 사용법: __attribute__((section(".ccmram"))) uint32_t buf[256]; */
+    _siccmram = LOADADDR(.ccmram);
+    .ccmram :
+    {
+        . = ALIGN(4);
+        _sccmram = .;
+        *(.ccmram)
+        *(.ccmram*)
+        . = ALIGN(4);
+        _eccmram = .;
+    } >CCMRAM AT> FLASH
+    /* {{HAS_CCM_END}} */
+
+    /* 제로 초기화 데이터 (.bss) */
+    .bss :
+    {
+        . = ALIGN(4);
+        _sbss = .;
+        __bss_start__ = _sbss;
+        *(.bss)
+        *(.bss*)
+        *(COMMON)
+        . = ALIGN(4);
+        _ebss = .;
+        __bss_end__ = _ebss;
+    } >RAM
+
+    /* 힙/스택 공간 확인 */
+    ._user_heap_stack :
+    {
+        . = ALIGN(8);
+        PROVIDE(end = .);
+        PROVIDE(_end = .);
+        . = . + _Min_Heap_Size;
+        . = . + _Min_Stack_Size;
+        . = ALIGN(8);
+    } >RAM
+
+    /* ARM 빌드 속성 */
+    .ARM.attributes 0 : { *(.ARM.attributes) }
+
+    /* 사용하지 않는 섹션 제거 */
+    /DISCARD/ :
+    {
+        libc.a(*)
+        libm.a(*)
+        libgcc.a(*)
+    }
+}

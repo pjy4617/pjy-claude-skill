@@ -1,0 +1,191 @@
+{
+  "_comment": "STM32F411xx AF 매핑 — 공식 데이터시트 DS10314 Rev 7, Table 9 기준",
+  "_datasheet": "DS10314",
+  "_mcu": "STM32F411xx",
+  "_packages": ["UFQFPN48", "LQFP48", "LQFP64", "LQFP100", "UFBGA100"],
+  "_sysclk_max": 100,
+  "_flash_max": "512KB",
+  "_sram": "128KB, CCM 없음",
+
+  "_missing_vs_f407": [
+    "USART3 없음",
+    "UART4/UART5 없음",
+    "CAN 없음",
+    "DAC 없음",
+    "USB_OTG_HS 없음",
+    "Ethernet 없음",
+    "FSMC 없음",
+    "DCMI 없음",
+    "TIM6/TIM7/TIM8/TIM12/TIM13/TIM14 없음",
+    "ADC2/ADC3 없음 (ADC1만)"
+  ],
+
+  "_added_vs_f401": [
+    "SPI3 있음 (AF6)",
+    "SPI4/SPI5 있음",
+    "SDIO 있음",
+    "I2C3 핀 옵션 추가"
+  ],
+
+  "peripherals": {
+    "SPI1": {
+      "bus": "APB2",
+      "pins": {
+        "SCK":  ["PA5/AF5", "PB3/AF5"],
+        "MISO": ["PA6/AF5", "PB4/AF5"],
+        "MOSI": ["PA7/AF5", "PB5/AF5"],
+        "NSS":  ["PA4/AF5", "PA15/AF5"]
+      }
+    },
+    "SPI2": {
+      "bus": "APB1",
+      "pins": {
+        "SCK":  ["PB10/AF5", "PB13/AF5"],
+        "MISO": ["PB14/AF5", "PC2/AF5"],
+        "MOSI": ["PB15/AF5", "PC3/AF5"],
+        "NSS":  ["PB9/AF5", "PB12/AF5"]
+      }
+    },
+    "SPI3": {
+      "bus": "APB1",
+      "pins": {
+        "SCK":  ["PB3/AF6", "PC10/AF6"],
+        "MISO": ["PB4/AF6", "PC11/AF6"],
+        "MOSI": ["PB5/AF6", "PC12/AF6"],
+        "NSS":  ["PA4/AF6", "PA15/AF6"]
+      }
+    },
+    "SPI4": {
+      "bus": "APB2",
+      "pins": {
+        "SCK":  ["PB13/AF6"],
+        "MISO": ["PA11/AF6"],
+        "MOSI": ["PA1/AF5"],
+        "NSS":  ["PB12/AF6"]
+      }
+    },
+    "SPI5": {
+      "bus": "APB2",
+      "pins": {
+        "SCK":  ["PB0/AF6"],
+        "MISO": ["PA12/AF6"],
+        "MOSI": ["PA10/AF6", "PB8/AF6"],
+        "NSS":  ["PB1/AF6"]
+      }
+    },
+    "I2C1": {
+      "bus": "APB1",
+      "pins": {
+        "SCL": ["PB6/AF4", "PB8/AF4"],
+        "SDA": ["PB7/AF4", "PB9/AF4"]
+      }
+    },
+    "I2C2": {
+      "bus": "APB1",
+      "pins": {
+        "SCL": ["PB10/AF4"],
+        "SDA": ["PB3/AF9", "PB9/AF9"]
+      }
+    },
+    "I2C3": {
+      "bus": "APB1",
+      "pins": {
+        "SCL": ["PA8/AF4"],
+        "SDA": ["PB4/AF9", "PC9/AF4"]
+      }
+    },
+    "USART1": {
+      "bus": "APB2",
+      "pins": {
+        "TX": ["PA9/AF7", "PA15/AF7", "PB6/AF7"],
+        "RX": ["PA10/AF7", "PB3/AF7", "PB7/AF7"]
+      }
+    },
+    "USART2": {
+      "bus": "APB1",
+      "pins": {
+        "TX": ["PA2/AF7", "PD5/AF7"],
+        "RX": ["PA3/AF7", "PD6/AF7"]
+      }
+    },
+    "USART6": {
+      "bus": "APB2",
+      "pins": {
+        "TX": ["PA11/AF8", "PC6/AF8"],
+        "RX": ["PA12/AF8", "PC7/AF8"]
+      }
+    },
+    "USB_OTG_FS": {
+      "pins": {
+        "DM":   ["PA11/AF10"],
+        "DP":   ["PA12/AF10"],
+        "VBUS": ["PA9/GPIO_INPUT"],
+        "ID":   ["PA10/AF10"],
+        "SOF":  ["PA8/AF10"]
+      }
+    },
+    "SDIO": {
+      "bus": "APB2",
+      "pins": {
+        "CLK": ["PC12/AF12"],
+        "CMD": ["PD2/AF12"],
+        "D0":  ["PC8/AF12"],
+        "D1":  ["PC9/AF12"],
+        "D2":  ["PC10/AF12"],
+        "D3":  ["PC11/AF12"]
+      }
+    },
+    "TIM1":  { "af": 1 },
+    "TIM2":  { "af": 1 },
+    "TIM3":  { "af": 2 },
+    "TIM4":  { "af": 2 },
+    "TIM5":  { "af": 2 },
+    "TIM9":  { "af": 3 },
+    "TIM10": { "af": 3 },
+    "TIM11": { "af": 3 }
+  },
+
+  "adc_pins": [
+    "PA0/ADC1_IN0", "PA1/ADC1_IN1", "PA2/ADC1_IN2", "PA3/ADC1_IN3",
+    "PA4/ADC1_IN4", "PA5/ADC1_IN5", "PA6/ADC1_IN6", "PA7/ADC1_IN7",
+    "PB0/ADC1_IN8", "PB1/ADC1_IN9",
+    "PC0/ADC1_IN10","PC1/ADC1_IN11","PC2/ADC1_IN12","PC3/ADC1_IN13",
+    "PC4/ADC1_IN14","PC5/ADC1_IN15"
+  ],
+
+  "five_volt_tolerant": [
+    "PA0","PA1","PA2","PA3","PA5","PA6","PA7","PA8","PA9","PA10","PA11","PA12","PA13","PA14","PA15",
+    "PB0","PB1","PB2","PB3","PB4","PB5","PB6","PB7","PB8","PB9","PB10","PB12","PB13","PB14","PB15",
+    "PC6","PC7","PC8","PC9","PC10","PC11","PC12","PC13","PC14","PC15",
+    "PD0","PD1","PD2","PD3","PD4","PD5","PD6","PD7"
+  ],
+  "not_five_volt_tolerant": [
+    "PA4", "PC0", "PC1", "PC2", "PC3", "PC4", "PC5", "PH0", "PH1"
+  ],
+
+  "special_pins": {
+    "BOOT0": "전용핀 — GND로 풀다운 필요",
+    "PA13":  "SWDIO",
+    "PA14":  "SWCLK",
+    "PA0":   "WKUP1",
+    "PH0":   "OSC_IN",
+    "PH1":   "OSC_OUT",
+    "PA11":  "USB_FS_DM / SPI4_MISO / USART6_TX — 동시 사용 불가",
+    "PA12":  "USB_FS_DP / SPI5_MISO / USART6_RX — 동시 사용 불가"
+  },
+
+  "pin_conflicts": [
+    {
+      "pins": ["PA11", "PA12"],
+      "functions": ["USB_OTG_FS", "USART6", "SPI4/SPI5"],
+      "severity": "ERROR",
+      "resolution": "USB 사용 시 USART6를 PC6/PC7로, SPI4/5를 다른 핀으로"
+    },
+    {
+      "pins": ["PC10", "PC11", "PC12"],
+      "functions": ["SPI3", "SDIO"],
+      "severity": "ERROR",
+      "resolution": "SPI3와 SDIO 동시 사용 불가, SPI3를 PB3/PB4/PB5로 이동"
+    }
+  ]
+}
