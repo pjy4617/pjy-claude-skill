@@ -1,0 +1,10 @@
+{
+	global:
+		Motion_ModuleId;
+		Motion_ModuleInfo;
+		Motion_Setup;
+		Motion_Init;
+		Motion_Cleanup;
+		Motion_Process;
+	local:*;
+};

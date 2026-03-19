@@ -1,0 +1,9 @@
+{
+  "name": "wmx3md",
+  "version": "1.0.0",
+  "description": "WMX3 모션 제어 모듈 풀스택 개발: 3-layer 모듈 스캐폴딩(Core RTDLL + C++ API + CLR) + CMake 크로스플랫폼 빌드(Linux RT/Xenomai, Windows RTX64) + gtest/gmock TDD + RT 안전성 코드 리뷰 + API 사용자 설명서 자동 생성 + /opt/lmx 배포 스크립트. 8개 스킬 + 6개 에이전트",
+  "author": {
+    "name": "pjy4617"
+  },
+  "skills": "./skills/"
+}

@@ -1,0 +1,128 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "windows",
+      "displayName": "Windows VS2022 (v110 toolset)",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "toolset": "v110",
+      "binaryDir": "${sourceDir}/build-windows",
+      "cacheVariables": {
+        "WMX3_BUILD_CONFIG": "RTX64_4.x"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux GCC Release",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build-linux-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "OSL_TYPE": "rt"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux GCC Debug",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build-linux-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "OSL_TYPE": "rt"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-relwithdebinfo",
+      "displayName": "Linux GCC RelWithDebInfo",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build-linux-relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "OSL_TYPE": "rt"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-xenomai",
+      "displayName": "Linux Xenomai Release",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build-linux-xenomai",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "OSL_TYPE": "xeno"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-release",
+      "displayName": "Windows Release",
+      "configurePreset": "windows",
+      "configuration": "Release",
+      "jobs": 0
+    },
+    {
+      "name": "windows-debug",
+      "displayName": "Windows Debug",
+      "configurePreset": "windows",
+      "configuration": "Debug",
+      "jobs": 0
+    },
+    {
+      "name": "windows-relwithdebinfo",
+      "displayName": "Windows RelWithDebInfo",
+      "configurePreset": "windows",
+      "configuration": "RelWithDebInfo",
+      "jobs": 0
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release",
+      "configurePreset": "linux-release",
+      "jobs": 0
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug",
+      "configurePreset": "linux-debug",
+      "jobs": 0
+    },
+    {
+      "name": "linux-relwithdebinfo",
+      "displayName": "Linux RelWithDebInfo",
+      "configurePreset": "linux-relwithdebinfo",
+      "jobs": 0
+    },
+    {
+      "name": "linux-xenomai",
+      "displayName": "Linux Xenomai",
+      "configurePreset": "linux-xenomai",
+      "jobs": 0
+    }
+  ]
+}

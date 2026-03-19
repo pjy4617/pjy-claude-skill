@@ -26,7 +26,11 @@ webtalk*/
 vivado*.backup/
 NA/
 
+# 테스트
+skill-test/
+
 # KiCad 임시
 *-backups/
 *.kicad_sch-bak
 fp-info-cache
+.note.md
