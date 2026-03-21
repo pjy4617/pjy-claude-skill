@@ -31,18 +31,26 @@ plugins/
 │   ├── agents/
 │   ├── claude-md/CLAUDE.md
 │   └── docs/
-└── wmx3md/                        ← WMX3 모션 제어 모듈 플러그인 (8 스킬 + 6 에이전트)
+├── wmx3md/                        ← WMX3 모션 제어 모듈 플러그인 (8 스킬 + 6 에이전트)
+│   ├── plugin.json
+│   ├── skills/
+│   │   └── wmx3-module-create/
+│   │       ├── references/        ← 모듈 인터페이스, 빌드, IPC, 네이밍 등 11개 참조 문서
+│   │       └── assets/templates/  ← 3-layer 모듈 스캐폴딩 템플릿 (C99 Core + C++ API + gtest)
+│   ├── agents/
+│   ├── claude-md/CLAUDE.md
+│   └── docs/
+└── manual/                        ← Sphinx 문서화 플러그인 (4 스킬 + 4 에이전트)
     ├── plugin.json
     ├── skills/
-    │   └── wmx3-module-create/
-    │       ├── references/        ← 모듈 인터페이스, 빌드, IPC, 네이밍 등 11개 참조 문서
-    │       └── assets/templates/  ← 3-layer 모듈 스캐폴딩 템플릿 (C99 Core + C++ API + gtest)
+    │   └── manual-write/
+    │       └── references/        ← 다국어 네비게이션 템플릿 등
     ├── agents/
     ├── claude-md/CLAUDE.md
     └── docs/
 ```
 
-핵심 구조: 각 플러그인은 `plugin.json` + `skills/` 디렉토리를 가지며, `marketplace.json`이 이를 카탈로그로 등록한다. 에이전트는 마켓플레이스가 직접 지원하지 않으므로, `*-setup` 스킬이 `.claude/agents/`로 복사하는 메커니즘을 사용한다.
+핵심 구조: 각 플러그인은 `plugin.json` + `skills/` 디렉토리를 가지며, `marketplace.json`이 이를 카탈로그로 등록한다. 에이전트는 마켓플레이스가 직접 지원하지 않으므로, `*-setup` 스킬이 사용자에게 프로젝트 경로를 질문한 뒤 해당 경로의 `.claude/agents/`로 복사하는 메커니즘을 사용한다.
 
 ## 스킬 파일 규칙
 

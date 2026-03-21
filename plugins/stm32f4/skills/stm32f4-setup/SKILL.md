@@ -19,39 +19,52 @@ allowed-tools: Bash, Read, Write, Edit, Glob
 PLUGIN_DIR = ${CLAUDE_SKILL_DIR}/../../
 ```
 
-### 2단계: 에이전트 설치
+### 2단계: 프로젝트 경로 확인
 
-프로젝트 루트의 `.claude/agents/` 디렉토리에 2개 에이전트를 복사합니다.
+설치를 진행하기 전에 사용자에게 프로젝트 경로를 질문합니다:
+
+> STM32F4 프로젝트를 설치할 경로를 알려주세요.
+> (엔터만 누르면 현재 디렉토리에 설치합니다)
+
+- 사용자가 경로를 입력하면: 해당 경로를 `PROJECT_ROOT`로 설정
+- 사용자가 입력하지 않으면 (빈 값): 현재 작업 디렉토리를 `PROJECT_ROOT`로 설정
+- `PROJECT_ROOT`가 존재하지 않으면 생성 여부를 사용자에게 확인 후 생성
+
+이후 모든 단계는 `PROJECT_ROOT` 기준으로 실행합니다.
+
+### 3단계: 에이전트 설치
+
+`PROJECT_ROOT/.claude/agents/` 디렉토리에 2개 에이전트를 복사합니다.
 
 ```bash
-mkdir -p .claude/agents
+mkdir -p ${PROJECT_ROOT}/.claude/agents
 ```
 
 복사 대상 (PLUGIN_DIR/agents/ 아래):
 - `kicad-stm32-checker.md` — KiCad 회로도 STM32 핀/페리페럴 검증자
 - `stm32f4-test-writer.md` — 호스트 기반 단위 테스트 작성 전문가
 
-각 파일을 읽어서 `.claude/agents/`에 동일한 이름으로 작성합니다.
+각 파일을 읽어서 `${PROJECT_ROOT}/.claude/agents/`에 동일한 이름으로 작성합니다.
 이미 존재하는 파일은 덮어쓰기 전에 사용자에게 확인합니다.
 
-### 3단계: CLAUDE.md 병합
+### 4단계: CLAUDE.md 병합
 
-`PLUGIN_DIR/claude-md/CLAUDE.md`의 내용을 읽어서 프로젝트 `.claude/CLAUDE.md`에 추가합니다.
+`PLUGIN_DIR/claude-md/CLAUDE.md`의 내용을 읽어서 `${PROJECT_ROOT}/.claude/CLAUDE.md`에 추가합니다.
 
-- `.claude/CLAUDE.md`가 없으면 새로 생성합니다.
+- `${PROJECT_ROOT}/.claude/CLAUDE.md`가 없으면 새로 생성합니다.
 - 이미 존재하면, `## STM32F4 Firmware Project` 섹션이 있는지 확인합니다.
   - 있으면: "이미 설치되어 있습니다" 안내
   - 없으면: 파일 끝에 추가
 
-### 4단계: 프로젝트 디렉토리 생성
+### 5단계: 프로젝트 디렉토리 생성
 
-기본 디렉토리 구조를 생성합니다:
+`PROJECT_ROOT` 아래에 기본 디렉토리 구조를 생성합니다:
 
 ```bash
-mkdir -p Core/{Inc,Src} Drivers/{BSP/{Inc,Src},Device/{Inc,Src}} Middlewares/{Inc,Src} Startup Linker build
+mkdir -p ${PROJECT_ROOT}/{Core/{Inc,Src},Drivers/{BSP/{Inc,Src},Device/{Inc,Src}},Middlewares/{Inc,Src},Startup,Linker,build}
 ```
 
-### 5단계: 설치 결과 보고
+### 6단계: 설치 결과 보고
 
 ```
 STM32F4 스킬 환경 설치 완료!

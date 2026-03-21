@@ -8,11 +8,23 @@ apibuffer 모듈을 기준 패턴으로 한 3-layer 모듈 스캐폴딩, 빌드,
 ## 설치
 
 ```bash
-# 플러그인 설치 후 최초 1회 실행
+# 1. 마켓플레이스 추가 (한 번만)
+/plugin marketplace add pjy4617/pjy-claude-skill
+
+# 2. WMX3 플러그인 설치
+/plugin install wmx3md@pjy-skills
+
+# 3. 에이전트 + CLAUDE.md 설치 (최초 1회)
 /wmx3-setup
 ```
 
-이 명령은 에이전트 6명과 CLAUDE.md를 프로젝트에 설치합니다.
+셋업 시 프로젝트 경로를 질문합니다:
+```
+> WMX3 모듈 프로젝트를 설치할 경로를 알려주세요.
+> (엔터만 누르면 현재 디렉토리에 설치합니다)
+```
+
+지정한 경로에 에이전트 6명과 CLAUDE.md가 설치됩니다.
 
 ## 스킬 목록 (7개)
 

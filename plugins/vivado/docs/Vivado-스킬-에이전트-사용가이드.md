@@ -100,26 +100,33 @@ kicad-review    KiCad 회로 리뷰
 ### 스킬 설치 (1분)
 
 ```bash
-tar xzf vivado-claude-setup.tar.gz
-mkdir my-fpga-project && cd my-fpga-project
-cp -r ../vivado-claude-setup/.claude/ .
-mkdir -p rtl tb constraints scripts build
+# 1. 마켓플레이스 추가 (한 번만)
+/plugin marketplace add pjy4617/pjy-claude-skill
+
+# 2. Vivado 플러그인 설치
+/plugin install vivado@pjy-skills
+
+# 3. 에이전트 + CLAUDE.md + 디렉토리 설치 (최초 1회)
+/vivado-setup
 ```
+
+셋업 시 프로젝트 경로를 질문합니다:
+```
+> Vivado 프로젝트를 설치할 경로를 알려주세요.
+> (엔터만 누르면 현재 디렉토리에 설치합니다)
+```
+
+지정한 경로에 에이전트, CLAUDE.md, 디렉토리 구조(`rtl/`, `tb/`, `constraints/`, `scripts/`, `build/`)가 생성됩니다.
 
 설치 확인:
 
 ```bash
-ls .claude/agents/
+ls <프로젝트경로>/.claude/agents/
 # kicad-xdc-gen.md  pin-reviewer.md  rtl-designer.md
 # rtl-reviewer.md   tb-reviewer.md   timing-analyst.md
-
-ls .claude/skills/
-# kicad-review  kicad-xdc  pin-review  rtl-review  tb-review
-# vivado-bitstream  vivado-gui  vivado-impl
-# vivado-project  vivado-sim  vivado-synth
 ```
 
-이 폴더 안에서 Claude Code를 실행하면, 모든 스킬과 에이전트가 자동으로 인식됩니다.
+해당 폴더 안에서 Claude Code를 실행하면, 모든 스킬과 에이전트가 자동으로 인식됩니다.
 
 ---
 

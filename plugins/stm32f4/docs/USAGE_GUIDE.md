@@ -22,9 +22,17 @@ stm32f4-setup     환경 초기 설정
 # 2. STM32F4 플러그인 설치 → 4개 스킬 활성화
 /plugin install stm32f4@pjy-skills
 
-# 3. 에이전트 + CLAUDE.md 설치 (최초 1회)
+# 3. 에이전트 + CLAUDE.md + 디렉토리 설치 (최초 1회)
 /stm32f4-setup
 ```
+
+셋업 시 프로젝트 경로를 질문합니다:
+```
+> STM32F4 프로젝트를 설치할 경로를 알려주세요.
+> (엔터만 누르면 현재 디렉토리에 설치합니다)
+```
+
+지정한 경로에 에이전트, CLAUDE.md, 디렉토리 구조(`Core/`, `Drivers/`, `Middlewares/`, `Startup/`, `Linker/`, `build/`)가 생성됩니다.
 
 ## 3. 플러그인 구조
 
