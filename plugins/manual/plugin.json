@@ -1,6 +1,6 @@
 {
   "name": "manual",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sphinx 기반 프로그램 문서화 도구: 4개 스킬 + 4개 에이전트. CHM/MD 파일을 Sphinx 문서로 변환하고, 다국어(한/영/일) 사용자 매뉴얼을 생성하며, 품질 리뷰까지 지원합니다.",
   "author": {
     "name": "pjy4617"
