@@ -21,7 +21,7 @@ plugins/
 │   ├── claude-md/CLAUDE.md        ← 타겟 프로젝트용 CLAUDE.md 템플릿
 │   ├── templates/                 ← 예제 RTL/TB/XDC/스크립트
 │   └── docs/                      ← 사용 가이드
-├── stm32f4/                       ← STM32F4 MCU 플러그인 (4 스킬 + 2 에이전트)
+├── stm32f4/                       ← STM32F4 MCU 플러그인 (4 스킬 + 4 에이전트)
 │   ├── plugin.json
 │   ├── skills/
 │   │   └── stm32f4-firmware/

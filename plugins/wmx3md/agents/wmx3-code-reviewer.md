@@ -10,9 +10,9 @@ RT 안전성, IPC 정합성, 크로스플랫폼 호환성, 네이밍 규칙, 심
 
 ## 역할
 
-- **RT 안전성 검사** (12항목): RT 컨텍스트에서 허용되지 않는 패턴 탐지
-- **IPC 정합성 검사** (8항목): ApiLocal.h ↔ Core ↔ Api 레이어 구조체·열거형 정합성 확인
-- **크로스플랫폼 호환성** (6항목): Linux/Windows/RTX64 분기 처리 검증
+- **RT 안전성 검사** (16항목): RT 컨텍스트에서 허용되지 않는 패턴 탐지
+- **IPC 정합성 검사** (11항목): ApiLocal.h ↔ Core ↔ Api 레이어 구조체·열거형 정합성 확인
+- **크로스플랫폼 호환성** (8항목): Linux/Windows/RTX64 분기 처리 검증
 - **네이밍 규칙 준수** (5항목): WMX3 모듈 표준 접두어·파일명 규칙 확인
 - **심볼 가시성** (4항목): export 파일과 실제 구현 함수 일치 검증
 
@@ -29,7 +29,7 @@ RT 안전성, IPC 정합성, 크로스플랫폼 호환성, 네이밍 규칙, 심
 
 ---
 
-## 검사 카테고리 1: RT 안전성 (12항목)
+## 검사 카테고리 1: RT 안전성 (16항목)
 
 RT(Real-Time) 컨텍스트에서 실행되는 코드는 아래 패턴이 금지됩니다.
 
@@ -153,9 +153,49 @@ grep -rn "pthread_create\|CreateThread\|_beginthread" \
     --include="*.c" --exclude-dir="test" .
 ```
 
+### 1-13. Motion_Process 반환값 항상 0 (RT-9)
+
+```bash
+# MAJOR: Motion_Process 함수의 모든 반환 경로가 return 0인지 확인
+grep -A5 "Motion_Process" --include="*.c" . | grep "return"
+```
+
+- `Motion_Process`는 엔진 주기 함수로, 반환값이 0이 아니면 엔진이 모듈을 비정상으로 판단
+- 모든 분기에서 `return 0` 확인 필수
+
+### 1-14. OslSleep 사용 시 큐 상태 DELAY 변경 (RT-10)
+
+```bash
+# MAJOR: OslSleep 호출 전에 큐 상태를 DELAY로 설정하는지 확인
+grep -B10 "OslSleep" --include="*.c" . | grep -E "OslSleep|DELAY|status\.state"
+```
+
+- `OslSleep` 호출 전 `lmParam->queCtrl->status.state = IM_LIB_QUEUE_STATE_DELAY` 설정 필수
+- `sleepFlag` 설정 전에 큐 상태가 DELAY여야 다른 큐가 정상 스케줄링됨
+
+### 1-15. 멀티-MP 환경 채널 분리 (RT-11)
+
+```bash
+# MAJOR: pMP->id 기준 채널 필터링 확인
+grep -rn "pMP->id\|interruptId\|buff\[.*\]\.interruptId" --include="*.c" . --exclude-dir="test"
+```
+
+- `Motion_Process`에서 `buff[i].interruptId == pMP->id` 조건으로 자기 MP 채널만 처리
+- 멀티-MP 환경에서 채널 간섭 방지
+
+### 1-16. 상태 업데이트 함수 MP 0 전용 실행 (RT-12)
+
+```bash
+# MAJOR: StatusUpdateType 함수에서 MP ID 0 조건 확인
+grep -A5 "StatusUpdateType\|bufApiStatusUpdateType" --include="*.c" . | grep -E "pMpData->id|== 0|SKIP|SINGLE"
+```
+
+- `bufApiStatusUpdateType` 함수에서 `pslParam->pMpData->id == 0` 조건으로 MP 0에서만 `IM_LIB_STATUS_UPDATE_TYPE_SINGLE` 반환
+- 나머지 MP에서는 `IM_LIB_STATUS_UPDATE_TYPE_SKIP` 반환하여 중복 업데이트 방지
+
 ---
 
-## 검사 카테고리 2: IPC 정합성 (8항목)
+## 검사 카테고리 2: IPC 정합성 (11항목)
 
 ApiBuffer 모듈 패턴을 기준으로 세 레이어 간 정합성을 검증합니다.
 
@@ -239,9 +279,41 @@ grep -rn "EVENT_OUTPUT\|EVENT_DATA\|outputFunction" \
     --include="*.h" --include="*.c" . --exclude-dir="test"
 ```
 
+### 2-9. WMX3_API_RETURN_SUCCESS의 argSize 일치 (IPC-6)
+
+```bash
+# MAJOR: WMX3_API_RETURN_SUCCESS의 argSize가 실제 반환 데이터 크기와 일치하는지 확인
+grep -rn "WMX3_API_RETURN_SUCCESS" --include="*.c" . --exclude-dir="test"
+```
+
+- 반환 데이터가 없으면 `WMX3_API_RETURN_SUCCESS(0)`
+- 반환 데이터가 있으면 `WMX3_API_RETURN_SUCCESS(sizeof(반환구조체))`
+- `argSize`가 실제 `pApiResp->size`에 설정되므로, C++ API가 읽는 응답 크기와 일치해야 함
+
+### 2-10. imdll_RequestStatusChannel의 sizeof 인수 (IPC-7)
+
+```bash
+# MAJOR: imdll_RequestStatusChannel의 sizeof 인수가 실제 상태 구조체 크기와 일치하는지 확인
+grep -rn "imdll_RequestStatusChannel\|RequestStatusChannel" --include="*.cpp" . --exclude-dir="test"
+```
+
+- `ApiBufferApi.cpp`의 `init()` 함수에서 `imdll_RequestStatusChannel(dev, moduleId, sizeof(상태구조체))` 호출
+- `sizeof` 인수가 `bufApiUpdateStatus`에서 `pData`로 캐스팅하는 구조체 크기와 일치해야 함
+
+### 2-11. 채널 번호 오프셋 +1 적용 일관성 (IPC-8)
+
+```bash
+# MAJOR: 사용자 채널을 받는 모든 핸들러에서 channel += 1 적용 확인
+grep -rn "channel\s*+=\s*1\|channel\s*+\s*1\|channel\s*\+\s*=\s*1" --include="*.c" . --exclude-dir="test"
+```
+
+- 사용자 채널 번호(0-base)와 내부 큐 인덱스(1-base) 사이에 +1 오프셋 존재
+- 채널을 받는 **모든** 핸들러에서 `channel += 1` 일관 적용 확인
+- 큐 인덱스 0은 시스템 예약 영역이므로 사용자 접근 불가
+
 ---
 
-## 검사 카테고리 3: 크로스플랫폼 호환성 (6항목)
+## 검사 카테고리 3: 크로스플랫폼 호환성 (8항목)
 
 ### 3-1. OS 분기 처리 완결성
 
@@ -301,6 +373,29 @@ grep -rn 'visibility\|DLL_EXPORT\|__declspec(dllexport)' \
 # export 파일 확인
 cat ApiBuffer/export 2>/dev/null || find . -name "export" -exec cat {} \;
 ```
+
+### 3-7. __stdcall 매크로 Linux 빈 정의 (CP-3)
+
+```bash
+# MINOR: __stdcall 매크로가 Linux에서 빈 정의로 제공되는지 확인
+grep -rn "__stdcall" --include="*.h" . --exclude-dir="test"
+grep -rn "#ifndef __stdcall\|#define __stdcall" --include="*.h" .
+```
+
+- `ApiDef.h`에 `#ifndef __stdcall` / `#define __stdcall` 블록이 존재해야 함
+- Linux에서 `__stdcall`은 의미 없으므로 빈 매크로로 정의 필요
+- 누락 시 Linux 빌드에서 `unknown attribute` 컴파일 에러 발생
+
+### 3-8. _OSL_T() 매크로 적용 (CP-5)
+
+```bash
+# MINOR: 문자열 리터럴에 _OSL_T() 매크로 적용 확인 (유니코드/멀티바이트 호환)
+grep -rn '"[^"]*"' --include="*.c" . --exclude-dir="test" | grep -v "_OSL_T\|#include\|#define\|//\|/\*"
+```
+
+- Windows 유니코드 빌드에서 `_OSL_T("문자열")` 매크로가 `L"문자열"`로 확장됨
+- 로깅, 에러 메시지 등 사용자 표시 문자열에 `_OSL_T()` 적용 필수
+- `#include` 경로나 매크로 정의 내 문자열은 예외
 
 ---
 

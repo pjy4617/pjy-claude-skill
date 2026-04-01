@@ -3,7 +3,7 @@
 > ZedBoard OLED 데모 프로젝트를 예시로 배우는 Claude Code 활용법
 > 
 > 이 가이드의 목적은 OLED을 구현하는 것이 아닙니다.
-> **11개 스킬과 6개 에이전트를 실전에서 어떻게 사용하는지** 배우는 것입니다.
+> **13개 스킬과 6개 에이전트를 실전에서 어떻게 사용하는지** 배우는 것입니다.
 > OLED 데모는 그 예시일 뿐입니다.
 
 ---
@@ -62,14 +62,16 @@
 ### 이 프로젝트의 구성
 
 ```
-스킬 11개 (절차서)                   에이전트 6명 (전문가)
+스킬 13개 (절차서)                   에이전트 6명 (전문가)
 ──────────────                     ─────────────────
-vivado-project  프로젝트/보드 관리    rtl-designer   설계자
-vivado-sim      시뮬레이션            rtl-reviewer   RTL 검증자
-vivado-synth    합성                  tb-reviewer    TB 검증자
-vivado-impl     배치/라우팅           pin-reviewer   핀 배치 검증자
-vivado-bitstream 비트스트림           timing-analyst 타이밍 분석가
-vivado-gui      GUI 전환              kicad-xdc-gen  KiCad→XDC 생성
+vivado-setup    에이전트/환경 설치     rtl-designer   설계 전문가
+vivado-project  프로젝트/보드 관리    rtl-reviewer   RTL 검증자
+vivado-sim      시뮬레이션            tb-reviewer    TB 검증자
+vivado-synth    합성                  pin-reviewer   핀 배치 검증자
+vivado-impl     배치/라우팅           timing-analyst 타이밍 분석 및 최적화 제안
+vivado-bitstream 비트스트림           kicad-xdc-gen  KiCad→XDC 생성
+vivado-build-all 전체 빌드 플로우
+vivado-gui      GUI 전환
 rtl-review      RTL 체크리스트
 tb-review       TB 체크리스트
 pin-review      핀 배치 체크리스트
@@ -373,7 +375,8 @@ KiCad 회로 리뷰 리포트
 │
 ├─ tb-reviewer (TB 검증자)
 │    tb-review 스킬의 체크리스트 28항목 적용
-│    테스트벤치 파일과 DUT를 동시에 분석
+│    테스트벤치 파일의 구조/커버리지/자동검증을 분석
+│    (DUT 로직 자체의 정확성은 rtl-reviewer가 담당)
 │    "검증이 충분한가? 커버리지는?"
 │
 └─ pin-reviewer (핀 배치 검증자)
@@ -413,10 +416,10 @@ Pin 리뷰:  PASS 25 / WARN 2 / FAIL 1  ❌
 
 #### 이 결과를 어떻게 읽나요?
 
-- **FAIL** = 반드시 고쳐야 합니다. 안 고치면 합성 실패하거나 보드가 손상됩니다.
-- **WARN** = 지금 안 고쳐도 동작은 하지만, 나중에 문제가 될 수 있습니다.
 - **PASS** = 이상 없습니다.
-- **🔴 CRITICAL** = 하드웨어 손상 위험. 최우선 수정.
+- **WARN** = 지금 안 고쳐도 동작은 하지만, 나중에 문제가 될 수 있습니다.
+- **FAIL** = 반드시 고쳐야 합니다. 안 고치면 합성 실패하거나 보드가 손상됩니다.
+- **🔴 CRITICAL** = FAIL 중에서도 최고 심각도. IOSTANDARD 전압 불일치, 전용 핀 오용 등 **FPGA 또는 보드 하드웨어가 물리적으로 손상**될 수 있는 항목입니다. 발견 즉시 최우선으로 수정해야 합니다.
 
 #### 다음에 할 말
 
@@ -581,9 +584,9 @@ WNS가 음수(타이밍 위반)이면 Claude가 알려줍니다:
    ↓
    별도 컨텍스트에서 타이밍 리포트 전체를 읽고 분석
    ↓
-   원인과 해결책만 메인 대화로 반환:
+   원인 분석 및 최적화 제안을 메인 대화로 반환:
    "원인: oled_ctrl의 FSM 출력 로직이 8단 조합 경로
-    해결: 파이프라인 1단 추가"
+    최적화 제안: 파이프라인 1단 추가"
 ```
 
 #### 💡 초보자 팁
@@ -680,6 +683,7 @@ D-Pad 버튼으로 조작하세요.
 | "합성해줘" | vivado-synth | synth_design batch 실행 |
 | "Implementation 돌려" | vivado-impl | place→route batch 실행 |
 | "비트스트림 만들어" | vivado-bitstream | write_bitstream 실행 |
+| "전체 빌드 돌려" | vivado-build-all | 합성→Impl→Bitstream 일괄 실행 |
 | "파형 보여줘" | vivado-gui | GUI로 파형 열기 |
 | "스키매틱 보여줘" | vivado-gui | GUI로 체크포인트 열기 |
 | "KiCad 회로도 리뷰해줘" | kicad-review | ERC, 넷리스트, BOM 종합 검토 |
@@ -688,12 +692,12 @@ D-Pad 버튼으로 조작하세요.
 
 | 당신이 말하면 | 동작하는 에이전트 | 하는 일 |
 |-------------|-----------------|--------|
-| "모듈 만들어줘" | rtl-designer | Verilog 코드 설계 (별도 컨텍스트) |
+| "모듈 만들어줘" | rtl-designer | Verilog 코드 설계 전문 (별도 컨텍스트, 리뷰는 rtl-reviewer가 담당) |
 | "리뷰해줘" | rtl-reviewer + tb-reviewer + pin-reviewer | 3인 병렬 리뷰 (각각 별도 컨텍스트) |
 | "RTL만 리뷰해줘" | rtl-reviewer | RTL 체크리스트 32항목 검사 |
 | "테스트벤치 리뷰해줘" | tb-reviewer | TB 체크리스트 28항목 검사 |
 | "핀 배치 확인해줘" | pin-reviewer | 핀 체크리스트 28항목 검사 |
-| "타이밍 분석해줘" | timing-analyst | 타이밍 리포트 분석 및 해결책 제시 |
+| "타이밍 분석해줘" | timing-analyst | 타이밍 리포트 분석 및 최적화 제안 (별도 컨텍스트) |
 | "KiCad에서 XDC 만들어줘" | kicad-xdc-gen | 넷리스트에서 XDC 자동 생성 (별도 컨텍스트) |
 
 ### 에이전트 + 스킬이 함께 동작하는 경우
@@ -823,22 +827,24 @@ TODO는 뱅크 전압을 자동으로 결정할 수 없는 핀입니다.
 
 | 이름 | 핵심 질문 | 트리거 키워드 |
 |------|----------|-------------|
-| rtl-designer | "어떻게 구현할까?" | "모듈 만들어", "코드 작성" |
+| rtl-designer | "어떻게 설계할까?" | "모듈 만들어", "코드 작성" |
 | rtl-reviewer | "합성 가능한가?" | "RTL 리뷰", "코드 리뷰", "린트" |
-| tb-reviewer | "검증 충분한가?" | "TB 리뷰", "테스트벤치 리뷰", "커버리지" |
+| tb-reviewer | "검증 충분한가?" (테스트벤치만 검토, DUT 로직은 rtl-reviewer 담당) | "TB 리뷰", "테스트벤치 리뷰", "커버리지" |
 | pin-reviewer | "핀 배치 안전한가?" | "핀 확인", "XDC 리뷰", "IOSTANDARD" |
-| timing-analyst | "타이밍 괜찮은가?" | "타이밍 분석", "WNS", "타이밍 위반" |
+| timing-analyst | "타이밍 괜찮은가? 어떻게 개선할까?" | "타이밍 분석", "WNS", "타이밍 위반", "타이밍 최적화" |
 | kicad-xdc-gen | "회로도에서 XDC 뽑을 수 있나?" | "KiCad XDC", "회로도에서 핀 배치", "넷리스트에서 XDC" |
 
-### 스킬 (11개) — 절차서
+### 스킬 (13개) — 절차서
 
 | 이름 | 역할 | 트리거 키워드 |
 |------|------|-------------|
+| vivado-setup | 에이전트/환경 설치 | "vivado 설치", "vivado-setup", `/vivado-setup` |
 | vivado-project | 프로젝트/보드 관리 | "프로젝트 만들어", "보드 바꿔" |
 | vivado-sim | 시뮬레이션 | "시뮬레이션", "시뮬", "xsim" |
 | vivado-synth | 합성 | "합성", "synth" |
 | vivado-impl | Place & Route | "Implementation", "impl", "배치" |
 | vivado-bitstream | Bitstream + 프로그래밍 | "비트스트림", "다운로드", "프로그래밍" |
+| vivado-build-all | 전체 빌드 플로우 (합성→Impl→Bitstream) | "전체 빌드", "빌드 전부", "합성부터 비트스트림까지" |
 | vivado-gui | GUI 전환 | "GUI 열어", "파형", "스키매틱", "Device View" |
 | rtl-review | RTL 체크리스트 (32항목) | rtl-reviewer 에이전트가 참조 |
 | tb-review | TB 체크리스트 (28항목) | tb-reviewer 에이전트가 참조 |
@@ -894,7 +900,7 @@ TODO는 뱅크 전압을 자동으로 결정할 수 없는 핀입니다.
 
 ---
 
-> **이 가이드는 Vivado + KiCad 스킬 패키지 (6 에이전트 + 11 스킬)의 사용법을 설명합니다.**
+> **이 가이드는 Vivado + KiCad 스킬 패키지 v1.1.0 (6 에이전트 + 13 스킬)의 사용법을 설명합니다.**
 > OLED 데모는 예시일 뿐이며, 같은 스킬/에이전트를 UART, SPI, I2C 등 
 > 어떤 Verilog 프로젝트에든 동일하게 적용할 수 있습니다.
 > KiCad 연동은 선택 사항이며, KiCad 없이도 전체 플로우가 동작합니다.

@@ -71,7 +71,8 @@
 - `TOP` — 톱 모듈 이름 (기본: top)
 - `PART_NUM` — FPGA 파트넘버 (기본: xc7a35ticsg324-1L)
 
-## 에이전트/스킬 구성 (6 에이전트 + 12 스킬)
+## 에이전트/스킬 구성 (6 에이전트 + 13 스킬)
 - 에이전트: rtl-designer, rtl-reviewer, tb-reviewer, pin-reviewer, timing-analyst, kicad-xdc-gen
 - 빌드 스킬: vivado-project, vivado-sim, vivado-synth, vivado-impl, vivado-bitstream, vivado-build-all, vivado-gui
 - 리뷰 스킬: rtl-review, tb-review, pin-review, kicad-xdc, kicad-review
+- 설정 스킬: vivado-setup

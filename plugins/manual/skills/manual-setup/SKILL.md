@@ -1,6 +1,6 @@
 ---
 name: manual-setup
-description: "Manual 스킬 환경 초기 설정. 에이전트 3명과 CLAUDE.md를 프로젝트에 설치합니다. 플러그인 설치 후 최초 1회 실행 필요. 'manual 설정', 'manual setup', '문서화 에이전트 설치', '매뉴얼 초기 설정' 등의 요청에 자동 적용."
+description: "Manual 스킬 환경 초기 설정. 에이전트 4명과 CLAUDE.md를 프로젝트에 설치합니다. 플러그인 설치 후 최초 1회 실행 필요. 'manual 설정', 'manual setup', '문서화 에이전트 설치', '매뉴얼 초기 설정' 등의 요청에 자동 적용."
 user-invocable: true
 allowed-tools: Bash, Read, Write, Edit, Glob
 ---

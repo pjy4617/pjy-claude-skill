@@ -1,16 +1,16 @@
-# STM32F4 Firmware Skill & Agent 사용 가이드 (v3)
+# STM32F4 Firmware Skill & Agent 사용 가이드 (v1.1.0)
 
 ## 1. 개요
 
-이 플러그인은 STM32F4 시리즈 MCU(F401/F407/F411/F429/F446) 펌웨어를 **4개 스킬 + 2개 에이전트**로 개발한다.
+이 플러그인은 STM32F4 시리즈 MCU(F401/F407/F411/F429/F446) 펌웨어를 **4개 스킬 + 4개 에이전트**로 개발한다.
 
 ```
-스킬 4개 (절차서)                    에이전트 2명 (전문가)
+스킬 4개 (절차서)                    에이전트 4명 (전문가)
 ──────────────                      ─────────────────
-stm32f4-firmware  5단계 파이프라인    kicad-stm32-checker  회로도 검증
-kicad-stm32-review  회로도 체크리스트  stm32f4-test-writer  테스트 작성
-stm32f4-tdd       호스트 기반 TDD
-stm32f4-setup     환경 초기 설정
+stm32f4-firmware  5단계 파이프라인    kicad-stm32-checker    회로도 검증
+kicad-stm32-review  회로도 체크리스트  stm32f4-test-writer    테스트 작성
+stm32f4-tdd       호스트 기반 TDD    stm32f4-code-reviewer  코드 리뷰
+stm32f4-setup     환경 초기 설정     stm32f4-qa             QA 최종검수
 ```
 
 ## 2. 설치
@@ -65,7 +65,9 @@ plugins/stm32f4/
 │       └── SKILL.md
 ├── agents/
 │   ├── kicad-stm32-checker.md         # 회로도 검증 전문가
-│   └── stm32f4-test-writer.md         # 테스트 코드 작성 전문가
+│   ├── stm32f4-test-writer.md         # 테스트 코드 작성 전문가
+│   ├── stm32f4-code-reviewer.md       # 소스코드 리뷰 전문가
+│   └── stm32f4-qa.md                  # QA 최종검수 전문가
 ├── claude-md/
 │   └── CLAUDE.md                      # 프로젝트 설정 템플릿
 └── docs/
@@ -130,6 +132,18 @@ plugins/stm32f4/
     → stm32f4-test-writer 에이전트가 Unity+FFF 테스트 생성
     → cd test && make → PASS 확인
 
+[코드 리뷰]
+  "코드 리뷰해줘"
+    → stm32f4-code-reviewer 에이전트가 34항목 체크리스트 검증
+    → 6카테고리: HAL 안전성, 인터럽트 안전성, 아키텍처 규칙, 네이밍, 메모리 안전성, 양산 준비도
+    → 항목별 OK / WARN / ERROR 판정
+
+[QA 최종검수]
+  "릴리스 확인" 또는 "QA 검수해줘"
+    → stm32f4-qa 에이전트가 최종검수 수행
+    → 필수 게이트 6개 + 권고 5개 검증
+    → PASS / CONDITIONAL / REJECT 3단계 판정
+
 [빌드 & 플래싱]
   cmake --preset debug && cmake --build --preset debug
   make flash
@@ -166,6 +180,21 @@ plugins/stm32f4/
 → 리팩토링 (Refactor)
 ```
 
+### 코드 리뷰
+```
+"코드 리뷰해줘"
+→ stm32f4-code-reviewer 에이전트가 34항목 체크리스트 검증
+→ HAL 안전성, 인터럽트 안전성, 아키텍처 규칙, 네이밍, 메모리 안전성, 양산 준비도
+→ 항목별 OK / WARN / ERROR 판정 + 수정 제안
+```
+
+### QA 최종검수 (릴리스 전)
+```
+"릴리스 확인" 또는 "QA 검수해줘"
+→ stm32f4-qa 에이전트가 필수 게이트 6개 + 권고 5개 검증
+→ PASS: 릴리스 가능 / CONDITIONAL: 조건부 승인 / REJECT: 릴리스 불가
+```
+
 ## 7. 참조 문서 활용표
 
 | 에이전트/스킬 | 참조 문서 | 언제 읽는가 |
@@ -179,6 +208,8 @@ plugins/stm32f4/
 | Agent 5 | production-checklist.md | 프로덕션 빌드 검토 시 |
 | kicad-stm32-review | pin-validation.md | 회로도 검증 시 |
 | stm32f4-tdd | coding-rules.md | 테스트 코드 네이밍 시 |
+| stm32f4-code-reviewer | coding-rules.md, architecture-patterns.md, production-checklist.md | 코드 리뷰 시 (34항목 6카테고리) |
+| stm32f4-qa | production-checklist.md, pin-validation.md | QA 최종검수 시 (필수 게이트 6개 + 권고 5개) |
 | 개발자 | debugging-guide.md | HardFault, 디버깅 문제 시 |
 
 ## 8. 제한사항

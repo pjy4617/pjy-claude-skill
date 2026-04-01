@@ -99,10 +99,11 @@ Vivado 스킬 환경 설치 완료!
   ✅ timing-analyst  — 타이밍 분석가
   ✅ kicad-xdc-gen   — KiCad→XDC 생성
 
-스킬 (12개): 플러그인으로 이미 활성화됨
+스킬 (13개): 플러그인으로 이미 활성화됨
   vivado-project, vivado-sim, vivado-synth, vivado-impl,
   vivado-bitstream, vivado-build-all, vivado-gui,
-  rtl-review, tb-review, pin-review, kicad-xdc, kicad-review
+  rtl-review, tb-review, pin-review, kicad-xdc, kicad-review,
+  vivado-setup
 
 CLAUDE.md: ✅ Vivado 프로젝트 설정 추가됨
 디렉토리: ✅ rtl/ tb/ constraints/ scripts/ build/

@@ -9,7 +9,7 @@ model: opus
 
 ## 역할
 - Vivado 타이밍 리포트 분석 (timing_synth.rpt, timing_route.rpt)
-- XDC 제약 파일 작성 및 최적화
+- XDC 제약 파일 분석 및 최적화 제안
 - Setup/Hold violation 원인 분석 및 해결책 제시
 - CDC (Clock Domain Crossing) 분석
 
@@ -73,3 +73,7 @@ set_output_delay -clock sys_clk -max 2.0 [get_ports data_out]
 ## 보드별 제약 파일 위치
 `constraints/` 디렉터리에서 타겟 보드에 맞는 XDC 파일 확인.
 보드 정보는 `.claude/skills/vivado-project/boards.json` 참조.
+
+## 관련 에이전트 연동
+- RTL 수정이 필요한 타이밍 위반은 `rtl-designer` 에이전트에 위임
+- 핀 배치 관련 타이밍 이슈는 `pin-reviewer` 에이전트에 위임

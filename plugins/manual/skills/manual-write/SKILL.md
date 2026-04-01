@@ -1,14 +1,14 @@
 ---
 name: manual-write
-description: "프로그램 소스 코드, CHM 파일, MD 파일(Doxygen 포함)을 분석하여 Sphinx 기반 사용자 매뉴얼을 생성합니다. 기본 테마는 sphinx-rtd-theme입니다. '매뉴얼 만들어', '사용자 가이드 작성', 'Sphinx 문서 생성', '문서화해줘', 'CHM을 Sphinx로', 'MD를 Sphinx로 변환', 'Doxygen에서 Sphinx로', '사용법 문서', 'Getting Started 가이드', '프로그램 설명서', 'API 문서 생성', '웹 매뉴얼 만들어' 등의 요청에 자동 적용. 문서 작성, 매뉴얼, 가이드, Sphinx, reStructuredText, MyST Markdown 관련 요청이면 이 스킬을 사용하세요."
+description: "프로그램 소스 코드, CHM 파일, MD 파일(Doxygen 포함), DOCX 파일을 분석하여 Sphinx 기반 사용자 매뉴얼을 생성합니다. 기본 테마는 sphinx-rtd-theme입니다. '매뉴얼 만들어', '사용자 가이드 작성', 'Sphinx 문서 생성', '문서화해줘', 'CHM을 Sphinx로', 'MD를 Sphinx로 변환', 'Doxygen에서 Sphinx로', 'DOCX를 Sphinx로', 'Word 문서 변환', '사용법 문서', 'Getting Started 가이드', '프로그램 설명서', 'API 문서 생성', '웹 매뉴얼 만들어' 등의 요청에 자동 적용. 문서 작성, 매뉴얼, 가이드, Sphinx, reStructuredText, MyST Markdown 관련 요청이면 이 스킬을 사용하세요."
 user-invocable: true
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent
-argument-hint: "[소스 경로 또는 CHM/MD 파일 경로]"
+argument-hint: "[소스 경로 또는 CHM/MD/DOCX 파일 경로]"
 ---
 
 # Sphinx 기반 프로그램 매뉴얼 생성
 
-이 스킬은 프로그램 소스 코드, CHM 파일, MD 파일(Doxygen 스타일 포함)을 분석하여 Sphinx 기반의 체계적인 사용자 매뉴얼을 생성합니다.
+이 스킬은 프로그램 소스 코드, CHM 파일, MD 파일(Doxygen 스타일 포함), DOCX 파일을 분석하여 Sphinx 기반의 체계적인 사용자 매뉴얼을 생성합니다.
 
 ## 전제 조건
 
@@ -28,6 +28,12 @@ pip install pychm
 sudo apt-get install libchm-bin
 ```
 
+DOCX 파일 변환이 필요한 경우:
+```bash
+# pandoc 설치
+sudo apt-get install pandoc
+```
+
 ## 작업 프로세스
 
 사용자가 문서화를 요청하면, 아래 단계를 순서대로 진행합니다. 각 단계의 결과를 사용자에게 보여주고 승인을 받은 후 다음 단계로 넘어가세요. 사용자가 "검토만 해줘"라고 하면 Phase 1~2까지만 진행하고 멈추세요.
@@ -37,6 +43,7 @@ sudo apt-get install libchm-bin
 1. `$ARGUMENTS`로 전달된 경로를 확인합니다.
    - 경로가 없으면 현재 프로젝트 루트를 대상으로 합니다.
    - CHM 파일이면 Phase 1-A로 분기합니다.
+   - DOCX 파일이면 Phase 1-E로 분기합니다.
    - MD 파일에 `\page`, `\subpage`, `@ref` 등 Doxygen 명령이 있으면 Phase 1-D로 분기합니다.
    - 일반 MD 파일이면 Phase 1-B로, 소스 코드면 Phase 1-C로 분기합니다.
 
@@ -103,6 +110,60 @@ MD 파일에 Doxygen 명령어(`\page`, `\subpage`, `@ref` 등)가 포함된 경
 ```
 
 이전 버전 정보는 부제(blockquote)로 남기고, 하위 섹션은 H2(`##`)로 작성합니다.
+
+#### Phase 1-E: DOCX 파일 변환
+
+DOCX 파일이 입력된 경우:
+
+```bash
+# pandoc 설치 확인
+if ! command -v pandoc &> /dev/null; then
+    echo "ERROR: pandoc이 설치되어 있지 않습니다."
+    echo "설치: sudo apt-get install pandoc (Ubuntu/Debian)"
+    echo "      brew install pandoc (macOS)"
+    echo "      choco install pandoc (Windows)"
+    exit 1
+fi
+pandoc --version | head -1
+```
+
+```bash
+# DOCX에서 Markdown 변환 (이미지 자동 추출)
+mkdir -p docs/_static/images
+pandoc "$DOCX_FILE" -t markdown -o /tmp/docx_converted.md \
+    --extract-media=docs/_static/images \
+    --wrap=none \
+    --track-changes=accept
+
+# 변환된 MD 파일의 구조 분석
+cat /tmp/docx_converted.md | head -100
+```
+
+참고: `-t markdown`은 pandoc 확장 Markdown을 출력합니다. MyST Markdown과 대부분 호환되며, definition list와 footnote 확장이 유지됩니다. GFM(`-t gfm`)은 이 확장들이 제거되므로 사용하지 않습니다.
+
+여러 DOCX 파일이 입력된 경우, 각 파일을 순차적으로 변환한 후 결과를 하나의 Sphinx 프로젝트에 통합합니다. 각 DOCX가 하나의 챕터가 됩니다.
+
+변환 후 처리:
+- pandoc이 생성한 Markdown의 제목(heading) 레벨을 분석하여 챕터를 분리합니다.
+- `# 제목` (H1) 단위로 파일을 분할합니다.
+- 이미지 경로를 `docs/_static/images/` 기준으로 수정합니다. pandoc은 `--extract-media` 경로 아래에 `media/` 서브디렉토리를 생성합니다 (예: `docs/_static/images/media/image1.png`). 이미지 경로를 `_static/images/media/` 기준으로 수정합니다.
+- Word 스타일(볼드, 이탤릭, 표, 목록)은 pandoc이 자동 변환하므로 결과만 검증합니다.
+- 수식이 포함된 경우 LaTeX 형식으로 변환되었는지 확인합니다.
+
+**pandoc DOCX 변환 제한사항:**
+
+아래 항목은 pandoc이 완벽하게 변환하지 못하므로 수동 검토가 필요합니다:
+
+| 항목 | pandoc 동작 | 대응 방법 |
+|------|------------|----------|
+| 병합 셀 표 | 단순 표로 풀림 (셀 병합 해제) | 변환 후 수동으로 표 재구성 |
+| OLE 객체 (내장 Excel 차트 등) | 변환 불가, 누락됨 | 원본에서 스크린샷을 캡처하여 이미지로 대체 |
+| 텍스트 박스 / SmartArt | 무시됨 | 텍스트 내용을 수동 추출하여 본문에 삽입 |
+| Track Changes (변경 추적) | 마크업 노이즈 발생 | `--track-changes=accept` 옵션 사용 (최종본 기준) |
+| 머리글 / 바닥글 | 변환되지 않음 | 필요 시 수동 추가 |
+| 각주(footnote) | 변환됨 | 미주(endnote)는 불완전할 수 있으므로 확인 필요 |
+| Word 목차(TOC) | 빈 텍스트 또는 깨진 링크로 변환 | 제거 후 Sphinx toctree로 대체 |
+| 페이지 나누기 | 무시되거나 `\newpage`로 변환 | H1 기준 분할과 별도로 처리 |
 
 **Doxygen → MyST 변환 매핑 테이블:**
 

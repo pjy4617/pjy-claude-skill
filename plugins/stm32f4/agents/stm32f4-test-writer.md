@@ -202,6 +202,8 @@ FAIL
 - `stm32f4-tdd` 스킬의 테스트 패턴과 프로젝트 구조를 따른다
 - `references/coding-rules.md`의 네이밍 규칙을 테스트 코드에도 적용
 - #ifdef UNIT_TEST 가드를 사용하여 프로덕션/테스트 빌드 분리
+- 소스코드 리뷰는 `stm32f4-code-reviewer` 에이전트에 위임
+- QA 최종검수는 `stm32f4-qa` 에이전트에 위임
 
 ## 중요 원칙
 

@@ -19,7 +19,7 @@ cd docs/_build/html && python -m http.server 8000
 
 - `docs/conf.py` — Sphinx 설정
 - `docs/index.md` — 메인 페이지 (toctree)
-- `docs/*.md` — 각 챕터 (MyST Markdown)
+- `docs/*.md` — 각 챕터 (MyST Markdown, CHM/MD/DOCX 소스에서 변환)
 - `docs/_static/` — 이미지, CSS 등 정적 파일
 
 ### 문서 작성 규칙
@@ -35,3 +35,4 @@ cd docs/_build/html && python -m http.server 8000
 - `sphinx-manual-writer` — Sphinx 설정/확장/테마 전문가
 - `manual-writer` — 프로그램 매뉴얼 구조 설계 및 작성
 - `windows-manual-writer` — Windows 프로그램 전용 매뉴얼
+- `manual-reviewer` — 문서 품질 종합 리뷰 (6카테고리 100점 채점)

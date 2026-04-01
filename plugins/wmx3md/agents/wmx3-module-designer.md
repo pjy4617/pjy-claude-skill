@@ -52,12 +52,26 @@ Motion_API Motion_Process(void* mParam);
 ### API 모드 핸들러 시그니처
 
 ```c
-// 모든 API 모드 핸들러는 동일한 시그니처를 사용
-typedef int (*IM_LIB_API_FUNC)(void* mParam, int channel, void* inData, void* outData);
+// WMX3_API_PARAM 매크로로 5개 파라미터를 정의
+#define WMX3_API_PARAM \
+    void* lParam, void* mParam, \
+    IM_API_CMD_HEADER* pApiCmd, IM_API_RESP_HEADER* pApiResp, \
+    void* pData
+
+// 모든 API 모드 핸들러는 WMX3_API_PARAM 시그니처를 사용
+typedef int (IM_API *IM_LIB_API_FUNC)(WMX3_API_PARAM);
 
 // 예시
-int myModuleApiHandler(void* mParam, int channel, void* inData, void* outData);
+int IM_API myModuleApiExecute(WMX3_API_PARAM);
 ```
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `lParam` | `void*` | IMLib이 전달하는 내부 파라미터 |
+| `mParam` | `void*` | `PIM_LIB_MPARAM`로 캐스팅 (모듈 파라미터) |
+| `pApiCmd` | `IM_API_CMD_HEADER*` | 명령 헤더 (mode, property 포함) |
+| `pApiResp` | `IM_API_RESP_HEADER*` | 응답 헤더 (결과 코드, 크기 설정) |
+| `pData` | `void*` | 실제 데이터 페이로드 (구조체 포인터) |
 
 ## 작업 절차
 
@@ -229,3 +243,9 @@ typedef struct MY_MODULE_DATA {
 - **공유 헤더만 공유** — `include/` 디렉토리의 헤더만 두 계층이 공유
 - **기존 모듈 패턴 우선** — ApiBuffer 등 기존 모듈의 구조를 먼저 분석하고 따름
 - **설계 완료 후 wmx3-code-generator에게 전달** — 설계 산출물을 코드 생성 에이전트에 넘김
+
+## 설계 산출물 전달 규약
+
+- 설계 산출물은 대화 컨텍스트로 `wmx3-code-generator`에 전달하며, 필요 시 `docs/design_<모듈명>.md`에 저장한다
+- 전달 시 위의 "설계 산출물 형식" 섹션의 구조를 준수한다
+- `wmx3-code-generator`는 이 산출물의 API 모드 목록, 데이터 구조, 의존 모듈 정보를 기반으로 코드를 생성한다

@@ -1,8 +1,10 @@
 # Sphinx 문서화 플러그인 사용 가이드
 
+> **플러그인 버전**: v1.1.0
+
 ## 1. 개요
 
-이 플러그인은 프로그램 소스 코드, CHM 파일, MD 파일(Doxygen 포함)을 **Sphinx 기반 다국어(한/영/일) 사용자 매뉴얼**로 변환합니다.
+이 플러그인은 프로그램 소스 코드, CHM 파일, MD 파일(Doxygen 포함), DOCX 파일을 **Sphinx 기반 다국어(한/영/일) 사용자 매뉴얼**로 변환합니다.
 **4개 스킬 + 4개 에이전트**로 구성되며, 기본 테마는 `sphinx-rtd-theme`(녹색 `#27ae60` 커스텀)입니다.
 
 ```
@@ -67,7 +69,7 @@ Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
 
 | Phase | 내용 | 사용자 개입 |
 |-------|------|------------|
-| 1 | 소스 분석 (CHM/MD/Doxygen/소스코드 자동 분기) + 다국어 감지 | - |
+| 1 | 소스 분석 (CHM/MD/DOCX/Doxygen/소스코드 자동 분기) + 다국어 감지 | - |
 | 2 | 다국어 문서 구조 제안 + `_structure.md` 저장 | **승인 필요** |
 | 3 | Sphinx 프로젝트 초기화 (언어별 conf.py, 언어 전환 템플릿) | - |
 | 4 | 각 언어/챕터별 MD 파일 작성 | - |
@@ -82,6 +84,7 @@ Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
 | 일반 MD | Phase 1-B | MyST Markdown으로 직접 사용 |
 | 소스 코드 | Phase 1-C | docstring 분석, autodoc 설정 |
 | Doxygen MD | Phase 1-D | `\page`, `\subpage`, `@ref` 등 변환 |
+| DOCX 파일 | Phase 1-E | pandoc으로 Markdown 변환 후 Sphinx 적용 |
 
 ### manual-build
 
@@ -131,12 +134,54 @@ Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
 
 ## 5. 에이전트 역할 분담
 
+### 역할 요약
+
 | 에이전트 | 전문 분야 | 위임 기준 |
 |----------|----------|----------|
-| `sphinx-manual-writer` | Sphinx 셋업, conf.py, 확장 기능, Doxygen→MyST 변환 | Sphinx 시스템 레벨 작업 |
+| `sphinx-manual-writer` | Sphinx 셋업, conf.py, 확장 기능, Doxygen→MyST 변환, DOCX→Sphinx 통합 | Sphinx 시스템 레벨 작업 |
 | `manual-writer` | 소스 분석, 문서 구조 설계, 챕터별 내용 작성 | 매뉴얼 내용 작성 |
 | `windows-manual-writer` | Windows 설치/제거, 트레이 아이콘, 관리자 권한 | Windows 전용 UI/기능 문서 |
 | `manual-reviewer` | 6개 카테고리 품질 검증, 100점 만점 리뷰 + 자동 수정 | 완성된 문서 품질 검증 |
+
+### 역할 경계 (범위)
+
+각 에이전트는 명확한 담당/비담당 범위를 가집니다. 범위를 벗어나는 작업은 해당 에이전트에 위임합니다.
+
+| 에이전트 | 담당 | 담당하지 않음 (위임 대상) |
+|----------|------|--------------------------|
+| `sphinx-manual-writer` | Sphinx 프로젝트 설정 (conf.py, 확장, 테마), RST/MyST 변환, Doxygen→Sphinx 마이그레이션, DOCX→Sphinx 통합, 빌드 파이프라인 구성 | 챕터별 콘텐츠 기획 및 작성 → `manual-writer` |
+| `manual-writer` | 매뉴얼 콘텐츠 기획, 챕터별 내용 작성 (Markdown), 초보자 친화적 문서 구조 설계 | Sphinx conf.py 고급 설정, 테마 커스터마이징, Doxygen 마이그레이션 → `sphinx-manual-writer` |
+| `windows-manual-writer` | Windows 7/10/11 환경 특화 설치 가이드, 사용법, 트러블슈팅 | Windows 외 범용 매뉴얼 → `manual-writer`, Sphinx 설정 → `sphinx-manual-writer` |
+| `manual-reviewer` | 6개 카테고리 품질 검증, 점수 산출, 자동 수정 (리뷰 전용, 읽기 중심) | 콘텐츠 수정 → `manual-writer`, 빌드/설정 수정 → `sphinx-manual-writer`, Windows 수정 → `windows-manual-writer` |
+
+### 에이전트 간 상호참조
+
+각 에이전트는 자신의 범위를 벗어나는 작업을 적절한 에이전트에 위임합니다.
+
+```
+sphinx-manual-writer ←→ manual-writer
+    │                        │
+    │  콘텐츠 작성 위임 →    │
+    │  ← Sphinx 설정 위임    │
+    │                        │
+    ├── windows-manual-writer ←─ Windows 외 범용 → manual-writer
+    │       │
+    └── manual-reviewer ←── 수정 필요 시 각 에이전트에 위임
+            │
+            ├─ 콘텐츠 수정 → manual-writer
+            ├─ 설정/빌드 수정 → sphinx-manual-writer
+            └─ Windows 수정 → windows-manual-writer
+```
+
+### 트리거 키워드
+
+자연어 요청에 따라 적절한 에이전트가 자동 위임됩니다.
+
+| 에이전트 | 트리거 키워드 |
+|----------|-------------|
+| `manual-writer` | "매뉴얼 작성", "문서 작성", "가이드 생성", "사용법 문서" |
+| `windows-manual-writer` | "Windows 매뉴얼", "Windows 설치 가이드", "Windows 사용법" |
+| `manual-reviewer` | "문서 리뷰", "매뉴얼 검토", "문서 품질 확인" |
 
 **복합 프로젝트**: `sphinx-manual-writer`(Sphinx 셋업) + `manual-writer`(내용 작성) + `manual-reviewer`(품질 검증) 병행 가능
 
@@ -144,19 +189,22 @@ Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
 
 ```
 [환경 설정]
-  /manual-setup → 에이전트 + CLAUDE.md 설치
+  /manual-setup → 에이전트 4명 + CLAUDE.md 설치 (manual-reviewer 포함)
 
 [문서 생성]
   "이 프로젝트의 사용자 매뉴얼을 만들어줘"
     → manual-write 스킬 (Phase 1~6)
+    → Phase 1: 소스/CHM/MD/DOCX 자동 분기
     → Phase 2에서 구조 제안 → 사용자 승인
     → 3개 언어 Sphinx 프로젝트 + MD 파일 생성 + 빌드
+    → 에이전트 위임: sphinx-manual-writer(Sphinx 설정) + manual-writer(내용 작성)
 
 [품질 리뷰]
   /manual-review
-    → 6개 카테고리 100점 만점 검증
+    → manual-reviewer 에이전트가 6개 카테고리 100점 만점 검증
     → 자동 수정 가능 이슈 발견 시 "수정할까요?" 질문
     → 승인 시 자동 수정 → 재빌드 → 점수 재산출
+    → 수정 필요 시 해당 에이전트에 위임 (콘텐츠→manual-writer, 설정→sphinx-manual-writer)
 
 [빌드만]
   /manual-build
@@ -186,6 +234,12 @@ Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
 "매뉴얼 작성해주고 리뷰해줘. 문제 있으면 자동으로 고쳐줘"
 ```
 → manual-write (Phase 1~6) → manual-review (--fix) → 점수 보고
+
+### DOCX 파일을 Sphinx 문서로 변환
+```
+"manual.docx 파일을 Sphinx 매뉴얼로 변환해줘"
+```
+→ Phase 1-E: pandoc으로 Markdown 변환 → Sphinx 프로젝트에 통합 → 다국어 문서 생성
 
 ### 검토만 요청
 ```
@@ -274,5 +328,23 @@ docs/
 - Sphinx/Python 환경이 필요 — `pip install sphinx sphinx-rtd-theme myst-parser sphinx-copybutton`
 - PDF 빌드는 LaTeX 패키지 별도 설치 필요 (`texlive-latex-recommended` 등)
 - CHM 파일 변환은 `libchm-bin` 또는 `pychm` 패키지 필요
+- DOCX 파일 변환은 `pandoc` 패키지 필요 (`sudo apt-get install pandoc`)
 - Doxygen `@ref`로 참조된 API 심볼은 autodoc 대상이 아니면 인라인 코드로 대체됨
 - 이미지 파일은 자동 복사되지만, 스크린샷은 사용자가 직접 추가해야 함
+
+## 11. 변경 이력
+
+### v1.1.0
+
+- **DOCX 입력 지원 추가**: pandoc 기반 Phase 1-E로 DOCX 파일을 Sphinx 문서로 변환 가능
+- **에이전트 역할 경계 명확화**: 4개 에이전트에 담당/비담당 범위(범위 섹션) 추가
+- **에이전트 간 상호참조 추가**: 각 에이전트가 범위 밖 작업을 적절한 에이전트에 위임하는 구조 명시
+- **트리거 키워드 보강**: manual-writer, windows-manual-writer에 자동 위임 트리거 키워드 추가
+- **claude-md에 manual-reviewer 등록**: 프로젝트 CLAUDE.md 템플릿에 manual-reviewer 에이전트 포함
+
+### v1.0.0
+
+- 초기 릴리스: 4개 스킬 + 4개 에이전트
+- CHM/MD/소스코드/Doxygen 입력 지원
+- 다국어(한/영/일) Sphinx 문서 생성
+- 6개 카테고리 100점 만점 품질 리뷰

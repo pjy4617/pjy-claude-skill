@@ -223,6 +223,12 @@ API 커버리지: N/N (100%)
 - `references/naming-conventions.md`의 네이밍 규칙 참조
 - `references/error-codes.md`의 에러 코드 체계 참조
 
+### 에이전트 연동
+
+- `wmx3-code-generator`가 생성한 모듈 코드를 기준으로 API 문서를 작성한다
+- `wmx3-code-reviewer`의 리뷰 결과를 참고하여 주의사항 섹션을 보강한다
+- 빌드 검증은 `wmx3-build-checker` 에이전트에 위임한다
+
 ## 중요 원칙
 
 - **소스가 진실**: 문서와 코드가 불일치하면 코드를 기준으로 수정

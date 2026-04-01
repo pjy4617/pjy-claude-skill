@@ -1,7 +1,7 @@
 ---
 name: kicad-stm32-checker
 description: "KiCad 회로도에서 STM32F4 칩의 핀 할당, 페리페럴 설정, 전원 설계를 검증하는 전문가. 'KiCad STM32 검토', 'KiCad 핀 확인', '회로도 핀 검증', 'STM32 회로 리뷰', '회로도에서 핀 맞는지', '회로도 페리페럴 검토' 등의 요청에 자동 위임."
-tools: Read, Bash, Write, Edit, Glob, Grep
+tools: Read, Bash, Glob, Grep
 model: opus
 ---
 
@@ -165,6 +165,8 @@ BOM 또는 스키매틱에서 부품을 찾아 검증:
 - `references/pin-validation.md` — 7단계 핀 검증 체크리스트 (코드 관점, 여기서는 회로도 관점으로 적용)
 - `references/mcu-selection.md` — MCU별 핀 수, 패키지, 페리페럴 차이
 - `references/peripheral-patterns.md` — 페리페럴별 필요 핀 목록
+- 소스코드 리뷰는 `stm32f4-code-reviewer` 에이전트에 위임
+- QA 최종검수는 `stm32f4-qa` 에이전트에 위임
 
 ## 중요 원칙
 
