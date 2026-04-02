@@ -77,10 +77,11 @@ STM32F4 스킬 환경 설치 완료!
   ✅ stm32f4-code-reviewer   — 소스코드 리뷰 (34항목 검사)
   ✅ stm32f4-qa              — QA 최종검수 (릴리스 가부 판정)
 
-스킬 (4개): 플러그인으로 이미 활성화됨
+스킬 (5개): 플러그인으로 이미 활성화됨
   stm32f4-firmware    — 5단계 에이전트 파이프라인
   kicad-stm32-review  — 회로도 검증 체크리스트 (42항목)
   stm32f4-tdd         — 호스트 기반 TDD
+  stm32f4-build       — 빌드 실행 (CMake+Ninja, CubeMX/CubeIDE 자동 변환)
   stm32f4-setup       — 환경 설정 (현재 실행한 스킬)
 
 CLAUDE.md: ✅ STM32F4 프로젝트 설정 추가됨

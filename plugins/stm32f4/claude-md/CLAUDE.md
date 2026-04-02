@@ -1,21 +1,25 @@
 ## STM32F4 Firmware Project
 
+### 빌드 환경 (기본)
+- **STM32CubeIDE for VS Code** (ST 공식 VS Code 확장) — 기본 빌드 환경
+  - STM32CubeIDE 번들 툴체인 자동 사용 (cmake, ninja, arm-none-eabi-gcc)
+  - STM32CubeProgrammer 번들 포함 (플래싱)
+  - 설치: VS Code Extensions에서 "STM32 VS Code Extension" 검색
+
 ### 최소 요구 버전
-- arm-none-eabi-gcc: 10.3 이상
-- CMake: 3.22 이상 (CMake 빌드 사용 시)
-- Ninja: 1.10 이상 (CMake 빌드 사용 시)
-- OpenOCD: 0.11 이상 (또는 ST-LINK GDB Server)
+- STM32CubeIDE: 1.13 이상 (번들 툴체인 제공)
 - Python: 3.6 이상 (KiCad XDC 생성 스크립트용)
 - KiCad: 8.0 이상 (회로도 검증 사용 시, 선택 사항)
 - Unity/FFF: 테스트 실행 시 자동 다운로드
 
 ### 환경
+- IDE: VS Code + STM32CubeIDE for VS Code 확장 (기본)
 - OS: Linux (Ubuntu/WSL)
 - Language: C (C11)
 - MCU: STM32F4 시리즈 (F401, F407, F411, F429, F446)
-- 컴파일러: arm-none-eabi-gcc (기본), Arm Clang (대안)
-- 빌드 시스템: CMake + Ninja (기본), Makefile (대안)
-- 디버거: OpenOCD + cortex-debug 또는 ST 공식 확장
+- 컴파일러: arm-none-eabi-gcc (STM32CubeIDE 번들)
+- 빌드 시스템: CMake + Ninja (STM32CubeIDE 번들)
+- 디버거: ST 공식 확장 (stlinkgdbtarget) 또는 cortex-debug + OpenOCD
 
 ### 디렉토리 규칙
 - `Core/Inc/` `Core/Src/` — main, HAL 설정, 인터럽트 핸들러
@@ -40,19 +44,26 @@
 
 ### 빌드 방법
 ```bash
-# CMake (기본)
+# STM32CubeIDE for VS Code 환경 (기본)
+# VS Code Tasks 또는 stm32f4-build 스킬 사용 권장
 cmake --preset debug && cmake --build --preset debug
 
-# Makefile (대안)
-make -j$(nproc) DEBUG=1
+# 플래싱 (STM32CubeProgrammer CLI)
+STM32_Programmer_CLI -c port=SWD -d build/Debug/project.bin 0x08000000 -v -rst
 
-# 플래싱
-make flash  # 또는 cmake --build --preset debug --target flash
+# 플래싱 (OpenOCD 폴백)
+openocd -f openocd.cfg -c "program build/Debug/project.bin verify reset exit 0x08000000"
 
 # 테스트 (호스트 기반)
 cd test && make
 ```
 
-### 에이전트/스킬 구성 (3 스킬 + 2 에이전트)
-- 스킬: stm32f4-firmware, kicad-stm32-review, stm32f4-tdd
-- 에이전트: kicad-stm32-checker, stm32f4-test-writer
+### 에이전트/스킬 구성 (5 스킬 + 4 에이전트)
+- 스킬: stm32f4-firmware, kicad-stm32-review, stm32f4-tdd, stm32f4-build, stm32f4-setup
+- 에이전트: kicad-stm32-checker, stm32f4-test-writer, stm32f4-code-reviewer, stm32f4-qa
+
+### 빌드 실행 (stm32f4-build 스킬)
+- 프로젝트 자동 감지: .cproject (STM32CubeIDE) / Makefile (CubeMX) → CMakeLists.txt 자동 생성
+- STM32CubeIDE 번들 툴체인 자동 탐지 (cmake, ninja, arm-none-eabi-gcc)
+- 빌드: `cmake --preset debug && cmake --build --preset debug`
+- 플래싱: STM32CubeProgrammer CLI 또는 OpenOCD

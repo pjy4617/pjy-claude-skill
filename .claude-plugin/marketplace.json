@@ -14,7 +14,7 @@
       "name": "stm32f4",
       "source": "./plugins/stm32f4",
       "description": "STM32F4 펌웨어 풀스택 개발: 5단계 에이전트 파이프라인(요구사항→아키텍처→코드→빌드→검토) + KiCad 회로도 핀/페리페럴 검증(42항목) + 호스트 기반 TDD(Unity+FFF) + CMake+Ninja 빌드 실행(CubeMX/CubeIDE 자동 변환) + 소스코드 리뷰(34항목) + QA 최종검수. 5개 스킬 + 4개 에이전트.",
-      "version": "1.2.0"
+      "version": "1.3.0"
     },
     {
       "name": "wmx3md",

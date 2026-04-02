@@ -13,10 +13,17 @@ argument-hint: "[debug|release] [--flash] [--clean]"
 STM32F4 프로젝트를 CMake + Ninja로 빌드한다.
 CubeMX/CubeIDE 프로젝트를 자동 감지하여 CMakeLists.txt를 생성하고, STM32CubeIDE 번들 툴체인으로 크로스 컴파일한다.
 
-## 전제 조건
+## 기본 빌드 환경: STM32CubeIDE for VS Code
 
-- **STM32CubeIDE 설치** (번들 툴체인 사용: cmake, ninja, arm-none-eabi-gcc)
-- **VS Code** 에서 개발 (STM32CubeIDE는 툴체인 제공 용도)
+이 스킬은 **STM32CubeIDE for VS Code** (ST 공식 VS Code 확장)를 기본 빌드 환경으로 한다.
+
+- **STM32CubeIDE** 설치 시 번들되는 cmake, ninja, arm-none-eabi-gcc를 자동 탐지
+- **STM32CubeProgrammer** 번들 CLI로 플래싱
+- **VS Code**에서 개발 — STM32CubeIDE는 IDE가 아닌 툴체인 제공 용도로만 사용
+
+### 필수 설치
+1. **STM32CubeIDE** — 번들 툴체인 (cmake, ninja, arm-none-eabi-gcc, STM32CubeProgrammer)
+2. **VS Code** + **STM32 VS Code Extension** (ST 공식)
 
 ---
 
@@ -80,16 +87,13 @@ arm-none-eabi-gcc --version | head -1
 ```
 ❌ 빌드 도구를 찾을 수 없습니다.
 
-필요한 도구:
-  - arm-none-eabi-gcc (10.3+)
-  - cmake (3.22+)
-  - ninja (1.10+)
-
-설치 방법:
-  1. STM32CubeIDE 설치 (권장 — 모든 도구 번들)
+기본 환경 (권장):
+  1. STM32CubeIDE 설치 (모든 도구 번들: cmake, ninja, arm-none-eabi-gcc, STM32CubeProgrammer)
      https://www.st.com/en/development-tools/stm32cubeide.html
-  2. 또는 개별 설치:
-     sudo apt install cmake ninja-build gcc-arm-none-eabi
+  2. VS Code에서 "STM32 VS Code Extension" 설치
+
+대안 (개별 설치):
+  sudo apt install cmake ninja-build gcc-arm-none-eabi
 ```
 
 ---
