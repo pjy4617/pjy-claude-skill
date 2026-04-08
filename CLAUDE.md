@@ -44,6 +44,17 @@ plugins/
 │   ├── agents/
 │   ├── claude-md/CLAUDE.md
 │   └── docs/
+├── kicad/                         ← KiCad 회로도 플러그인 (3 스킬 + 3 에이전트)
+│   ├── plugin.json
+│   ├── skills/
+│   │   ├── kicad-design/          ← PRD/설계사양서 → 회로도 생성
+│   │   │   └── references/        ← S-expression 포맷 가이드
+│   │   ├── kicad-review/          ← 8단계 회로도 리뷰 + BOM 생성
+│   │   │   └── references/        ← 체크리스트, 파싱 가이드, 데이터시트 검색
+│   │   └── kicad-setup/           ← 에이전트 설치
+│   ├── agents/
+│   ├── claude-md/CLAUDE.md
+│   └── docs/
 └── manual/                        ← Sphinx 문서화 플러그인 (4 스킬 + 4 에이전트)
     ├── plugin.json
     ├── skills/

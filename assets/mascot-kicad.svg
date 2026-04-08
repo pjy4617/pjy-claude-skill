@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#1a2a1a"/>
+      <stop offset="100%" stop-color="#0d170d"/>
+    </radialGradient>
+    <radialGradient id="bodyGrad" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#4a8c3f"/>
+      <stop offset="60%" stop-color="#2d6b24"/>
+      <stop offset="100%" stop-color="#1e4d17"/>
+    </radialGradient>
+    <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="70%" stop-color="#e8f8e8"/>
+      <stop offset="100%" stop-color="#b8e8b8"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- 배경 -->
+  <rect width="1080" height="1080" fill="url(#bgGrad)"/>
+
+  <!-- 회로 패턴 배경 (KiCad 스키매틱 느낌) -->
+  <g opacity="0.12" stroke="#4a8c3f" stroke-width="1.5" fill="none">
+    <!-- 수평선 -->
+    <line x1="80" y1="200" x2="300" y2="200"/>
+    <line x1="780" y1="200" x2="1000" y2="200"/>
+    <line x1="80" y1="880" x2="300" y2="880"/>
+    <line x1="780" y1="880" x2="1000" y2="880"/>
+    <!-- 수직선 -->
+    <line x1="200" y1="100" x2="200" y2="300"/>
+    <line x1="880" y1="100" x2="880" y2="300"/>
+    <line x1="200" y1="780" x2="200" y2="980"/>
+    <line x1="880" y1="780" x2="880" y2="980"/>
+    <!-- 저항 심볼 -->
+    <polyline points="100,200 120,200 130,185 150,215 170,185 190,215 210,185 220,200 240,200"/>
+    <polyline points="840,200 860,200 870,185 890,215 910,185 930,215 950,185 960,200 980,200"/>
+    <!-- 캐패시터 심볼 -->
+    <line x1="185" y1="860" x2="185" y2="900"/>
+    <line x1="215" y1="860" x2="215" y2="900"/>
+    <line x1="185" y1="880" x2="150" y2="880"/>
+    <line x1="215" y1="880" x2="250" y2="880"/>
+    <line x1="865" y1="860" x2="865" y2="900"/>
+    <line x1="895" y1="860" x2="895" y2="900"/>
+    <line x1="865" y1="880" x2="830" y2="880"/>
+    <line x1="895" y1="880" x2="930" y2="880"/>
+    <!-- IC 아웃라인 -->
+    <rect x="100" y="400" width="80" height="120" rx="4"/>
+    <rect x="900" y="400" width="80" height="120" rx="4"/>
+    <!-- IC 핀 -->
+    <line x1="80" y1="430" x2="100" y2="430"/>
+    <line x1="80" y1="460" x2="100" y2="460"/>
+    <line x1="80" y1="490" x2="100" y2="490"/>
+    <line x1="180" y1="430" x2="200" y2="430"/>
+    <line x1="180" y1="460" x2="200" y2="460"/>
+    <line x1="180" y1="490" x2="200" y2="490"/>
+    <line x1="880" y1="430" x2="900" y2="430"/>
+    <line x1="880" y1="460" x2="900" y2="460"/>
+    <line x1="880" y1="490" x2="900" y2="490"/>
+    <line x1="980" y1="430" x2="1000" y2="430"/>
+    <line x1="980" y1="460" x2="1000" y2="460"/>
+    <line x1="980" y1="490" x2="1000" y2="490"/>
+    <!-- 접합점 -->
+    <circle cx="200" cy="200" r="4" fill="#4a8c3f"/>
+    <circle cx="880" cy="200" r="4" fill="#4a8c3f"/>
+    <circle cx="200" cy="880" r="4" fill="#4a8c3f"/>
+    <circle cx="880" cy="880" r="4" fill="#4a8c3f"/>
+    <!-- GND 심볼 -->
+    <g transform="translate(540, 950)">
+      <line x1="0" y1="0" x2="0" y2="15"/>
+      <line x1="-15" y1="15" x2="15" y2="15"/>
+      <line x1="-10" y1="20" x2="10" y2="20"/>
+      <line x1="-5" y1="25" x2="5" y2="25"/>
+    </g>
+    <!-- VCC 심볼 -->
+    <g transform="translate(540, 100)">
+      <line x1="0" y1="15" x2="0" y2="0"/>
+      <line x1="-10" y1="8" x2="0" y2="0"/>
+      <line x1="10" y1="8" x2="0" y2="0"/>
+    </g>
+  </g>
+
+  <!-- 몸체 그림자 -->
+  <ellipse cx="540" cy="750" rx="200" ry="20" fill="#000" opacity="0.2" filter="url(#softGlow)"/>
+
+  <!-- 몸체 -->
+  <g filter="url(#shadow)">
+    <ellipse cx="540" cy="520" rx="220" ry="260" fill="url(#bodyGrad)"/>
+    <!-- 몸체 하이라이트 -->
+    <ellipse cx="500" cy="420" rx="120" ry="140" fill="#5a9c4f" opacity="0.15"/>
+  </g>
+
+  <!-- 얼굴 -->
+  <g>
+    <!-- 눈 -->
+    <ellipse cx="460" cy="470" rx="38" ry="42" fill="url(#eyeGlow)" filter="url(#glow)"/>
+    <ellipse cx="620" cy="470" rx="38" ry="42" fill="url(#eyeGlow)" filter="url(#glow)"/>
+    <!-- 동공 -->
+    <ellipse cx="468" cy="475" rx="16" ry="18" fill="#1a2a1a"/>
+    <ellipse cx="628" cy="475" rx="16" ry="18" fill="#1a2a1a"/>
+    <!-- 동공 하이라이트 -->
+    <circle cx="474" cy="468" r="6" fill="#fff" opacity="0.9"/>
+    <circle cx="634" cy="468" r="6" fill="#fff" opacity="0.9"/>
+    <!-- 미소 -->
+    <path d="M 480 550 Q 540 590 600 550" stroke="#1e4d17" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- 왼손: 회로도 들고 있는 모습 -->
+  <g>
+    <!-- 팔 -->
+    <path d="M 340 560 Q 260 530 230 440" stroke="#2d6b24" stroke-width="28" fill="none" stroke-linecap="round"/>
+    <!-- 회로도 종이 -->
+    <g transform="translate(160, 330) rotate(-10)">
+      <rect x="0" y="0" width="120" height="90" rx="4" fill="#f0f5e8" stroke="#4a8c3f" stroke-width="2"/>
+      <!-- 회로도 내용 (미니) -->
+      <rect x="15" y="15" width="30" height="20" rx="2" fill="none" stroke="#2d6b24" stroke-width="1.5"/>
+      <line x1="10" y1="25" x2="15" y2="25" stroke="#2d6b24" stroke-width="1.5"/>
+      <line x1="45" y1="25" x2="60" y2="25" stroke="#2d6b24" stroke-width="1.5"/>
+      <line x1="60" y1="25" x2="60" y2="50" stroke="#2d6b24" stroke-width="1.5"/>
+      <rect x="50" y="50" width="20" height="15" rx="2" fill="none" stroke="#2d6b24" stroke-width="1.5"/>
+      <line x1="70" y1="57" x2="90" y2="57" stroke="#2d6b24" stroke-width="1.5"/>
+      <!-- 저항 심볼 미니 -->
+      <polyline points="75,57 78,52 84,62 90,52 93,57" stroke="#2d6b24" stroke-width="1" fill="none"/>
+      <!-- 핀 dot -->
+      <circle cx="60" cy="25" r="2" fill="#4a8c3f"/>
+    </g>
+  </g>
+
+  <!-- 오른손: 돋보기 (리뷰 상징) -->
+  <g>
+    <!-- 팔 -->
+    <path d="M 740 560 Q 820 530 850 440" stroke="#2d6b24" stroke-width="28" fill="none" stroke-linecap="round"/>
+    <!-- 돋보기 -->
+    <g transform="translate(850, 360) rotate(15)">
+      <!-- 손잡이 -->
+      <line x1="30" y1="30" x2="70" y2="70" stroke="#8B7355" stroke-width="10" stroke-linecap="round"/>
+      <!-- 렌즈 -->
+      <circle cx="15" cy="15" r="30" fill="#e8f0ff" fill-opacity="0.3" stroke="#6a9f5f" stroke-width="4"/>
+      <!-- 렌즈 반사 -->
+      <path d="M 0 5 Q 5 -5 15 -2" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"/>
+      <!-- 체크마크 (리뷰 OK) -->
+      <path d="M 5 15 L 12 22 L 25 5" stroke="#4a8c3f" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- 머리 위 안테나 (핀 헤더 모양) -->
+  <g>
+    <line x1="500" y1="280" x2="500" y2="230" stroke="#6aac5f" stroke-width="4"/>
+    <rect x="493" y="218" width="14" height="14" rx="2" fill="#4a8c3f" stroke="#6aac5f" stroke-width="1.5"/>
+    <line x1="540" y1="270" x2="540" y2="210" stroke="#6aac5f" stroke-width="4"/>
+    <rect x="533" y="198" width="14" height="14" rx="2" fill="#4a8c3f" stroke="#6aac5f" stroke-width="1.5"/>
+    <line x1="580" y1="280" x2="580" y2="230" stroke="#6aac5f" stroke-width="4"/>
+    <rect x="573" y="218" width="14" height="14" rx="2" fill="#4a8c3f" stroke="#6aac5f" stroke-width="1.5"/>
+  </g>
+
+  <!-- 배 부분 KiCad 로고 영역 -->
+  <g transform="translate(540, 620)" text-anchor="middle">
+    <!-- 회로 기판 패턴 (배 부분) -->
+    <rect x="-60" y="-25" width="120" height="50" rx="8" fill="#1e4d17" opacity="0.5"/>
+    <text font-family="monospace" font-size="28" font-weight="bold" fill="#8fd47e" dy="8">KiCad</text>
+  </g>
+
+  <!-- 발 -->
+  <ellipse cx="460" cy="770" rx="60" ry="20" fill="#1e4d17"/>
+  <ellipse cx="620" cy="770" rx="60" ry="20" fill="#1e4d17"/>
+
+  <!-- 하단 텍스트 -->
+  <text x="540" y="870" text-anchor="middle" font-family="sans-serif" font-size="32" font-weight="bold" fill="#6aac5f" opacity="0.8">Schematic Design + Review</text>
+  <text x="540" y="910" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#4a8c3f" opacity="0.6">3 Skills + 3 Agents</text>
+</svg>
