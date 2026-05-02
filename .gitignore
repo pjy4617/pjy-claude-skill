@@ -4,6 +4,7 @@ build/
 # 임시 디렉토리
 _extract/
 temp/
+.temp/
 
 # OMC 상태
 .omc/
