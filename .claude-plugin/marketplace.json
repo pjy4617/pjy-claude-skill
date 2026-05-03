@@ -37,8 +37,8 @@
     {
       "name": "parallel-delegation",
       "source": "./plugins/parallel-delegation",
-      "description": "서브에이전트 병렬 위임 워크플로 스킬: 독립 작업을 단일 응답에 다수 Agent 호출로 묶어 동시 실행. 8단계 절차(분해→매칭→모델 라우팅→단일 메시지 묶기→Self-contained 프롬프트→Worktree 격리→Foreground/Background→합성·검증) + 흔한 함정 대응. 다중 도메인·다중 파일 작업 벽시계 시간 단축. 1개 스킬.",
-      "version": "1.0.0"
+      "description": "서브에이전트 병렬 위임 워크플로 + 3-role 에이전트(구현/테스트/구현품질검증): 독립 작업을 단일 응답에 다수 Agent 호출로 묶어 동시 실행. 자기 검증의 함정 차단을 위한 역할 분리 패턴 + 카탈로그 자동 발견·description 매칭 메커니즘. 누락 역할만 보충 설치하는 setup 스킬 포함(사용자 정의·OMC 에이전트 우선). 2개 스킬 + 3개 에이전트.",
+      "version": "1.1.0"
     }
   ]
 }

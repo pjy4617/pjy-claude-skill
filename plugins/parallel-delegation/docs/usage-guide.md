@@ -28,7 +28,17 @@
 claude marketplace install parallel-delegation
 ```
 
-설치 후 별도의 `*-setup` 단계 없이 자동으로 활성화됩니다 (에이전트 복사 단계가 없는 순수 스킬 플러그인).
+### 3-role 에이전트 설치 (권장)
+
+타겟 프로젝트에서 3-role 에이전트(구현/테스트/구현품질검증)를 사용하려면:
+
+```
+/parallel-delegation-setup
+```
+
+- 기존 `.claude/agents/`와 OMC 설치 여부를 자동 스캔
+- 누락된 역할만 번들에서 보충 (사용자 정의 에이전트는 덮어쓰지 않음)
+- OMC 사용자는 OMC 에이전트(`executor`/`test-engineer`/`verifier`)를 그대로 사용 가능
 
 ---
 
@@ -37,14 +47,93 @@ claude marketplace install parallel-delegation
 | 스킬 | 명령어 | 기능 |
 |------|--------|------|
 | 병렬 위임 워크플로 | `/parallel-delegation` | 다중 작업을 단일 메시지에 Agent 호출 묶음으로 동시 실행 |
+| 3-role 에이전트 설치 | `/parallel-delegation-setup` | 구현/테스트/구현품질검증 에이전트를 누락분만 보충 설치 |
 
-이 스킬은 사용자가 명시적으로 호출하지 않아도 다음 트리거에 자동으로 활성화됩니다.
+이 워크플로 스킬은 사용자가 명시적으로 호출하지 않아도 다음 트리거에 자동으로 활성화됩니다.
 
 - `"A 하고 B 하고 C 해줘"` — 다중 의도
 - `"프론트엔드와 백엔드를 동시에"`, `"한꺼번에"`, `"병렬로"`
 - `"subagent 써서"`, `"team으로"`, `"multi-agent"` 언급
 - 서로 다른 파일/도메인을 한 요청에서 다룸
 - 탐색 + 구현이 동시에 가능한 상황
+
+---
+
+## 3-role 분리 패턴 (구현 / 테스트 / 구현품질검증)
+
+같은 에이전트가 구현·테스트·검증을 모두 하면 **자기 검증의 함정**(자기 코드의 약점을 자기가 못 봄)에 빠집니다. parallel-delegation은 다음 3-role 분리를 권장합니다.
+
+| 역할 | 사고방식 | 책임 | 번들 에이전트 | OMC 대응 |
+|------|---------|------|------------|---------|
+| **구현** | "어떻게 동작하게 할지" | 코드 작성·수정·리팩토링. **테스트·검증 안 함** | `pd-implementer` | `oh-my-claudecode:executor` |
+| **테스트** | "무엇이 옳은 동작인지" | 테스트 코드 작성, 엣지 케이스 발굴, TDD. **구현 안 함** | `pd-tester` | `oh-my-claudecode:test-engineer` |
+| **구현품질검증** | "사양·통합·품질을 만족하는가" | 사양 정합성, 누락 엣지, 통합 동작, 외부 정합성 검증. **수정 안 함** | `pd-verifier` | `oh-my-claudecode:verifier` |
+
+### 왜 분리하는가
+
+| 같은 에이전트가 다 하면 | 분리하면 |
+|--------------------|--------|
+| 자기 가정으로 짠 테스트가 자기 가정의 버그를 못 잡음 | 테스트가 구현의 가정을 의심하고 반례를 찾음 |
+| "다 됐다"는 자기 보고를 누구도 검증 못 함 | 검증자가 사양·산출물을 독립 시각으로 대조 |
+| 단위 통과 = 시스템 동작이라고 착각 | 검증자가 통합·외부 정합성까지 확인 |
+
+### 워크플로 예시
+
+```
+사용자: "JWT 인증 미들웨어 만들고 테스트도 짜고 검증해줘"
+
+[메인 에이전트의 단일 응답]
+ ├─ Agent(pd-implementer, model="opus", "JWT 미들웨어 구현 — sec-spec.md §3 따를 것")
+ ├─ Agent(pd-tester,      model="opus", "JWT 미들웨어 테스트 — 만료/위조/none 알고리즘 케이스")
+ └─ Agent(pd-verifier,    model="opus", "구현+테스트 결과를 sec-spec.md와 대조 검증")
+
+[결과 합성]
+  메인이 3 보고를 받아 통합. CRITICAL/MAJOR 발견 시 다음 응답에서
+  pd-implementer / pd-tester에 재위임.
+```
+
+---
+
+## 에이전트 매칭 메커니즘
+
+### 자동 발견 (Discovery)
+
+Claude Code 세션 시작 시 다음 위치를 스캔해 `subagent_type` 카탈로그를 만듭니다. **사용자가 별도로 등록할 필요 없습니다.**
+
+| 우선순위 | 출처 | 예 |
+|---------|------|-----|
+| 1 | 프로젝트 `.claude/agents/*.md` | `pd-implementer`, `kicad-schematic-reviewer` |
+| 2 | 플러그인 제공 (`<plugin>:<agent>`) | `oh-my-claudecode:executor` |
+| 3 | Claude Code 내장 | `Explore`, `general-purpose`, `Plan` |
+
+### 자동 매칭 (Matching)
+
+§2(에이전트 매칭) 단계에서 메인 에이전트가 카탈로그를 훑어 **description 적합도가 가장 높은** 에이전트를 선택합니다. 출처와 무관하게 description만으로 결정됩니다.
+
+> 우선순위는 **이름 충돌 시** 어떤 에이전트가 그 이름을 차지하는지의 해석 순서일 뿐, 매칭 자체는 description 기반입니다.
+
+### description 품질이 매칭 정확도를 결정
+
+사용자 정의 에이전트의 description이 모호하면 매칭이 빗나가 `general-purpose`로 폴백됩니다.
+
+```yaml
+# 나쁨 — 매칭 실패 가능
+description: "회로도 관련 작업"
+
+# 좋음 — 매칭 정확
+description: "KiCad 회로도(.kicad_sch) 8단계 리뷰 — PDF 시각 검토,
+  라이브러리 비교, 데이터시트 정합성, ERC. '회로도 리뷰',
+  '핀 검증', 'BOM 검토' 요청 시 자동 선택."
+```
+
+좋은 description의 조건:
+- 역할 한 줄 요약 (무엇을 하는 에이전트인가)
+- 트리거 키워드 ("X 요청 시 자동 선택")
+- 책임 범위 (포함/제외)
+
+### 사용자 정의 에이전트도 자동 사용된다
+
+`.claude/agents/my-implementer.md`를 만들어두면 자동으로 카탈로그에 등록되고, description이 적합하면 메인이 자동 선택합니다. **번들 에이전트는 빈 역할만 채우는 보조 역할**일 뿐, 사용자 의도를 침범하지 않습니다 — 이를 위해 setup 스킬이 역할 매핑·중복 체크를 수행합니다.
 
 ---
 

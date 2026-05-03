@@ -28,19 +28,47 @@ description: How to delegate independent work units to multiple subagents in par
 - 같은 파일을 동시 수정해야 하는가? → 병렬 + worktree 격리
 
 ### 2. 에이전트 매칭
-각 작업에 가장 적합한 `subagent_type`을 고른다. 일반론:
 
+#### 카탈로그 발견은 자동
+Claude Code 세션 시작 시 다음 위치를 스캔해 `subagent_type` 카탈로그를 만든다. 사용자가 별도로 등록할 필요 없다.
+
+| 우선순위 | 출처 | 비고 |
+|---------|------|------|
+| 1 | 프로젝트 `.claude/agents/*.md` | 도메인 전문 에이전트 |
+| 2 | 플러그인 제공 (`<plugin>:<agent>`) | OMC 등 |
+| 3 | Claude Code 내장 | `Explore`, `general-purpose`, `Plan` |
+
+각 에이전트의 frontmatter `description`이 메인 시스템 프롬프트의 Agent 도구 설명에 노출되어, 메인은 카탈로그를 **이미 알고 있는 상태**로 §2에 진입한다.
+
+#### 매칭은 description 적합도로 결정
+"우선순위"는 이름 충돌 시 해석 순서일 뿐, **매칭은 출처와 무관하게 description 적합도로 결정**된다. 사용자 정의 에이전트도 description이 충실하면 자동 선택된다.
+
+> description이 모호하면(예: "회로도 관련 작업") 매칭이 빗나가 `general-purpose`로 폴백된다. 좋은 description은 ① 역할 한 줄 요약, ② 트리거 키워드("X 요청 시 자동 선택"), ③ 책임 범위(포함/제외)를 담는다.
+
+#### 권장 패턴: 3-role 분리 (구현 / 테스트 / 구현품질검증)
+같은 에이전트가 구현·테스트·검증을 모두 하면 **자기 검증의 함정**(자기 코드의 약점을 자기가 못 봄)에 빠진다. 다음 3-role로 분리하면 함정이 구조적으로 차단된다.
+
+| 역할 | 사고방식 | 번들 에이전트 | OMC 대응 |
+|------|---------|------------|---------|
+| **구현** | "어떻게 동작하게 할지" | `pd-implementer` | `oh-my-claudecode:executor` |
+| **테스트** | "무엇이 옳은 동작인지" | `pd-tester` | `oh-my-claudecode:test-engineer` |
+| **구현품질검증** | "결과물이 사양·통합·품질을 만족하는가" | `pd-verifier` | `oh-my-claudecode:verifier` |
+
+이 3종은 `/parallel-delegation-setup` 스킬로 설치한다. 설치 시 기존 사용자 정의 에이전트와의 역할 중복을 자동 검사해 누락된 것만 보충한다 (덮어쓰기 안 함).
+
+#### 그 외 작업 유형
 | 작업 유형 | 권장 에이전트 | 모델 (§3 정책) |
 |---|---|---|
 | 코드베이스 탐색 / 심볼 위치 | `Explore` | sonnet |
-| 단순 구현 / 리팩토링 | 일반 구현 에이전트 | opus |
-| 복잡한 자율 작업 | 깊이 있는 구현 에이전트 | opus |
-| 코드/보안 리뷰 | 리뷰 전문 에이전트 | opus |
-| 테스트 작성 / 전략 | 테스트 엔지니어 | opus |
-| 빌드 실패 / 타입 오류 | 빌드 픽서 | opus |
-| 검증 / 완료 증거 수집 | 검증 에이전트 | opus |
+| 구현 | `pd-implementer` 또는 OMC `executor` | opus |
+| 테스트 작성 | `pd-tester` 또는 OMC `test-engineer` | opus |
+| 구현품질검증 | `pd-verifier` 또는 OMC `verifier` | opus |
+| 복잡한 자율 작업 | OMC `deep-executor` 등 | opus |
+| 코드/보안 리뷰 | OMC `code-reviewer`, `security-reviewer` | opus |
+| 빌드 실패 / 타입 오류 | OMC `build-fixer` | opus |
+| 시스템 설계 | OMC `architect` | opus |
 
-프로젝트마다 도메인 전문 에이전트가 `.claude/agents/`에 있을 수 있다. 있다면 우선 사용한다. 카탈로그의 에이전트 frontmatter에 적힌 기본 모델(haiku/sonnet/opus)은 정보용이며, 본 스킬은 위 표의 §3 정책 모델로 호출한다.
+도메인 전문 에이전트가 있으면 우선 사용한다 (예: `kicad-schematic-reviewer`는 KiCad 회로도 리뷰 작업에 자동 매칭). 카탈로그의 에이전트 frontmatter에 적힌 기본 모델(haiku/sonnet/opus)은 정보용이며, 본 스킬은 위 표의 §3 정책 모델로 호출한다.
 
 ### 3. 모델 라우팅
 **기본값: `model: "opus"`. 단순 탐색만 `model: "sonnet"`.**
@@ -53,10 +81,10 @@ description: How to delegate independent work units to multiple subagents in par
 | 그 외 모든 호출 — 구현, 분석, 리뷰, 테스트, 검증, 디버깅, 리팩토링 등 | **`opus`** |
 
 ```
-Agent(Explore,         model="sonnet", "기존 X 위치 찾기")     ← 단순 탐색
-Agent(executor,        model="opus",   "...")                  ← 구현
-Agent(code-reviewer,   model="opus",   "...")                  ← 리뷰·검증
-Agent(test-engineer,   model="opus",   "...")                  ← 테스트 작성
+Agent(Explore,        model="sonnet", "기존 X 위치 찾기")    ← 단순 탐색 (내장)
+Agent(pd-implementer, model="opus",   "...")                 ← 구현
+Agent(pd-tester,      model="opus",   "...")                 ← 테스트 작성
+Agent(pd-verifier,    model="opus",   "...")                 ← 구현품질검증
 ```
 
 판단 기준: 서브에이전트가 **읽고 보고만** 하면 sonnet, **판단·작성·수정**을 하면 opus. `Explore` 에이전트 호출은 거의 항상 sonnet, 그 외 에이전트는 거의 항상 opus다. 의심스러우면 opus.
@@ -68,10 +96,10 @@ Agent(test-engineer,   model="opus",   "...")                  ← 테스트 작
 
 ```
 [하나의 응답]
- ├─ Agent(executor,      "UI 컴포넌트 작성")     ┐
- ├─ Agent(executor,      "API 핸들러 작성")       ├─ 동시 시작
- ├─ Agent(architect,     "DB 스키마 설계")        │
- └─ Agent(test-engineer, "통합 테스트 작성")     ┘
+ ├─ Agent(pd-implementer, "UI 컴포넌트 작성")    ┐
+ ├─ Agent(pd-implementer, "API 핸들러 작성")      ├─ 동시 시작
+ ├─ Agent(pd-tester,      "통합 테스트 작성")     │
+ └─ Agent(pd-verifier,    "사양 정합성 검증")     ┘
 ```
 
 ### 5. Self-contained 프롬프트 작성
