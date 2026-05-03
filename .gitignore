@@ -6,6 +6,22 @@ _extract/
 temp/
 .temp/
 
+# Claude Code 개인 설정 (팀 공유 X)
+.claude/settings.local.json
+
+# 스킬 평가 워크스페이스 — raw 응답·timing은 무시, benchmark.md/.json은 유지
+**/skills/*-workspace/iteration-*/eval-*/
+**/skills/*-workspace/skill-snapshot/
+
+# 편집기 / IDE
+.vscode/
+.idea/
+*.swp
+
+# Python 캐시 (검증 명령용)
+__pycache__/
+*.pyc
+
 # OMC 상태
 .omc/
 

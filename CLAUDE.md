@@ -55,6 +55,13 @@ plugins/
 │   ├── agents/
 │   ├── claude-md/CLAUDE.md
 │   └── docs/
+├── parallel-delegation/           ← 워크플로 플러그인 (2 스킬 + 3 에이전트, 도메인 없음)
+│   ├── plugin.json
+│   ├── skills/
+│   │   ├── parallel-delegation/      ← 8단계 병렬 위임 절차
+│   │   └── parallel-delegation-setup/ ← 3-role 누락분만 보충 설치
+│   ├── agents/                       ← pd-implementer / pd-tester / pd-verifier
+│   └── docs/
 └── manual/                        ← Sphinx 문서화 플러그인 (4 스킬 + 4 에이전트)
     ├── plugin.json
     ├── skills/
@@ -78,6 +85,9 @@ plugins/
 
 ## 검증
 
+> Windows에서는 `python3`/`python`이 MS Store alias로 잡혀 exit 49로 실패할 수 있다.
+> PowerShell 대안: `Get-Content '.claude-plugin/marketplace.json' -Raw | ConvertFrom-Json | Out-Null`
+
 ```bash
 # marketplace.json JSON 유효성
 python3 -c "import json; json.load(open('.claude-plugin/marketplace.json')); print('OK')"
@@ -96,14 +106,25 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 
 ## 새 플러그인 추가 절차
 
+플러그인 종류:
+- **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
+- **워크플로 플러그인**(parallel-delegation): 도메인 무관 절차. `claude-md/` 없음 + `*-setup`이 누락분만 보충
+
 1. `plugins/<이름>/plugin.json` 생성 (`name`, `version`, `description`, `skills` 필드)
 2. `plugins/<이름>/skills/<스킬명>/SKILL.md` 생성
 3. `.claude-plugin/marketplace.json`의 `plugins` 배열에 항목 추가 (`name`, `source`, `description`, `version`)
 4. 에이전트가 있으면 `plugins/<이름>/agents/` + `*-setup` 스킬 추가
-5. `claude-md/CLAUDE.md` 템플릿 추가 (타겟 프로젝트용)
+5. 도메인 플러그인이면 `claude-md/CLAUDE.md` 템플릿 추가 (타겟 프로젝트용); 워크플로 플러그인은 생략
 
 ## 언어 규칙
 
 - 스킬/에이전트 본문, 주석, 문서: 한국어
 - 프론트매터 `name` 필드, JSON 키: 영어 (kebab-case)
 - `description` 필드: 한국어 (트리거 키워드 포함)
+
+## 자주 만나는 함정
+
+- `Glob`은 파일만 매치 — 디렉토리 확인은 PowerShell `Get-ChildItem -Directory` 또는 `ls`
+- JSON 숫자에 `+` 접두사(`+587`) 금지 — 부호 표기는 문자열 필드(`"+1.4%"`)로
+- Windows: `python3`/`python` 명령은 MS Store alias로 exit 49 가능 — PowerShell `ConvertFrom-Json` 권장
+- 에이전트 이름은 플러그인별 prefix(`pd-`, `kicad-`, `stm32f4-`)로 — OMC 및 타 플러그인 에이전트와의 이름 충돌 방지
