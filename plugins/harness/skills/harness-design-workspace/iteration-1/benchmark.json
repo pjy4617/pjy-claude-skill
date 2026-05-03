@@ -1,0 +1,52 @@
+{
+  "skill_name": "harness-design",
+  "iteration": 1,
+  "configurations": ["with_skill", "without_skill"],
+  "summary": {
+    "with_skill": {
+      "pass_rate": 1.0,
+      "passed": 24,
+      "total": 24,
+      "mean_duration_seconds": 105.7,
+      "mean_total_tokens": 43077
+    },
+    "without_skill": {
+      "pass_rate": 0.708,
+      "passed": 17,
+      "total": 24,
+      "mean_duration_seconds": 104.8,
+      "mean_total_tokens": 33479
+    }
+  },
+  "delta": {
+    "pass_rate": "+0.292",
+    "duration_seconds": "+0.9",
+    "tokens": "+9598"
+  },
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-diagnosis",
+      "with_skill": {"passed": 6, "total": 6, "duration_s": 105.1, "tokens": 39810},
+      "without_skill": {"passed": 3, "total": 6, "duration_s": 127.6, "tokens": 35218}
+    },
+    {
+      "id": 2,
+      "name": "permissions-routing",
+      "with_skill": {"passed": 6, "total": 6, "duration_s": 98.2, "tokens": 42337},
+      "without_skill": {"passed": 6, "total": 6, "duration_s": 88.8, "tokens": 32917}
+    },
+    {
+      "id": 3,
+      "name": "hooks-routing",
+      "with_skill": {"passed": 7, "total": 7, "duration_s": 102.8, "tokens": 42837},
+      "without_skill": {"passed": 6, "total": 7, "duration_s": 102.6, "tokens": 32785}
+    },
+    {
+      "id": 4,
+      "name": "evolution-check",
+      "with_skill": {"passed": 5, "total": 5, "duration_s": 116.6, "tokens": 47323},
+      "without_skill": {"passed": 2, "total": 5, "duration_s": 100.3, "tokens": 32997}
+    }
+  ]
+}

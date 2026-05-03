@@ -1,0 +1,9 @@
+{
+  "name": "harness",
+  "version": "1.0.0",
+  "description": "Claude Code 하네스 진화 도구: CLAUDE.md(규칙 전달) + Permissions(위험 차단) + Hooks(자동 검증) + MCP(테스트 도구) + Subagent(AI 분리) + 진화 원칙(메타) 6단계를 진단·추천·확정 워크플로우로 단계적으로 보강합니다. 신규 셋업보다는 이미 쓰는 프로젝트의 하네스를 진화시키는 데 초점. 1개 스킬.",
+  "author": {
+    "name": "pjy4617"
+  },
+  "skills": "./skills/"
+}

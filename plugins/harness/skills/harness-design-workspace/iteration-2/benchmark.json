@@ -1,0 +1,65 @@
+{
+  "skill_name": "harness-design",
+  "iteration": 2,
+  "configurations": ["with_skill", "without_skill"],
+  "baseline_source": "iteration-1 (reused)",
+  "summary": {
+    "with_skill": {
+      "pass_rate": 1.0,
+      "passed": 24,
+      "total": 24,
+      "mean_duration_seconds": 68.3,
+      "mean_total_tokens": 43664
+    },
+    "without_skill": {
+      "pass_rate": 0.708,
+      "passed": 17,
+      "total": 24,
+      "mean_duration_seconds": 104.8,
+      "mean_total_tokens": 33479,
+      "note": "reused from iteration-1"
+    }
+  },
+  "comparison_with_iteration_1": {
+    "with_skill_pass_rate_delta": 0,
+    "with_skill_duration_delta_seconds": -37.4,
+    "with_skill_duration_pct_change": "-35.4%",
+    "with_skill_tokens_delta": 587,
+    "with_skill_tokens_pct_change": "+1.4%"
+  },
+  "improvements_applied": [
+    "SKILL.md: mode-specific diagnosis depth (특정 단계 mode skips 6-row table)",
+    "SKILL.md: 4-step → 5-step pattern with [e] next-stage hint",
+    "references/06-evolution.md: 5 evolution triggers (model upgrade, milestone, new member, recurring mistakes, hook accumulation)"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-diagnosis",
+      "iter1": {"passed": 6, "total": 6, "duration_s": 105.1, "tokens": 39810},
+      "iter2": {"passed": 6, "total": 6, "duration_s": 70.8, "tokens": 42239},
+      "qualitative_change": "explicit '강제력 낮음 → 높음' priority ordering"
+    },
+    {
+      "id": 2,
+      "name": "permissions-routing",
+      "iter1": {"passed": 6, "total": 6, "duration_s": 98.2, "tokens": 42337},
+      "iter2": {"passed": 6, "total": 6, "duration_s": 59.3, "tokens": 42564},
+      "qualitative_change": "skipped 6-row table (single-stage mode), added [e] next stage hint"
+    },
+    {
+      "id": 3,
+      "name": "hooks-routing",
+      "iter1": {"passed": 7, "total": 7, "duration_s": 102.8, "tokens": 42837},
+      "iter2": {"passed": 7, "total": 7, "duration_s": 60.4, "tokens": 43153},
+      "qualitative_change": "skipped 6-row table, added [e] next stage hint, structured operational considerations as table"
+    },
+    {
+      "id": 4,
+      "name": "evolution-check",
+      "iter1": {"passed": 5, "total": 5, "duration_s": 116.6, "tokens": 47323},
+      "iter2": {"passed": 5, "total": 5, "duration_s": 82.4, "tokens": 46699},
+      "qualitative_change": "applied 5 evolution triggers (Q3 expanded to milestone/team/hook accumulation)"
+    }
+  ]
+}

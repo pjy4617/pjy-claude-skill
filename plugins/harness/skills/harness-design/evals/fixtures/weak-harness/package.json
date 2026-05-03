@@ -1,0 +1,9 @@
+{
+  "name": "sample-app",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "dev": "next dev"
+  }
+}
