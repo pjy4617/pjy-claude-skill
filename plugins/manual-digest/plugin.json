@@ -1,0 +1,9 @@
+{
+  "name": "manual-digest",
+  "version": "1.0.0",
+  "description": "대용량 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD) 다이제스트 플러그인: 한 번 추출→요약하면 이후 작업은 ~0.3% 압축된 마크다운 다이제스트만 참조하고, 디테일 필요 시 원본의 특정 페이지/섹션만 핀포인트로 추출. PDF는 @sylphx/pdf-reader-mcp MCP 사용. project/global 두 스코프 지원, CLAUDE.md 마커 자동 주입으로 Claude가 매뉴얼 질문에 자동으로 다이제스트를 1차 참조하도록 가이드. 2개 스킬: manual-digest(인제스트/갱신/목록/삭제) + manual-digest-setup(환경 1회 초기화).",
+  "author": {
+    "name": "pjy4617"
+  },
+  "skills": "./skills/"
+}
