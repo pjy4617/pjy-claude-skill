@@ -62,14 +62,21 @@ plugins/
 │   │   └── parallel-delegation-setup/ ← 3-role 누락분만 보충 설치
 │   ├── agents/                       ← pd-implementer / pd-tester / pd-verifier
 │   └── docs/
-└── manual/                        ← Sphinx 문서화 플러그인 (4 스킬 + 4 에이전트)
+├── manual/                        ← Sphinx 문서화 플러그인 (4 스킬 + 4 에이전트)
+│   ├── plugin.json
+│   ├── skills/
+│   │   └── manual-write/
+│   │       └── references/        ← 다국어 네비게이션 템플릿 등
+│   ├── agents/
+│   ├── claude-md/CLAUDE.md
+│   └── docs/
+└── manual-digest/                 ← 대용량 매뉴얼 다이제스트 플러그인 (2 스킬, 에이전트 없음)
     ├── plugin.json
     ├── skills/
-    │   └── manual-write/
-    │       └── references/        ← 다국어 네비게이션 템플릿 등
-    ├── agents/
-    ├── claude-md/CLAUDE.md
-    └── docs/
+    │   ├── manual-digest/         ← 인제스트/갱신/목록/삭제 (8단계 워크플로)
+    │   │   └── references/        ← 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD)
+    │   └── manual-digest-setup/   ← MCP 등록 + 디렉토리 + CLAUDE.md 마커 1회 초기화
+    └── docs/USAGE_GUIDE.md
 ```
 
 핵심 구조: 각 플러그인은 `plugin.json` + `skills/` 디렉토리를 가지며, `marketplace.json`이 이를 카탈로그로 등록한다. 에이전트는 마켓플레이스가 직접 지원하지 않으므로, `*-setup` 스킬이 사용자에게 프로젝트 경로를 질문한 뒤 해당 경로의 `.claude/agents/`로 복사하는 메커니즘을 사용한다.

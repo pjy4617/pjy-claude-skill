@@ -119,7 +119,4 @@
 | `대형 PDF (1000p+) 시간 초과` | 자동으로 페이지 청크 분할 — 진행률 표시 확인 |
 | `스캔 PDF (텍스트 레이어 없음)` | "OCR 필요, V2 이후" — 현재 미지원 |
 
-## 참고
 
-- PRD: `.temp/PRD-manual-digest.md`
-- 검증 결과: PRD 부록 B (TwinCAT 3 I/O Manual 실측)
