@@ -128,3 +128,16 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 - JSON 숫자에 `+` 접두사(`+587`) 금지 — 부호 표기는 문자열 필드(`"+1.4%"`)로
 - Windows: `python3`/`python` 명령은 MS Store alias로 exit 49 가능 — PowerShell `ConvertFrom-Json` 권장
 - 에이전트 이름은 플러그인별 prefix(`pd-`, `kicad-`, `stm32f4-`)로 — OMC 및 타 플러그인 에이전트와의 이름 충돌 방지
+
+<!-- manual-digest:start -->
+## 매뉴얼 다이제스트 사용 규칙
+
+이 환경에는 외부 매뉴얼이 다이제스트로 등록되어 있다 (현재 1개) — 도메인 매뉴얼이 필요한 질문을 받으면:
+
+1. `.claude/manuals/INDEX.md` (project) + `~/.claude/manuals/INDEX.md` (global) 양쪽 확인
+2. 관련 매뉴얼의 `digest.md` 우선 참조 → 부족하면 `index.md` 페이지 포인터로 원본 핀포인트
+3. 답변에 출처(§/p./scope) 명시
+4. 인덱싱되지 않은 매뉴얼이면 `/manual-digest <path>` 등록 제안
+
+PDF 핀포인트 추출: `mcp__pdf-reader__read_pdf` `pages: "<범위 또는 혼합 범위>"`
+<!-- manual-digest:end -->
