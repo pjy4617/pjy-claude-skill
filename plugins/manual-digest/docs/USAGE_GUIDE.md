@@ -60,7 +60,7 @@
 /manual-digest --update <id>
 ```
 
-원본 sha256이 바뀐 경우 변경된 섹션만 재요약 (비변경 섹션 보존).
+변경분만 재요약 (비변경분 보존). 문서는 sha256 비교, 코드베이스는 git ref 비교(`git diff --stat`로 변경 디렉토리 식별).
 
 ### 목록
 
@@ -96,6 +96,22 @@
 | EPUB | 미검증 | PowerShell `Expand-Archive` |
 | DOCX | 미검증 | PowerShell `Expand-Archive` |
 | CHM | 미검증 (Windows 전용) | `hh.exe -decompile` |
+| **codebase (디렉토리)** | ✓ 검증 (HMI Frontend 18,079 LOC → ~14 KB) | Claude `Read`/`Grep`/`Glob` + `find`/`git` (**PDF MCP 불필요**) |
+
+### 코드베이스 다이제스트
+
+`<path>`가 **디렉토리**이면 자동으로 `format: codebase`로 분기한다. 단일 문서가 아니라 레포/패키지를 하나의 "매뉴얼"로 인덱싱한다.
+
+```
+/manual-digest /home/me/Repos/MyApp/Frontend
+```
+
+- 페이지 대신 **디렉토리 맵 + 심볼→파일 인덱스**, 핀포인트는 `Read`/`Grep`/`Glob`
+- 인제스트 시작 시 **추출 목적**(재사용 탐색 / 온보딩 / 리팩토링 / 디버깅)을 1줄로 확인 — 샘플링과 디렉토리 맵 주석 컬럼이 거기서 결정됨
+- 목적 직결 핵심 파일만 전수 Read, 나머지는 1줄 맵핑/경로 포인터 (전수 읽기 금지)
+- `metadata.json`은 `sha256/pages` 대신 `loc/src_files/test_files/stack/version(git ref)/sampling_strategy`
+- `--update`는 sha256 대신 **git ref 비교** → `git diff --stat`로 변경된 디렉토리만 재요약
+- 자세한 절차·산출물 형식: `plugins/manual-digest/skills/manual-digest/references/codebase-extract.md`
 
 ## 산출물 구조
 

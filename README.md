@@ -57,7 +57,7 @@ CLAUDE.md / Permissions / Hooks / MCP / Subagent / 진화 6단계 진단·진화
 <tr>
 <td align="center" width="25%">
 <b>Manual Digest</b><br>
-대용량 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD) 한 번 추출·요약 → ~0.3% 다이제스트만 1차 참조 (Claude Code 메타 도구)<br>
+대용량 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD) + 소스코드 디렉토리(codebase) 한 번 추출·요약 → ~0.3% 다이제스트만 1차 참조 (Claude Code 메타 도구)<br>
 2 스킬
 </td>
 </tr>
@@ -572,14 +572,15 @@ PCB 레이아웃 진행
 
 ### Manual Digest 플러그인 — 이렇게 말하면 됩니다
 
-대용량 매뉴얼을 **한 번만** 추출·요약하여 마크다운 다이제스트로 저장하고, 이후 작업에서는 다이제스트(원본의 ~0.3% 크기)를 1차 참조하는 워크플로. 디테일이 필요할 때만 원본의 특정 페이지/섹션만 핀포인트로 다시 읽습니다 (실측: TwinCAT 168p 매뉴얼 6.29 MB → 18.6 KB).
+대용량 매뉴얼 **또는 소스코드 디렉토리**를 **한 번만** 추출·요약하여 마크다운 다이제스트로 저장하고, 이후 작업에서는 다이제스트(원본의 ~0.3% 크기)를 1차 참조하는 워크플로. 디테일이 필요할 때만 원본의 특정 페이지/섹션(문서) 또는 파일/심볼(코드)만 핀포인트로 다시 읽습니다 (실측: TwinCAT 168p 매뉴얼 6.29 MB → 18.6 KB; HMI Frontend 18,079 LOC → ~14 KB).
 
 | 하고 싶은 것 | 이렇게 말하세요 | 동작하는 스킬 |
 |-------------|---------------|--------------|
 | 환경 셋업(1회) | "manual-digest 셋업" / `/manual-digest-setup` | manual-digest-setup 스킬 |
 | 매뉴얼 등록 | "이 PDF 등록해줘" / `/manual-digest <path>` | manual-digest 스킬 (8단계) |
+| 코드베이스 등록 | "이 레포 코드 다이제스트 만들어줘" / `/manual-digest <dir>` | manual-digest 스킬 (`format: codebase`, MCP 불필요) |
 | Global scope 등록 | `/manual-digest <path> --scope global` | 모든 프로젝트 공유 |
-| 원본 변경 시 갱신 | `/manual-digest --update <id>` | sha256 비교 → 변경 섹션만 재요약 |
+| 원본 변경 시 갱신 | `/manual-digest --update <id>` | 문서=sha256 / 코드=git ref 비교 → 변경분만 재요약 |
 | 등록 매뉴얼 목록 | "등록된 매뉴얼 목록" / `/manual-digest --list` | INDEX.md 출력 |
 | 매뉴얼 제거 | `/manual-digest --remove <id>` | 디렉토리 + INDEX.md + CLAUDE.md 카탈로그 갱신 |
 | 자동 활용 | (도메인 매뉴얼 질문) | Claude가 INDEX.md → digest.md → 필요 시 원본 핀포인트 |
@@ -594,6 +595,7 @@ PCB 레이아웃 진행
 | EPUB | PowerShell `Expand-Archive` → 내부 XHTML |
 | DOCX | PowerShell `Expand-Archive` → `word/document.xml` |
 | CHM | `hh.exe -decompile` (Windows 전용) |
+| **codebase (디렉토리)** | **Claude Read/Grep/Glob + `find`/`git` (PDF MCP 불필요)** |
 
 #### Manual Digest 전체 워크플로우
 
@@ -754,7 +756,7 @@ pjy-claude-skill/
 │       ├── plugin.json
 │       ├── skills/ (2개)          ← 인제스트/갱신/목록/삭제 + 환경 1회 초기화
 │       │   ├── manual-digest/
-│       │   │   └── references/    ← 6개 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD)
+│       │   │   └── references/    ← 7개 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase)
 │       │   └── manual-digest-setup/
 │       └── docs/USAGE_GUIDE.md    ← 사용 가이드 (빠른 시작, 명령어, scope, 트러블슈팅)
 ├── CLAUDE.md
