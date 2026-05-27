@@ -78,13 +78,22 @@ plugins/
 │   │   ├── harness-design/        ← CLAUDE.md/Permissions/Hooks/MCP/Subagent 6단계 진단·보강
 │   │   └── harness-design-workspace/
 │   └── (claude-md 없음 / setup 없음 — 현재 디렉토리 진단)
-└── manual-digest/                 ← 대용량 매뉴얼 다이제스트 플러그인 (2 스킬, 에이전트 없음)
+├── manual-digest/                 ← 대용량 매뉴얼 다이제스트 플러그인 (2 스킬, 에이전트 없음)
+│   ├── plugin.json
+│   ├── skills/
+│   │   ├── manual-digest/         ← 인제스트/갱신/목록/삭제 (8단계 워크플로, 문서+codebase)
+│   │   │   └── references/        ← 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase)
+│   │   └── manual-digest-setup/   ← MCP 등록 + 디렉토리 + CLAUDE.md 마커 1회 초기화
+│   └── docs/USAGE_GUIDE.md
+└── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json
     ├── skills/
-    │   ├── manual-digest/         ← 인제스트/갱신/목록/삭제 (8단계 워크플로, 문서+codebase)
-    │   │   └── references/        ← 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase)
-    │   └── manual-digest-setup/   ← MCP 등록 + 디렉토리 + CLAUDE.md 마커 1회 초기화
-    └── docs/USAGE_GUIDE.md
+    │   ├── react-vite-frontend/   ← 구현→검증 역할분리 워크플로 (범용+UI specialist 라우팅)
+    │   │   └── references/        ← UI 라이브러리 가이드 (ui-fluent-ui.md / ui-shadcn-ui.md)
+    │   └── react-vite-setup/      ← 에이전트 6종 + CLAUDE.md 설치
+    ├── agents/                    ← 범용 program/qa-expert + Fluent·shadcn 라이브러리별 구현·QA specialist (6)
+    ├── claude-md/CLAUDE.md
+    └── docs/usage-guide.md
 ```
 
 핵심 구조: 각 플러그인은 `plugin.json` + `skills/` 디렉토리를 가지며, `marketplace.json`이 이를 카탈로그로 등록한다. 에이전트는 마켓플레이스가 직접 지원하지 않으므로, `*-setup` 스킬이 사용자에게 프로젝트 경로를 질문한 뒤 해당 경로의 `.claude/agents/`로 복사하는 메커니즘을 사용한다.

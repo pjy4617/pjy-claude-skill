@@ -1,0 +1,9 @@
+{
+  "name": "react-vite",
+  "version": "1.0.0",
+  "description": "React 19 + Vite 8 + TypeScript 프론트엔드 풀스택 개발: 범용 구현/품질검증 + UI 라이브러리별 심화 specialist를 역할 분리로 조율하는 워크플로 + 자기검증 함정 차단. UI는 Fluent UI v9(Griffel) 또는 shadcn/ui(Radix+Tailwind) 중 프로젝트당 택1 — 각 라이브러리 전용 구현·QA 에이전트(테마/SSR/cva·cn, provider 래퍼·jsdom 폴리필·portal·axe-core a11y) 제공. Zustand+Immer, (선택)react-konva·@dnd-kit. React 19 패턴(no forwardRef/React.FC, Compiler) + Vitest/RTL/Playwright + 60fps·번들·메모리 검증. 2개 스킬 + 6개 에이전트(범용 2 + Fluent 2 + shadcn 2).",
+  "author": {
+    "name": "pjy4617"
+  },
+  "skills": "./skills/"
+}
