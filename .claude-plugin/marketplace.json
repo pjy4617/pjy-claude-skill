@@ -31,8 +31,8 @@
     {
       "name": "kicad",
       "source": "./plugins/kicad",
-      "description": "KiCad 회로도 풀스택 도구: PRD/설계사양서 기반 회로도 생성 + 8단계 설계 리뷰(PDF 시각 검토, 라이브러리 비교, 데이터시트 검증) + BOM 마크다운 생성. STM32, FPGA, IO 보드, EtherCAT 슬레이브 등 모든 도메인 지원. 3개 스킬 + 3개 에이전트.",
-      "version": "1.0.0"
+      "description": "KiCad 회로도 풀스택 도구: PRD/설계사양서 기반 회로도 생성 + 8단계 설계 리뷰(PDF 시각 검토, 라이브러리 비교, 데이터시트 검증) + BOM 마크다운 생성 + 회로/PCB 정밀 분석(ERC/DRC, 넷 추적, 트랙/라우팅, 신호·전원 무결성, Seeed kicad-mcp-server 연동·폴백). STM32, FPGA, IO 보드, EtherCAT 슬레이브 등 모든 도메인 지원. 4개 스킬 + 4개 에이전트.",
+      "version": "1.1.0"
     },
     {
       "name": "parallel-delegation",

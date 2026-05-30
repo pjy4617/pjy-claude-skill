@@ -46,15 +46,17 @@ plugins/
 │   ├── agents/
 │   ├── claude-md/CLAUDE.md
 │   └── docs/
-├── kicad/                         ← KiCad 회로도 플러그인 (3 스킬 + 3 에이전트)
+├── kicad/                         ← KiCad 회로도 플러그인 (4 스킬 + 4 에이전트)
 │   ├── plugin.json
 │   ├── skills/
 │   │   ├── kicad-design/          ← PRD/설계사양서 → 회로도 생성
 │   │   │   └── references/        ← S-expression 포맷 가이드
-│   │   ├── kicad-review/          ← 8단계 회로도 리뷰 + BOM 생성
+│   │   ├── kicad-review/          ← 8단계 회로도 설계 리뷰 + BOM 생성
 │   │   │   └── references/        ← 체크리스트, 파싱 가이드, 데이터시트 검색
-│   │   └── kicad-setup/           ← 에이전트 설치
-│   ├── agents/
+│   │   ├── kicad-analyze/         ← 회로(넷리스트)/PCB 정밀 분석 (ERC/DRC, 넷 추적, 트랙, SI/PI)
+│   │   │   └── references/        ← Seeed MCP 도구 매핑·폴백, PCB 분석·SI/PI 가이드
+│   │   └── kicad-setup/           ← 에이전트 설치 (--with-mcp로 Seeed MCP 등록 안내)
+│   ├── agents/                    ← schematic-designer/reviewer/bom-generator/pcb-analyzer
 │   ├── claude-md/CLAUDE.md
 │   └── docs/
 ├── parallel-delegation/           ← 워크플로 플러그인 (2 스킬 + 3 에이전트, 도메인 없음)

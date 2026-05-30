@@ -1,6 +1,6 @@
 ---
 name: kicad-review
-description: "KiCad 회로도(.kicad_sch)를 분석하여 설계 리뷰, 데이터시트 비교 검증, BOM(파트리스트) 마크다운 생성을 수행합니다. 'KiCad 회로도 리뷰', '회로도 검토', '회로 리뷰', 'schematic review', '회로도 분석', '파트리스트 만들어', 'BOM 생성', '부품 목록', '회로도에서 문제 찾아', '데이터시트 비교', '회로 검증', 'KiCad BOM', '회로도 체크' 등의 요청에 자동 적용. STM32, FPGA(Xilinx/Intel), EtherCAT 슬레이브, IO 보드, 전원부, PHY/트랜시버 등 모든 하드웨어 도메인을 지원하는 범용 회로도 리뷰 도구."
+description: "KiCad 회로도(.kicad_sch)를 분석하여 설계 리뷰, 데이터시트 비교 검증, BOM(파트리스트) 마크다운 생성을 수행합니다. 'KiCad 회로도 리뷰', '회로도 검토', '회로 리뷰', 'schematic review', '회로도 분석', '파트리스트 만들어', 'BOM 생성', '부품 목록', '회로도에서 문제 찾아', '데이터시트 비교', '회로 검증', 'KiCad BOM', '회로도 체크' 등의 요청에 자동 적용. ※ PCB(.kicad_pcb) 물리 분석·ERC/DRC 실행·넷 연결 추적·신호/전원 무결성(SI/PI)은 kicad-analyze 스킬을 쓴다(이 스킬은 회로도 *설계* 적정성·데이터시트·BOM에 집중). STM32, FPGA(Xilinx/Intel), EtherCAT 슬레이브, IO 보드, 전원부, PHY/트랜시버 등 모든 하드웨어 도메인을 지원하는 범용 회로도 리뷰 도구."
 user-invocable: true
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, Agent
 ---

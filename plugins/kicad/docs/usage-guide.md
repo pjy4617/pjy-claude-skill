@@ -38,14 +38,16 @@ KiCad 프로젝트가 있는 디렉토리에서:
 /kicad-setup
 ```
 
-질문에 따라 프로젝트 경로를 입력하면 에이전트 3개와 CLAUDE.md가 자동 설치됩니다.
+질문에 따라 프로젝트 경로를 입력하면 에이전트 4개와 CLAUDE.md가 자동 설치됩니다.
+PCB 신호/전원 무결성(SI/PI)까지 정밀 분석하려면 `/kicad-setup --with-mcp`로 Seeed kicad-mcp-server 등록을 안내받을 수 있습니다(KiCad 9.0+ 로컬 설치 전제).
 
 설치되는 파일:
 ```
 .claude/agents/
 ├── kicad-schematic-designer.md    (회로도 설계 에이전트)
 ├── kicad-schematic-reviewer.md    (회로도 리뷰 에이전트)
-└── kicad-bom-generator.md         (BOM 생성 에이전트)
+├── kicad-bom-generator.md         (BOM 생성 에이전트)
+└── kicad-pcb-analyzer.md          (회로/PCB 분석 에이전트)
 CLAUDE.md                          (KiCad 설정 추가)
 ```
 
@@ -57,7 +59,8 @@ CLAUDE.md                          (KiCad 설정 추가)
 |------|--------|------|
 | 회로도 설계 | `/kicad-design` | PRD/설계사양서 → KiCad 회로도 생성 |
 | 회로도 리뷰 | `/kicad-review` | 8단계 설계 리뷰 + BOM 생성 |
-| 프로젝트 설정 | `/kicad-setup` | 에이전트를 타겟 프로젝트에 설치 |
+| 회로/PCB 분석 | `/kicad-analyze` | 넷리스트/PCB 정밀 분석: ERC/DRC, 넷 추적, 트랙/라우팅, 신호·전원 무결성(SI/PI) |
+| 프로젝트 설정 | `/kicad-setup` | 에이전트를 타겟 프로젝트에 설치 (`--with-mcp`로 Seeed MCP 등록 안내) |
 
 ---
 
@@ -294,6 +297,13 @@ kicad-cli --version
 
 - **역할**: 넷리스트에서 BOM 추출 → 마크다운 포맷팅
 - **트리거**: `/kicad-review` 스킬에서 위임
+- **모델**: opus
+
+### kicad-pcb-analyzer
+
+- **역할**: 엔진 감지 → 회로(넷리스트)/PCB 정밀 분석 (넷 추적, ERC/DRC, 핀 충돌, 트랙/라우팅, SI/PI) → 분석 보고서
+- **엔진**: Seeed kicad-mcp-server(`mcp__<서버>__*`) → kicad-cli → 직접 파싱 폴백. `tools:` 미명시로 등록된 모든 도구 상속(MCP 포함)
+- **트리거**: `/kicad-analyze` 스킬에서 위임
 - **모델**: opus
 
 ---
