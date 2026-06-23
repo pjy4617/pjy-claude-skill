@@ -65,6 +65,11 @@ CLAUDE.md / Permissions / Hooks / MCP / Subagent / 진화 6단계 진단·진화
 React 19 + Vite 8 + TS 프론트엔드 — Fluent UI v9 / shadcn/ui 택1, 범용 + UI별 구현·QA specialist 역할 분리<br>
 2 스킬 + 6 에이전트
 </td>
+<td align="center" width="25%">
+<b>Gerber Digest</b><br>
+거버/드릴 팹 출력 폴더(PADS/Altium/KiCad/Eagle) 한 번 파싱·요약 → 수 KB 다이제스트만 1차 참조 + gerber-pcb-analyst 깊은 분석 (Claude Code 메타 도구)<br>
+2 스킬 + 1 에이전트
+</td>
 </tr>
 </table>
 
@@ -207,6 +212,17 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 
 </details>
 
+<details>
+<summary><b>Gerber Digest 플러그인</b></summary>
+
+- Claude Code만 있으면 동작 — 거버/드릴/리포트는 전부 텍스트라 `Read`/`Grep`/`Bash`로 파싱 (**MCP·gerbv 불필요**)
+- 입력: 팹 출력 폴더(`.pho`/`.gbr`/`.ger` RS-274X, `.drl`/`.txt` Excellon, `.rep`/`.lst` PADS 리포트, `.gbrjob` KiCad)
+- 지원 CAD: PADS Layout 9.x, KiCad, Altium/Protel, Eagle (헤더로 자동 식별)
+- 디스크 쓰기 권한: `<project>/.claude/gerbers/` (project scope) 또는 `~/.claude/gerbers/` (global scope)
+- 깊은 분석용 `gerber-pcb-analyst` 에이전트는 `gerber-digest-setup`이 `.claude/agents/`로 설치 (신규 설치 시 세션 재시작)
+
+</details>
+
 ---
 
 ## 설치 방법 (초보자 가이드)
@@ -344,6 +360,20 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 
 셋업 시 프로젝트 경로를 질문합니다. 지정한 경로에 6개 에이전트(범용 구현/QA 2종 + Fluent UI·shadcn/ui 라이브러리별 구현·QA specialist 4종)와 CLAUDE.md가 생성됩니다. 프로젝트가 한 UI 라이브러리만 쓰면 반대쪽 specialist 2종은 삭제해도 됩니다.
 
+#### Gerber Digest (거버 파일 다이제스트) 설치
+
+```
+/plugin install gerber-digest@pjy-skills
+```
+
+2개 스킬이 활성화됩니다. **첫 사용 전 1회 환경 초기화 필수**:
+
+```
+/gerber-digest-setup
+```
+
+`gerber-pcb-analyst` 에이전트를 `.claude/agents/`에 설치하고 `.claude/gerbers/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP·gerbv는 불필요**하며(거버는 텍스트 파싱), 에이전트 신규 설치 시 Claude Code 세션 재시작이 필요할 수 있습니다. 이후 `/gerber-digest <거버 폴더>`로 보드를 등록하면, 다음부터 "이 보드 외곽 몇 mm야?" 같은 질문이 다이제스트만으로 즉시 처리됩니다. idempotent — `--scope project|global|both`, `--agent-only`, `--skip-agent`, `--repair`, `--dry-run` 옵션.
+
 #### 여러 플러그인 동시 설치
 
 ```
@@ -356,6 +386,7 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 /plugin install harness@pjy-skills
 /plugin install manual-digest@pjy-skills
 /plugin install react-vite@pjy-skills
+/plugin install gerber-digest@pjy-skills
 ```
 
 각 플러그인은 독립적이므로 원하는 것만 설치할 수 있습니다.
@@ -696,6 +727,54 @@ React 19 + Vite 8 + TypeScript 프론트엔드를 **구현 → 검증**의 역�
 
 ---
 
+### Gerber Digest 플러그인 — 이렇게 말하면 됩니다
+
+팹으로 보내는 **거버/드릴 출력 폴더**를 **한 번만** 파싱·요약하여 마크다운 다이제스트로 저장하고, 이후 보드 질문("외곽 몇 mm?", "홀 몇 개?", "최소 트레이스 폭?")은 원본 거버를 다시 파싱하지 않고 다이제스트(수 KB)를 1차 참조합니다. 디테일이 필요할 때만 원본 거버의 특정 레이어/좌표를 핀포인트로 재파싱하고, SI/PI·차동쌍·플레인 분할 같은 깊은 분석은 `gerber-pcb-analyst` 에이전트가 담당합니다. `manual-digest`의 거버 버전 — 거버는 전부 텍스트라 **MCP·gerbv 불필요**.
+
+| 하고 싶은 것 | 이렇게 말하세요 | 동작하는 스킬/에이전트 |
+|-------------|---------------|--------------|
+| 환경 셋업(1회) | "gerber-digest 셋업" / `/gerber-digest-setup` | gerber-digest-setup 스킬 (에이전트 설치) |
+| 거버 등록 | "이 거버 폴더 등록해줘" / `/gerber-digest <폴더>` | gerber-digest 스킬 (8단계) |
+| Global scope 등록 | `/gerber-digest <폴더> --scope global` | 모든 프로젝트 공유 |
+| 거버 변경 시 갱신 | `/gerber-digest --update <id>` | sha256 비교 → 변경 파일만 재파싱 |
+| 등록 보드 목록 | "등록된 거버 목록" / `/gerber-digest --list` | INDEX.md 출력 |
+| 보드 제거 | `/gerber-digest --remove <id>` | 디렉토리 + INDEX.md + CLAUDE.md 갱신 |
+| 깊은 분석 | "이 보드 SI/제조성 검토해줘" | gerber-pcb-analyst 에이전트 |
+| 자동 활용 | (보드/거버 질문) | Claude가 INDEX.md → digest.md → 필요 시 원본 핀포인트 |
+
+#### 지원 입력 (CAD 툴 자동 식별)
+
+| CAD 툴 | 거버 | 드릴 | 식별 근거 |
+|--------|------|------|----------|
+| PADS Layout 9.x | `.pho` (RS-274X) | `.drl` + `.lst`/`.rep` | `.pho` 헤더 `G04 PADS x.x`, `%IN` job명 |
+| KiCad | `.gbr` (X2) | `.drl` + `.gbrjob` | `TF.GenerationSoftware,KiCad` |
+| Altium/Protel | `.gtl/.gbl/...` | `.txt`/`.drl` | 헤더 식별 |
+| Eagle | `.cmp/.sol/...` | `.drd` | 헤더 식별 |
+
+> 레거시(PADS 등) 출력의 정상적 부재(전용 외곽 파일·`.gbrjob`·paste 거버 없음)는 Critical이 아니라 Info로 처리하고, 외곽은 동박/실크 폴리라인·좌표 bbox에서 추출합니다.
+
+#### Gerber Digest 전체 워크플로우
+
+```
+"gerber-digest 셋업"             ← gerber-digest-setup (에이전트 설치 + 디렉토리 + CLAUDE.md 마커)
+    ↓ (에이전트 신규 설치 시 Claude Code 재시작)
+"이 거버 폴더 등록해줘"           ← /gerber-digest <폴더>
+    ↓  ① 입력 검증 → ② ID 결정 → ③ .rep 인벤토리 → ④ 단위/좌표 디코드
+    ↓  ⑤ 깊은 파싱(gerber-pcb-analyst 위임 / 직접 파싱) → ⑥ sha256 → ⑦ 산출물 → ⑧ 카탈로그 갱신
+산출물: <scope>/.claude/gerbers/<id>/{digest.md, index.md, metadata.json}
+    ↓
+(이후 보드/거버 질문)            ← Claude 자동 동작
+    ↓  INDEX.md 확인 → digest.md 1차 참조 → 부족 시 index.md → 원본 레이어/좌표 핀포인트
+    ↓  답변 + 출처 명시 (파일·D-code·scope)
+"거버 변경됨"                     ← /gerber-digest --update <id> (sha256 비교, 변경분만)
+```
+
+> **단위 혼재 주의**: PADS `.rep` Width는 mm, 본문 거버는 inch — 다이제스트는 inch·mm를 **둘 다** 병기합니다. 드릴 포맷 헤더가 없으면 동박 패드 플래시에 앵커링해 좌표 포맷을 역산 확정합니다.
+>
+> **CLAUDE.md 마커 블록**: 셋업이 `<!-- gerber-digest:start --> ... <!-- gerber-digest:end -->` 마커 사이에 사용 규칙을 주입합니다 — 마커 외부 콘텐츠는 건드리지 않습니다. 손상 시 `/gerber-digest-setup --repair`.
+
+---
+
 #### 펌웨어 생성 시 Claude가 물어보는 것들
 
 정보가 부족하면 Claude가 순서대로 질문합니다:
@@ -830,6 +909,14 @@ pjy-claude-skill/
 │   │   │   │   └── references/    ← 7개 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase)
 │   │   │   └── manual-digest-setup/
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (빠른 시작, 명령어, scope, 트러블슈팅)
+│   ├── gerber-digest/             ← 거버 파일 다이제스트 플러그인 (메타 도구)
+│   │   ├── plugin.json
+│   │   ├── skills/ (2개)          ← 인제스트/갱신/목록/삭제 + 환경 1회 초기화(에이전트 설치)
+│   │   │   ├── gerber-digest/
+│   │   │   │   └── references/    ← 산출물 스키마(gerber-digest-format) + 추출 절차(gerber-extract)
+│   │   │   └── gerber-digest-setup/
+│   │   ├── agents/ (1개)          ← gerber-pcb-analyst (깊은 거버 분석 + 보드별 메모리)
+│   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (빠른 시작, 명령어, 지원 CAD, 파싱 함정)
 │   └── react-vite/                ← React 19 + Vite 8 프론트엔드 플러그인
 │       ├── plugin.json
 │       ├── skills/ (2개)          ← 구현→검증 워크플로 + 에이전트 셋업
@@ -899,6 +986,7 @@ KiCad 9.x에서 바로 열 수 있습니다. 다만 S-expression 직접 생성�
 - **Claude Code Harness**: [`plugins/harness/docs/usage-guide.md`](plugins/harness/docs/usage-guide.md)
 - **Manual Digest**: [`plugins/manual-digest/docs/USAGE_GUIDE.md`](plugins/manual-digest/docs/USAGE_GUIDE.md)
 - **React-Vite Frontend**: [`plugins/react-vite/docs/usage-guide.md`](plugins/react-vite/docs/usage-guide.md)
+- **Gerber Digest**: [`plugins/gerber-digest/docs/USAGE_GUIDE.md`](plugins/gerber-digest/docs/USAGE_GUIDE.md)
 
 ---
 
