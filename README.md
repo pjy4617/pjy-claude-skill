@@ -33,8 +33,8 @@ RTL 설계 → 시뮬레이션 → 합성 → Bitstream<br>
 <td align="center" width="25%">
 <img src="assets/mascot-kicad.png" width="220" alt="KiCad Mascot"><br>
 <b>KiCad Schematic</b><br>
-PRD → 회로도 생성 + 8단계 리뷰 + BOM + 회로/PCB 분석(SI/PI)<br>
-4 스킬 + 4 에이전트
+PRD → 회로도 생성 + 8단계 리뷰 + BOM + 회로/PCB 분석(SI/PI) + KiCad 10.0 사용법 안내<br>
+5 스킬 + 4 에이전트
 </td>
 </tr>
 <tr>
@@ -302,7 +302,7 @@ Claude Code 터미널에서 다음을 입력합니다. **한 번만 하면 됩�
 /plugin install kicad@pjy-skills
 ```
 
-4개 스킬이 한 번에 활성화됩니다. 이후 에이전트를 설치합니다:
+5개 스킬이 한 번에 활성화됩니다(설계·리뷰·분석·설정 + KiCad 사용법 안내 `/kicad-usage`). 이후 에이전트를 설치합니다:
 
 ```
 /kicad-setup
@@ -557,6 +557,7 @@ WMX3 엔진 + IMLib + OSL
 | 넷 추적 | "+3V3 넷에 뭐 연결됐는지 추적해줘" | kicad-analyze 스킬 (단계 3) |
 | 신호/전원 무결성 | "차동 페어 임피던스·길이 매칭 확인해줘" | kicad-analyze 스킬 (단계 5, Seeed MCP 권장) |
 | 부품 변경 | "RJ45로 바꿔줘" | kicad-design 에이전트 (수정 모드) |
+| **KiCad 사용법** | "차동쌍 어떻게 배선해? / 거버 어떻게 내보내? / 커스텀 DRC 룰 문법? / 단축키 알려줘" | **kicad-usage 스킬** (KiCad 10.0 매뉴얼 다이제스트) |
 | 에이전트 설치 | "KiCad 설정해줘" | kicad-setup 스킬 (`--with-mcp`로 Seeed MCP 등록) |
 
 #### KiCad 전체 워크플로우
@@ -880,13 +881,15 @@ pjy-claude-skill/
 │   │   └── docs/
 │   ├── kicad/                     ← KiCad 회로도 플러그인
 │   │   ├── plugin.json
-│   │   ├── skills/ (4개)          ← 회로도 설계, 리뷰+BOM, 회로/PCB 분석, 환경 설정
+│   │   ├── skills/ (5개)          ← 회로도 설계, 리뷰+BOM, 회로/PCB 분석, KiCad 사용법, 환경 설정
 │   │   │   ├── kicad-design/      ← PRD → 회로도 생성
 │   │   │   │   └── references/    ← S-expression 포맷 + .kicad_pro 가이드
 │   │   │   ├── kicad-review/      ← 8단계 리뷰 + BOM 생성
 │   │   │   │   └── references/    ← 체크리스트, 파싱, 데이터시트, Ethernet 프런트엔드
 │   │   │   ├── kicad-analyze/     ← 회로/PCB 정밀 분석 (ERC/DRC, 넷 추적, SI/PI)
 │   │   │   │   └── references/    ← Seeed MCP 도구 매핑, PCB 분석·SI/PI 가이드
+│   │   │   ├── kicad-usage/       ← KiCad 10.0 사용법 안내 (공식 매뉴얼 다이제스트)
+│   │   │   │   └── references/    ← kicad-project / pcbnew(6) / gerbview / kicad-cli 다이제스트 + INDEX
 │   │   │   └── kicad-setup/
 │   │   ├── agents/ (4개)          ← designer, reviewer, bom-generator, pcb-analyzer
 │   │   ├── claude-md/

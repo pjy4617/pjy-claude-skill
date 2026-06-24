@@ -7,6 +7,7 @@
 - `/kicad-review` — 회로도 *설계* 분석, 데이터시트 비교 검증, BOM 생성을 통합 수행
 - `/kicad-analyze` — 회로(넷리스트)/PCB 정밀 분석: ERC/DRC, 넷 추적, 트랙/라우팅, 신호·전원 무결성(SI/PI)
 - `/kicad-design` — PRD/설계사양서 기반 KiCad 회로도 생성
+- `/kicad-usage` — **KiCad 10.0 프로그램 자체의 사용법** 안내(공식 매뉴얼 다이제스트: 프로젝트 매니저·pcbnew·gerbview·kicad-cli). "차동쌍 어떻게 배선해?", "거버 어떻게 내보내?", "커스텀 DRC 룰 문법?", "단축키 알려줘" 같은 How-to 질문에 응답
 - `/kicad-setup` — 에이전트를 다른 프로젝트에 설치 (`--with-mcp`로 Seeed MCP 등록 안내)
 
 ### 에이전트

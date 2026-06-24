@@ -2,8 +2,9 @@
 
 ## 개요
 
-KiCad 플러그인은 KiCad 회로도의 **설계**와 **리뷰**를 통합 지원하는 풀스택 도구입니다.
-PRD(설계사양서)로부터 회로도를 생성하고, 생성된 회로도를 8단계로 검증하며, BOM(파트리스트)을 마크다운으로 출력합니다.
+KiCad 플러그인은 KiCad 회로/PCB의 **설계 · 리뷰 · 분석**과 **KiCad 사용법 안내**를 통합 지원하는 풀스택 도구입니다.
+PRD(설계사양서)로부터 회로도를 생성하고, 생성된 회로도를 8단계로 검증하며, BOM(파트리스트)을 마크다운으로 출력하고, 넷리스트/PCB를 정밀 분석(ERC/DRC·넷 추적·트랙/라우팅·SI/PI)합니다.
+또한 **KiCad 10.0 공식 매뉴얼**(프로젝트 매니저·pcbnew·gerbview·kicad-cli)을 한국어 다이제스트로 번들해, "KiCad에서 X 어떻게 해?" 같은 프로그램 사용법 질문에도 `/kicad-usage`로 답합니다.
 
 ### 지원 도메인
 
@@ -21,7 +22,8 @@ PRD(설계사양서)로부터 회로도를 생성하고, 생성된 회로도를 
 ### 사전 요구사항
 
 - Claude Code CLI
-- KiCad 9.x (`kicad-cli` 명령어 사용 가능하면 최적, 없어도 동작)
+- KiCad 9.x 이상 (`kicad-cli` 명령어 사용 가능하면 최적, 없어도 동작)
+  - `/kicad-usage` 사용법 다이제스트는 **KiCad 10.0** 공식 문서 기준입니다(9.x도 대부분 호환, 일부 UI/기능 차이 가능)
 
 ### 플러그인 설치
 
@@ -60,6 +62,7 @@ CLAUDE.md                          (KiCad 설정 추가)
 | 회로도 설계 | `/kicad-design` | PRD/설계사양서 → KiCad 회로도 생성 |
 | 회로도 리뷰 | `/kicad-review` | 8단계 설계 리뷰 + BOM 생성 |
 | 회로/PCB 분석 | `/kicad-analyze` | 넷리스트/PCB 정밀 분석: ERC/DRC, 넷 추적, 트랙/라우팅, 신호·전원 무결성(SI/PI) |
+| KiCad 사용법 | `/kicad-usage` | **KiCad 10.0 프로그램 자체의 사용법** 안내 (공식 매뉴얼 다이제스트: 프로젝트 매니저·pcbnew·gerbview·kicad-cli) |
 | 프로젝트 설정 | `/kicad-setup` | 에이전트를 타겟 프로젝트에 설치 (`--with-mcp`로 Seeed MCP 등록 안내) |
 
 ---
@@ -243,6 +246,62 @@ KiCad에서 열고 다음을 보정하세요:
 
 ---
 
+## 사용법 3: KiCad 사용법 안내 (`/kicad-usage`)
+
+KiCad **프로그램 자체**를 어떻게 쓰는지 묻는 How-to 질문에 답합니다. KiCad 10.0 공식 매뉴얼 4종을 한국어 다이제스트로 압축해 플러그인에 번들했으며, 매번 원문을 읽지 않고 다이제스트를 1차 참조원으로 사용합니다.
+
+### 다른 스킬과의 차이
+
+- `kicad-design`/`kicad-review`/`kicad-analyze` → 사용자의 **회로/PCB 파일**을 생성·리뷰·분석(작업 수행)
+- `kicad-usage` → **KiCad라는 도구를 어떻게 쓰는가**를 안내(질의응답)
+
+### 사용 예시
+
+```
+"KiCad에서 차동쌍 어떻게 배선해?"          → pcbnew §Routing differential pairs
+"보드 스택업·임피던스 어디서 설정해?"        → pcbnew §Board setup (stackup)
+"커스텀 DRC 룰(.kicad_dru) 문법 알려줘"      → pcbnew §Custom design rules
+"거버·드릴 파일 어떻게 내보내?"              → pcbnew §Plotting / Drill files
+"kicad-cli로 PCB DRC 돌리는 명령 뭐야?"      → kicad-cli (pcb drc)
+"GerbView에서 D-code 어떻게 봐?"             → gerbview
+"PCB 에디터 단축키 정리해줘"                 → pcbnew Actions reference
+"KiCad 라이브러리 경로 어떻게 설정해?"       → kicad §Libraries configuration
+```
+
+### 답변 워크플로
+
+```
+[1] references/INDEX.md (토픽 → 파일·anchor 마스터 인덱스) 먼저 조회
+     ↓  (깊은 키워드 검색: grep -ri "키워드" references/)
+[2] 해당 다이제스트 파일 Read → 한국어로 답변 + 출처 명시
+     예: "출처: pcbnew §Length tuning · pcbnew.html#length-tuning"
+     ↓  (메뉴 경로·옵션명·단축키·CLI 플래그는 영어 원문 그대로 인용)
+[3] 다이제스트로 부족할 때만 원문 URL(<원문>#anchor)을 WebFetch로 확인
+```
+
+### 번들 다이제스트 (KiCad 10.0, `skills/kicad-usage/references/`)
+
+원본 매뉴얼 4종(아래 URL)을 한국어 다이제스트 **9개 + 마스터 INDEX**로 압축했으며, 원문 **544개 섹션을 100% anchor 커버**합니다.
+
+| 파일 | 다루는 범위 | 원문 |
+|------|------------|------|
+| `INDEX.md` | 토픽 → 파일·anchor 마스터 인덱스 (**먼저 조회**) | — |
+| `kicad-project.md` | 프로젝트 매니저, 설치/최초설정, 파일·폴더, 경로/환경변수/라이브러리, Jobsets, 템플릿, PCM, Preferences, 단축키 | <https://docs.kicad.org/10.0/en/kicad/kicad.html> |
+| `pcbnew-1-setup-ui.md` | 화면/표시·선택, 보드 레이어/Appearance, PCB 생성, **Board Setup**(스택업·디자인 룰·넷클래스·제약) | <https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html> |
+| `pcbnew-2-editing-routing.md` | 배치/그리기/그리드, 풋프린트/패드/**Zone**, **트랙·비아·차동쌍 배선**, **길이 튜닝**, Teardrops, 그래픽, Group/Array | ↑ pcbnew |
+| `pcbnew-3-inspect-output.md` | Forward/Back annotation, **DRC**, 3D 뷰어, Net inspector, 타 EDA 임포트, **출력 생성**(Plot/Gerber/Drill/STEP/BOM), Design variants | ↑ pcbnew |
+| `pcbnew-4-footprints.md` | 풋프린트 라이브러리/에디터(패드·필드·net tie·3D·wizard·체크), 멀티채널 레이아웃, 디자인 블록 | ↑ pcbnew |
+| `pcbnew-5-advanced-rules.md` | 설정/커스터마이즈, Text variables/expressions, 그래픽·**커스텀 디자인 룰(.kicad_dru)**, Python 스크립팅, IDF | ↑ pcbnew |
+| `pcbnew-6-hotkeys.md` | PCB Editor / 3D Viewer / Common **단축키** 전체 표 | ↑ pcbnew |
+| `gerbview.md` | GerbView 거버/드릴 뷰어 — 인터페이스, 툴바, Layers Manager, 메뉴, 인쇄 | <https://docs.kicad.org/10.0/en/gerbview/gerbview.html> |
+| `kicad-cli.md` | kicad-cli 명령행 — fp/jobset/pcb/sch/sym/version 서브커맨드와 옵션/플래그 | <https://docs.kicad.org/10.0/en/cli/cli.html> |
+
+각 섹션 제목 끝의 `#anchor`로 원문을 핀포인트할 수 있습니다(예: `pcbnew.html#routing-tracks`). 다이제스트로 부족하면 원문 URL을 확인하고, 출처(파일·anchor)를 항상 명시합니다.
+
+> 본 다이제스트는 **KiCad 10.0** 기준입니다. 9.x에서도 대부분 동일하나 일부 UI/기능이 다를 수 있습니다.
+
+---
+
 ## 설계 → 리뷰 연계
 
 두 스킬을 조합하면 설계부터 검증까지 원스톱으로 진행할 수 있습니다:
@@ -318,6 +377,8 @@ kicad-cli --version
 | KiCad 파싱 가이드 | `skills/kicad-review/references/kicad-parser.md` | S-expression 파싱 + 넷리스트 추출 |
 | 데이터시트 검색 | `skills/kicad-review/references/datasheet-lookup.md` | 제조사별 웹 검색 전략 |
 | S-expression 포맷 | `skills/kicad-design/references/kicad-schematic-format.md` | .kicad_sch 생성 포맷 가이드 |
+| KiCad 사용법 인덱스 | `skills/kicad-usage/references/INDEX.md` | 토픽 → 다이제스트 파일·anchor 마스터 맵 (544 섹션) |
+| KiCad 매뉴얼 다이제스트 | `skills/kicad-usage/references/*.md` | KiCad 10.0 공식 매뉴얼(kicad/pcbnew×6/gerbview/cli) 한국어 다이제스트 9종 |
 
 ---
 
