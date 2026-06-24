@@ -87,13 +87,13 @@ plugins/
 │   │   │   └── references/        ← 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase)
 │   │   └── manual-digest-setup/   ← MCP 등록 + 디렉토리 + CLAUDE.md 마커 1회 초기화
 │   └── docs/USAGE_GUIDE.md
-├── gerber-digest/                 ← 거버 파일 다이제스트 플러그인 (2 스킬 + 1 에이전트, 메타 도구)
+├── pcb-design-digest/             ← PCB 설계/제조 데이터 다이제스트 플러그인 (2 스킬 + 1 에이전트, 메타 도구) — 거버 팹출력 + PADS(.pcb/.asc) + KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)
 │   ├── plugin.json
 │   ├── skills/
-│   │   ├── gerber-digest/         ← 인제스트/갱신/목록/삭제 (8단계, 팹 출력 거버/드릴 세트)
-│   │   │   └── references/        ← gerber-digest-format.md(산출물 스키마) + gerber-extract.md(추출 절차)
-│   │   └── gerber-digest-setup/   ← 에이전트 설치 + 디렉토리 + CLAUDE.md 마커 1회 초기화 (MCP 불필요)
-│   ├── agents/                    ← gerber-pcb-analyst (깊은 거버 분석 + 보드별 메모리 누적)
+│   │   ├── pcb-design-digest/     ← 인제스트/갱신/목록/삭제 (8단계, 거버·PADS·KiCad 입력)
+│   │   │   └── references/        ← pcb-design-digest-format.md(산출물 스키마) + gerber-extract.md/pads-extract.md/kicad-extract.md(입력군별 추출 절차)
+│   │   └── pcb-design-digest-setup/ ← 에이전트 설치 + 디렉토리 + CLAUDE.md 마커 1회 초기화 (MCP 불필요)
+│   ├── agents/                    ← pcb-design-analyst (깊은 PCB 분석 + 보드별 메모리 누적)
 │   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json
@@ -143,7 +143,7 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 플러그인 종류:
 - **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
 - **워크플로 플러그인**(parallel-delegation): 도메인 무관 절차. `claude-md/` 없음 + `*-setup`이 누락분만 보충
-- **메타 도구 플러그인**(harness/manual-digest/gerber-digest): Claude Code 자체 환경 또는 컨텍스트 관리 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `gerber-digest`는 에이전트 1개(gerber-pcb-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요).
+- **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest): Claude Code 자체 환경 또는 컨텍스트 관리 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요).
 
 1. `plugins/<이름>/plugin.json` 생성 (`name`, `version`, `description`, `skills` 필드)
 2. `plugins/<이름>/skills/<스킬명>/SKILL.md` 생성
@@ -164,7 +164,7 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 - `Glob`은 파일만 매치 — 디렉토리 확인은 PowerShell `Get-ChildItem -Directory` 또는 `ls`
 - JSON 숫자에 `+` 접두사(`+587`) 금지 — 부호 표기는 문자열 필드(`"+1.4%"`)로
 - Windows: `python3`/`python` 명령은 MS Store alias로 exit 49 가능 — PowerShell `ConvertFrom-Json` 권장
-- 에이전트 이름은 플러그인별 prefix(`pd-`, `kicad-`, `stm32f4-`, `gerber-`)로 — OMC 및 타 플러그인 에이전트와의 이름 충돌 방지. 도메인 약어 prefix(예: `kicad-pcb-analyzer`, `gerber-pcb-analyst`)도 충돌 위험이 낮으면 허용
+- 에이전트 이름은 플러그인별 prefix(`pd-`, `kicad-`, `stm32f4-`, `pcb-`)로 — OMC 및 타 플러그인 에이전트와의 이름 충돌 방지. 도메인 약어 prefix(예: `kicad-pcb-analyzer`, `pcb-design-analyst`)도 충돌 위험이 낮으면 허용
 
 <!-- manual-digest:start -->
 ## 매뉴얼 다이제스트 사용 규칙
@@ -178,3 +178,16 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 
 PDF 핀포인트 추출: `mcp__pdf-reader__read_pdf` `pages: "<범위 또는 혼합 범위>"`
 <!-- manual-digest:end -->
+<!-- pcb-design-digest:start -->
+## PCB 다이제스트 사용 규칙
+
+이 환경에는 보드 PCB 데이터(거버/PADS/KiCad)가 다이제스트로 등록될 수 있다 (현재 0개) — 보드/PCB 정보가 필요한 질문을 받으면:
+
+1. `.claude/pcb-designs/INDEX.md` (project) + `~/.claude/pcb-designs/INDEX.md` (global) 양쪽 확인
+2. 관련 보드의 `digest.md` 우선 참조 → 부족하면 `index.md` 파일/라인/넷 포인터로 원본 핀포인트(Read/Grep, PADS 바이너리는 strings|grep)
+3. 답변에 출처(파일·D-code/넷·scope) 명시
+4. 깊은 분석(SI/PI·차동쌍·플레인 분할·제조성)은 `pcb-design-analyst` 에이전트 호출
+5. 인덱싱되지 않은 보드면 `/pcb-design-digest <경로>` 등록 제안
+
+거버·KiCad·PADS ASCII는 텍스트 — MCP·gerbv 불필요, Read/Grep으로 파싱. PADS 바이너리(.pcb)는 strings 부분 추출.
+<!-- pcb-design-digest:end -->

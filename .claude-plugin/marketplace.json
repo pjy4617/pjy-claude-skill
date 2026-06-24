@@ -59,10 +59,10 @@
       "version": "1.0.0"
     },
     {
-      "name": "gerber-digest",
-      "source": "./plugins/gerber-digest",
-      "description": "거버 파일 세트(RS-274X/X2 .gbr/.pho, Excellon 드릴 .drl, PADS/Altium/KiCad/Eagle 출력) 다이제스트 메타 도구: 팹 출력 폴더를 한 번만 파싱·요약하면 이후 작업은 ~수 KB 압축 마크다운 다이제스트(보드 외곽·레이어 인벤토리·애퍼처/드릴 통계·DFM 이슈)만 1차 참조하고, 디테일 필요 시 특정 레이어/좌표만 핀포인트 재파싱. 거버는 전부 텍스트라 Read/Grep/Bash로 파싱(MCP·gerbv 불필요). project/global 스코프 + CLAUDE.md 마커 자동 주입. 2개 스킬(gerber-digest 인제스트/갱신/목록/삭제 + gerber-digest-setup 환경 1회 초기화) + gerber-pcb-analyst 에이전트(깊은 분석·보드별 메모리 누적).",
-      "version": "1.0.0"
+      "name": "pcb-design-digest",
+      "source": "./plugins/pcb-design-digest",
+      "description": "PCB 설계/제조 데이터 다이제스트 메타 도구: 거버 팹 출력(RS-274X/X2 .gbr/.pho, Excellon 드릴 .drl), PADS 레이아웃(.pcb 바이너리/.asc ASCII), KiCad 소스(.kicad_pcb/.kicad_sch/.kicad_pro) 세 입력군을 한 번만 파싱·요약하면 이후 작업은 ~수 KB 압축 마크다운 다이제스트(보드 외곽·레이어·넷·부품·애퍼처/드릴 통계·DFM 이슈)만 1차 참조하고, 디테일 필요 시 특정 레이어/넷/좌표만 핀포인트 재파싱. 거버·KiCad·PADS ASCII는 텍스트라 Read/Grep/Bash로, PADS 바이너리 .pcb는 strings 부분 추출. project/global 스코프 + CLAUDE.md 마커 자동 주입. 2개 스킬(pcb-design-digest 인제스트/갱신/목록/삭제 + pcb-design-digest-setup 환경 1회 초기화) + pcb-design-analyst 에이전트(깊은 분석·보드별 메모리 누적).",
+      "version": "2.0.0"
     }
   ]
 }

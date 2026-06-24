@@ -2,12 +2,12 @@
 
 거버 폴더를 **싸게** 다이제스트화하는 절차. 핵심 원칙: **작은 리포트 먼저(.rep/.lst), 큰 .pho는 핀포인트만**. 거버는 전부 텍스트라 MCP·gerbv 불필요 — `Read`/`Grep`/`Bash`로 파싱한다.
 
-> 깊은 분석(SI/PI, 차동쌍, 플레인 분할, 제조성 종합 판정)은 `gerber-pcb-analyst` 에이전트에 위임한다. 이 가이드는 다이제스트 골격을 만드는 추출 절차에 집중한다.
+> 깊은 분석(SI/PI, 차동쌍, 플레인 분할, 제조성 종합 판정)은 `pcb-design-analyst` 에이전트에 위임한다. 이 가이드는 다이제스트 골격을 만드는 추출 절차에 집중한다.
 
 ## 추출 경로 두 가지
 
-1. **에이전트 위임(권장, 기본)** — `gerber-pcb-analyst` 에이전트를 Agent 도구로 호출(`subagent_type: "gerber-pcb-analyst"`)하여 "출력 형식 1~6" 전 구조의 보고서를 받는다. 그 보고서를 `gerber-digest-format.md` 스키마로 재배치해 `digest.md`로 저장. 에이전트는 분석 노하우를 자체 메모리에 누적하므로 반복 보드에서 점점 빨라진다.
-2. **직접 파싱(폴백)** — 에이전트가 설치돼 있지 않거나(`/gerber-digest-setup` 미실행) 보드가 단순하면, 아래 단계를 스킬이 직접 수행한다.
+1. **에이전트 위임(권장, 기본)** — `pcb-design-analyst` 에이전트를 Agent 도구로 호출(`subagent_type: "pcb-design-analyst"`)하여 "출력 형식 1~6" 전 구조의 보고서를 받는다. 그 보고서를 `pcb-design-digest-format.md` 스키마로 재배치해 `digest.md`로 저장. 에이전트는 분석 노하우를 자체 메모리에 누적하므로 반복 보드에서 점점 빨라진다.
+2. **직접 파싱(폴백)** — 에이전트가 설치돼 있지 않거나(`/pcb-design-digest-setup` 미실행) 보드가 단순하면, 아래 단계를 스킬이 직접 수행한다.
 
 어느 경로든 산출물 형식과 교차검증 기준은 동일하다.
 
@@ -66,7 +66,7 @@ gd_manifest <folder> | sha256sum | cut -d' ' -f1
 
 ## 6. 다이제스트 작성
 
-`gerber-digest-format.md` 스키마대로 `digest.md` + `index.md` + `metadata.json` 작성. 모든 수치는 inch·mm 병기, 확정/추정 구분, 근거(파일·라인·D-code) 명시.
+`pcb-design-digest-format.md` 스키마대로 `digest.md` + `index.md` + `metadata.json` 작성. 모든 수치는 inch·mm 병기, 확정/추정 구분, 근거(파일·라인·D-code) 명시.
 
 ## 흔한 함정
 
