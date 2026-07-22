@@ -36,6 +36,11 @@ RTL 설계 → 시뮬레이션 → 합성 → Bitstream<br>
 PRD → 회로도 생성 + 8단계 리뷰 + BOM + 회로/PCB 분석(SI/PI) + KiCad 10.0 사용법 안내<br>
 5 스킬 + 4 에이전트
 </td>
+<td align="center" width="25%">
+<b>WMX3 Application</b><br>
+WMX3.7 앱 설계 → C++/C# 구현 → 시뮬레이터 테스트 → 사용 검토(3.6u3→3.7 마이그레이션) + 로봇 옵션(PTP/CP·충돌 감지) + EtherCAT ENI 파일 제작·ESI 분석<br>
+6 스킬 + 5 에이전트
+</td>
 </tr>
 <tr>
 <td align="center" width="25%">
@@ -148,6 +153,16 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 - CMake 3.16 이상
 - Linux 환경 (Ubuntu 20.04+, WSL2 포함) 또는 Windows (Visual Studio 2022)
 - WMX3 SDK (`LMX_INSTALLER_ROOT` 환경변수, 선택 사항 — 없어도 단위 테스트 가능)
+
+</details>
+
+<details>
+<summary><b>WMX3 Application 플러그인</b></summary>
+
+- WMX3 3.7 SDK (Soft Servo Systems / Movensys) — C++ 또는 .NET(WMX3ApiCLR) 개발 환경
+- 실 하드웨어 없이도 시뮬레이터 플랫폼(SimuPlatform)으로 모션 검증 가능 — EtherCAT 실기는 선택 사항
+- (선택) manual-digest 플러그인으로 `wmx37-user-manual-kr` 매뉴얼 다이제스트 등록 시 API 근거 참조 정확도 향상 — 다관절 로봇(Robot Option) 제어 시 `wmx3-robot-help-kr`도 함께 권장
+- (주의) RT 공간 실시간 앱 개발(RTX SDK, VC++ 한정)은 WMX3·RTX 런타임 라이선스와 별도로 IntervalZero RTX SDK 라이선스 필요
 
 </details>
 
@@ -282,6 +297,20 @@ Claude Code 터미널에서 다음을 입력합니다. **한 번만 하면 됩�
 
 셋업 시 프로젝트 경로를 질문합니다. 지정한 경로에 6개 에이전트와 CLAUDE.md가 생성됩니다.
 
+#### WMX3 Application (WMX3.7 애플리케이션 개발) 설치
+
+```
+/plugin install wmx3app@pjy-skills
+```
+
+6개 스킬이 한 번에 활성화됩니다. 이후 에이전트를 설치합니다:
+
+```
+/wmx3-app-setup
+```
+
+셋업 시 프로젝트 경로를 질문합니다. 지정한 경로에 5개 에이전트와 CLAUDE.md가 생성됩니다. wmx3md(엔진 내부 모듈 개발)와 달리 WMX3 API를 **호출하는 애플리케이션** 개발용입니다.
+
 #### Manual (Sphinx 문서화) 설치
 
 ```
@@ -381,6 +410,7 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 /plugin install vivado@pjy-skills
 /plugin install stm32f4@pjy-skills
 /plugin install wmx3md@pjy-skills
+/plugin install wmx3app@pjy-skills
 /plugin install manual@pjy-skills
 /plugin install kicad@pjy-skills
 /plugin install parallel-delegation@pjy-skills
@@ -520,6 +550,39 @@ Layer 1: <ModuleName> (C99 Core RTDLL/SO)
     ↓
 WMX3 엔진 + IMLib + OSL
 ```
+
+---
+
+### WMX3 Application 플러그인 — 이렇게 말하면 됩니다
+
+WMX3.7 라이브러리를 **사용하는 애플리케이션**(장비 제어 SW)을 설계 → C++/C# 구현 → 시뮬레이터 테스트 → 사용 검토 흐름으로 개발합니다. wmx3md(WMX3 엔진에 로드되는 내부 모듈 rtdll 개발)와 달리, WMX3 API를 **호출하는 응용 프로그램** 쪽을 담당합니다. 다관절 로봇은 로봇 옵션(Robot Option — PTP/CP·충돌 감지)으로 지원합니다.
+
+| 하고 싶은 것 | 이렇게 말하세요 | 동작하는 스킬/에이전트 |
+|-------------|---------------|---------------------|
+| 시스템 설계 | "3축 갠트리 장비 WMX 시스템 설계해줘" | wmx3-app-design 스킬 + wmx3app-architect 에이전트 |
+| C++/C# 구현 | "이 설계로 C++ 모션 프로그램 작성해줘" | wmx3-app-implement 스킬 + wmx3app-implementer 에이전트 |
+| 테스트 | "시뮬레이터로 모션 테스트해줘" | wmx3-app-test 스킬 + wmx3app-test-engineer 에이전트 |
+| 사용 검토 | "이 프로젝트 WMX3 사용법 점검해줘" | wmx3-app-review 스킬 + wmx3app-usage-reviewer 에이전트 |
+| 3.7 마이그레이션 | "3.6u3 코드 3.7 이식 검토해줘" | wmx3-app-review / wmx3-app-implement |
+| 로봇 제어 | "6축 로봇 PTP/CP 시스템 설계해줘" | wmx3-app-design / wmx3-app-implement (Robot Option) |
+| ENI 파일 제작·ESI 분석 | "서보 4축 + IO 2대 구성 ENI 파일 만들어줘" / "보유 ESI 파일 분석해줘" | wmx3-app-eni 스킬 + wmx3app-eni-builder 에이전트 |
+| 에이전트 설치 | "wmx3app 설정해줘" | wmx3-app-setup 스킬 |
+
+#### WMX3 Application 전체 워크플로우
+
+```
+"WMX 시스템 설계해줘"            ← wmx3-app-design (플랫폼 선택·축 구성·기능 매핑·성능/안정성 전략)
+    ↓
+"설계대로 구현해줘"              ← wmx3-app-implement (C++/C# 초기화 시퀀스·모션·에러 처리)
+    ↓
+"시뮬레이터로 테스트해줘"        ← wmx3-app-test (SimuPlatform — 실 HW 없이 모션 검증)
+    ↓
+"WMX3 사용법 점검해줘"           ← wmx3-app-review (7카테고리 체크리스트, CRITICAL/MAJOR/MINOR/INFO)
+```
+
+> **wmx3md와의 차이**: wmx3md는 WMX3 엔진에 로드되는 **내부 모듈(rtdll) 개발**, wmx3app은 WMX3 API를 호출하는 **애플리케이션 개발**입니다.
+>
+> **manual-digest 연동 권장**: `/manual-digest`로 WMX3.7 매뉴얼(`wmx37-user-manual-kr`)을 등록하면 설계·구현·검토 시 API 근거를 다이제스트에서 1차 참조합니다. 다관절 로봇 제어를 다루면 로봇 매뉴얼(`wmx3-robot-help-kr`)도 함께 등록하세요.
 
 ---
 
@@ -871,6 +934,23 @@ pjy-claude-skill/
 │   │   ├── agents/ (6개)          ← designer, generator, build-checker, test-writer, code-reviewer, doc-writer
 │   │   ├── claude-md/
 │   │   └── docs/
+│   ├── wmx3app/                   ← WMX3.7 애플리케이션 개발 플러그인
+│   │   ├── plugin.json
+│   │   ├── skills/ (6개)          ← 시스템 설계, C++/C# 구현, 테스트, 사용 검토, ENI 제작, 환경 설정
+│   │   │   ├── wmx3-app-design/
+│   │   │   │   └── references/    ← 아키텍처 코어, 플랫폼 선택, 모션 기능 매핑, 성능/안정성, 로봇 옵션
+│   │   │   ├── wmx3-app-implement/
+│   │   │   │   └── references/    ← C++/C# 구현, 에러 처리, v3.7 마이그레이션
+│   │   │   ├── wmx3-app-test/
+│   │   │   │   └── references/    ← 시뮬레이터 플랫폼, 테스트 전략
+│   │   │   ├── wmx3-app-review/
+│   │   │   │   └── references/    ← 사용 검토 체크리스트 (7카테고리)
+│   │   │   ├── wmx3-app-eni/
+│   │   │   │   └── references/    ← eni-file-guide (WMX3 전용 ENI·ec_network.def·ESI 분석·PDO/CANopen 매핑)
+│   │   │   └── wmx3-app-setup/
+│   │   ├── agents/ (5개)          ← architect, implementer, test-engineer, usage-reviewer, eni-builder
+│   │   ├── claude-md/
+│   │   └── docs/USAGE_GUIDE.md
 │   ├── manual/                    ← Sphinx 문서화 플러그인
 │   │   ├── plugin.json
 │   │   ├── skills/ (4개)          ← 문서 생성, 빌드, 리뷰, 환경 설정
@@ -984,6 +1064,7 @@ KiCad 9.x에서 바로 열 수 있습니다. 다만 S-expression 직접 생성�
 - **Vivado**: [`plugins/vivado/docs/Vivado-스킬-에이전트-사용가이드.md`](plugins/vivado/docs/Vivado-스킬-에이전트-사용가이드.md)
 - **STM32F4**: [`plugins/stm32f4/docs/USAGE_GUIDE.md`](plugins/stm32f4/docs/USAGE_GUIDE.md)
 - **WMX3 Motion Module**: [`plugins/wmx3md/docs/USAGE_GUIDE.md`](plugins/wmx3md/docs/USAGE_GUIDE.md)
+- **WMX3 Application**: [`plugins/wmx3app/docs/USAGE_GUIDE.md`](plugins/wmx3app/docs/USAGE_GUIDE.md)
 - **Sphinx Manual**: [`plugins/manual/docs/USAGE_GUIDE.md`](plugins/manual/docs/USAGE_GUIDE.md)
 - **KiCad**: [`plugins/kicad/docs/usage-guide.md`](plugins/kicad/docs/usage-guide.md)
 - **Parallel Delegation**: [`plugins/parallel-delegation/docs/usage-guide.md`](plugins/parallel-delegation/docs/usage-guide.md)

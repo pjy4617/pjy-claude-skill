@@ -46,6 +46,23 @@ plugins/
 │   ├── agents/
 │   ├── claude-md/CLAUDE.md
 │   └── docs/
+├── wmx3app/                       ← WMX3.7 애플리케이션 개발 플러그인 (6 스킬 + 5 에이전트) — wmx3md(엔진 내부 모듈 rtdll)와 달리 WMX3 API를 호출하는 응용 프로그램 개발. Robot Option 다관절 로봇 제어(PTP/CP·충돌 감지)·EtherCAT ENI 파일 제작·ESI 분석 포함
+│   ├── plugin.json
+│   ├── skills/
+│   │   ├── wmx3-app-design/       ← 요구사항 → 시스템 설계 (플랫폼 선택·축 구성·모션 기능 매핑·성능/안정성)
+│   │   │   └── references/        ← architecture-core, platform-selection, motion-function-map, performance-stability, robot-option
+│   │   ├── wmx3-app-implement/    ← C++/C# 구현 (초기화 시퀀스·에러 처리·3.6u3→3.7 마이그레이션)
+│   │   │   └── references/        ← cpp-implementation, csharp-implementation, error-handling, v37-migration
+│   │   ├── wmx3-app-test/         ← 시뮬레이터 플랫폼(SimuPlatform) 기반 테스트
+│   │   │   └── references/        ← simulator-platform, test-strategy
+│   │   ├── wmx3-app-review/       ← 기존 프로젝트 WMX3 사용 검토 (7카테고리 체크리스트)
+│   │   │   └── references/        ← usage-review-checklist
+│   │   ├── wmx3-app-eni/          ← EtherCAT ENI 파일 제작 (WMX3 전용 ENI·ec_network.def·슬레이브 ESI 분석·PDO/CANopen 매핑)
+│   │   │   └── references/        ← eni-file-guide
+│   │   └── wmx3-app-setup/        ← 에이전트 5종 + CLAUDE.md 설치
+│   ├── agents/                    ← wmx3app-architect/implementer/test-engineer/usage-reviewer/eni-builder
+│   ├── claude-md/CLAUDE.md
+│   └── docs/
 ├── kicad/                         ← KiCad 회로도 플러그인 (5 스킬 + 4 에이전트)
 │   ├── plugin.json
 │   ├── skills/
@@ -143,7 +160,7 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 ## 새 플러그인 추가 절차
 
 플러그인 종류:
-- **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
+- **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md/wmx3app): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
 - **워크플로 플러그인**(parallel-delegation): 도메인 무관 절차. `claude-md/` 없음 + `*-setup`이 누락분만 보충
 - **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest): Claude Code 자체 환경 또는 컨텍스트 관리 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요).
 
