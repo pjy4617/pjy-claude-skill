@@ -53,13 +53,22 @@ model: opus
 
 ```python
 import numpy as np
+
+def _boot_ci(x, n_boot=10_000, alpha=5.0, rng=None):
+    """percentile 부트스트랩으로 '평균'에 대한 95% CI 추정(시드 평균 배열 x를 재표본).
+    골격 — 정본은 evaluation-protocol.md §3의 IQM·층화 부트스트랩 CI(Agarwal et al. 2021 rliable)를 사용."""
+    rng = rng if rng is not None else np.random.default_rng(0)
+    x = np.asarray(x)
+    boot_means = rng.choice(x, size=(n_boot, len(x)), replace=True).mean(axis=1)
+    return np.percentile(boot_means, [alpha / 2, 100 - alpha / 2])
+
 def evaluate(model, make_env, n_episodes=50, seeds=range(10)):
     """다중 시드·다중 에피소드 평가. 결정론적 정책 + 신뢰구간."""
     per_seed = []
     for s in seeds:
         env = make_env(seed=s); returns = []
         for _ in range(n_episodes):
-            obs, _ = env.reset()                      # Gymnasium 5-튜플
+            obs, _ = env.reset()                      # reset -> (observation, info) 2-튜플
             done, ret = False, 0.0
             while not done:
                 action, _ = model.predict(obs, deterministic=True)
@@ -69,8 +78,8 @@ def evaluate(model, make_env, n_episodes=50, seeds=range(10)):
             returns.append(ret)
         per_seed.append(np.mean(returns))
     per_seed = np.array(per_seed)
-    # 시드 간 평균과 95% 신뢰구간(부트스트랩 권장 — 정규 가정 회피)
-    return per_seed.mean(), np.percentile(per_seed, [2.5, 97.5])
+    # 시드 평균과 그 평균에 대한 95% 부트스트랩 CI(percentile method — 정규 가정 회피)
+    return per_seed.mean(), _boot_ci(per_seed)
 ```
 
 ### 3단계: 기능·안전 테스트 (근거: `functional-safety-tests.md`)
@@ -104,16 +113,20 @@ def evaluate(model, make_env, n_episodes=50, seeds=range(10)):
 - 두 정책(또는 정책 vs 베이스라인) 비교 시 시드 표본으로 **신뢰구간 겹침/부트스트랩**을 확인. 겹치면 "유의차 없음"으로 보고(고분산 함정 주의).
 - 표본이 적으면 결론을 보수적으로 내리고 시드 수 증대를 권고.
 
-### 5단계: sim-to-real 게이트 + 리포트
+### 5단계: 실기 전환 가드 게이트 + 리포트
 
-시뮬 성능은 실기 성능을 보장하지 않습니다(sim-to-real 갭). 실기 전환 전 가드형 체크리스트를 함께 냅니다:
+시뮬 성능은 실기 성능을 보장하지 않습니다(sim-to-real 갭). 실기 전환 전 가드형 체크리스트를 함께 냅니다(정본 10항목: `functional-safety-tests.md` §11):
 
-- [ ] 시뮬 다중 시드 성능이 베이스라인을 유의하게 상회
-- [ ] 제약 위반율·비상 정지가 안전 기준 충족(CRITICAL 0건)
-- [ ] 도메인 랜덤화 범위에서 강건성 확인(모델 불확실성 대리)
-- [ ] 안전 계층·폴백 제어기가 배포 경로에 존재하고 동작 확인
-- [ ] 저속·소범위 가드 운전 계획, 사람 감독·비상 정지 준비
-- [ ] 정규화 통계·추론 지연이 배포 구성과 일치
+- [ ] 안전 계층(clipping/shielding) 활성·주입 테스트 통과
+- [ ] 폴백 고전 제어기 상시 대기·전환 동작 확인(정책 실패·NaN·지연 초과 시)
+- [ ] 비상 정지 경로 검증
+- [ ] 제약 위반율 0 — 워스트케이스/적대적 외란 포함(CRITICAL 0건)
+- [ ] 실기 파라미터가 학습/랜덤화 분포 내
+- [ ] deterministic 정책·추론 지연 예산 충족(지연 초과 시 폴백)
+- [ ] 배포 구성 그대로 평가(정규화·안전 계층 포함)
+- [ ] 사람 감독 하 저속·소범위 시운전 계획
+- [ ] 실기 데이터 로깅·롤백 계획
+- [ ] 성능은 `evaluation-protocol.md` 기준(다중 시드·베이스라인) 충족
 
 ---
 
@@ -139,7 +152,7 @@ def evaluate(model, make_env, n_episodes=50, seeds=range(10)):
   - 비상 정지       : {동작 확인}  → {PASS|FAIL}
 
 [종합 판정]  ▶ PASS | ▶ FAIL(사유·심각도)
-sim-to-real 게이트: {완료 n/6 — 미완 항목}
+실기 전환 가드 게이트: {완료 n/10 — 미완 항목}
 후속: 결함 수정은 rlctrl-implementer, 설계 재검토는 rlctrl-algorithm-designer에 위임
 ```
 

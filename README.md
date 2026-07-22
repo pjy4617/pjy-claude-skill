@@ -79,7 +79,7 @@ React 19 + Vite 8 + TS 프론트엔드 — Fluent UI v9 / shadcn/ui 택1, 범용
 <tr>
 <td align="center" width="25%">
 <b>RL Control</b><br>
-강화학습(RL) 제어 적용 검토(게이트: 고전 제어 우선 판별) → 알고리즘 설계 → Gymnasium/SB3 구현 → 성능·안전 테스트(다중 시드·sim-to-real)<br>
+강화학습(RL) 제어 적용 검토(게이트: 고전 제어 우선 판별) → 알고리즘 설계 → Gymnasium/SB3 구현 → 성능·안전 테스트(다중 시드·sim-to-real) → ONNX·C#/C++ 추론 배포<br>
 5 스킬 + 4 에이전트
 </td>
 </tr>
@@ -885,7 +885,7 @@ PCB 설계 입력 세 종류 — **①거버/드릴 출력 폴더 ②PADS 레이
 | 알고리즘 선정·설계 | "SAC랑 PPO 중 뭐 써야 해?" / "보상 함수 설계해줘" | rl-design 스킬 + rlctrl-algorithm-designer 에이전트 |
 | 안전 강화학습 설계 | "안전 제약 있는 RL 설계해줘" | rl-design 스킬 (제약 MDP·Lagrangian·shielding) |
 | 환경·학습 구현 | "Gymnasium 환경 만들고 SB3로 학습해줘" | rl-implement 스킬 + rlctrl-implementer 에이전트 |
-| 실시간 추론 배포 | "학습한 정책 ONNX로 배포해줘" | rl-implement 스킬 (안전 계층·추론 지연 예산) |
+| 실시간 추론 배포 | "학습한 정책 ONNX로 배포해줘" / "C#/C++ 구동 프로그램에 배포해줘" | rl-implement 스킬 (안전 계층·추론 지연 예산·ONNX→C#/C++ 추론·정규화 패리티) |
 | 성능·안전 테스트 | "정책 성능 평가해줘" / "sim-to-real 검증해줘" | rl-test 스킬 + rlctrl-evaluator 에이전트 |
 | 에이전트 설치 | "rlcontrol 설정해줘" | rl-setup 스킬 |
 
@@ -1079,7 +1079,7 @@ pjy-claude-skill/
 │   │   │   ├── rl-design/         ← 알고리즘 선정 + 환경/보상/안전 설계
 │   │   │   │   └── references/    ← algorithm-catalog / algorithm-selection / reward-and-safety
 │   │   │   ├── rl-implement/      ← Gymnasium 환경(5-튜플)·SB3/CleanRL 학습·ONNX 배포
-│   │   │   │   └── references/    ← environment-design / framework-guide / training-and-deployment
+│   │   │   │   └── references/    ← environment-design / framework-guide / training-and-deployment / cross-language-deployment
 │   │   │   ├── rl-test/           ← 다중 시드 성능·기능·안전 테스트 (sim-to-real)
 │   │   │   │   └── references/    ← evaluation-protocol / functional-safety-tests
 │   │   │   └── rl-setup/

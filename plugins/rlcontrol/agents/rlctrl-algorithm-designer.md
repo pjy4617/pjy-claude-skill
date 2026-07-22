@@ -52,7 +52,7 @@ model: opus
 | 온폴리시 정책경사 | REINFORCE·A2C·PPO(Schulman 2017)·TRPO(Schulman 2015) | 이산+연속 | 온폴리시 | 낮음 | 안정·튜닝 쉬움, 표본 많이 필요 |
 | 오프폴리시 연속제어 | DDPG(Lillicrap et al. 2016)·TD3(Fujimoto et al. 2018)·SAC(Haarnoja et al. 2018)·TQC(Kuznetsov et al. 2020) | **연속** | 오프폴리시 | 높음 | 리플레이로 표본 효율↑, SAC는 엔트로피 정규화로 강건 |
 | 모델기반 | MBPO(Janner et al. 2019)·PETS(Chua et al. 2018)·Dreamer(Hafner et al. 2020~2023) | 연속/이산 | - | 매우 높음 | 모델 오차 리스크·구현 복잡 |
-| 오프라인 RL | BCQ(Fujimoto et al. 2019)·CQL(Kumar et al. 2020)·IQL(Kostrikov et al. 2022)·TD3+BC(Fujimoto et al. 2021) | 연속/이산 | 오프라인 | 고정 데이터 | 분포 이탈(OOD) 억제, 탐색 없음 |
+| 오프라인 RL | BCQ(Fujimoto et al. 2019)·CQL(Kumar et al. 2020)·IQL(Kostrikov et al. 2022)·TD3+BC(Fujimoto & Gu 2021) | 연속/이산 | 오프라인 | 고정 데이터 | 분포 이탈(OOD) 억제, 탐색 없음 |
 | Safe RL | CPO(Achiam 2017)·Lagrangian-PPO/SAC | 연속/이산 | - | - | 제약 MDP·비용 제약 만족 |
 
 **실무 기본값 지침(왜 그 기본값인지 근거 포함)**:
@@ -105,7 +105,7 @@ reward = - w_track * tracking_error        # 추종/정착 오차(주 목표, �
 - **무제약 정책 실기 직배포 금지**: 시뮬레이터 우선 검증 → 가드형 실기 전환
 
 **데이터 체제별 설계 주의(확립된 사실)**:
-- **오프라인 RL**(실기 로그만·탐색 불가): 분포 이탈(OOD) 행동의 가치 과대추정이 핵심 위험. CQL(보수적 Q)·IQL(암묵적 분위수)·TD3+BC(행동 복제 정규화)처럼 데이터 분포에 정책을 붙들어두는 알고리즘을 쓰고, 데이터 커버리지(어떤 상태·행동이 로그에 있는가)를 먼저 점검한다. 로그가 특정 운전점에 편중되면 그 밖에서는 신뢰할 수 없다.
+- **오프라인 RL**(실기 로그만·탐색 불가): 분포 이탈(OOD) 행동의 가치 과대추정이 핵심 위험. CQL(보수적 Q)·IQL(암묵적 Q학습·expectile 회귀로 데이터 내 행동만 학습)·TD3+BC(행동 복제 정규화)처럼 데이터 분포에 정책을 붙들어두는 알고리즘을 쓰고, 데이터 커버리지(어떤 상태·행동이 로그에 있는가)를 먼저 점검한다. 로그가 특정 운전점에 편중되면 그 밖에서는 신뢰할 수 없다.
 - **Safe RL**(강한 제약): 페널티만으로는 제약을 보장하지 못한다. 제약 MDP(비용 예산)를 CPO/Lagrangian으로 명시하거나, 검증 가능한 안전 집합에 대한 shielding으로 위반을 사전 차단한다. 제약 위반율은 rlctrl-evaluator의 하드 게이트가 된다.
 - **온라인 탐색 가능하나 안전 크리티컬**: 탐색 구간에도 안전 계층을 항상 통과시키고, 초기 정책을 고전 제어기/모방학습으로 워밍업해 위험한 초기 무작위 행동을 줄인다.
 

@@ -121,8 +121,8 @@ plugins/
 │   │   │   └── references/        ← mdp-formulation, feasibility-checklist, rl-vs-classical
 │   │   ├── rl-design/             ← 알고리즘 검토·선정 + 환경/보상/안전 설계
 │   │   │   └── references/        ← algorithm-catalog, algorithm-selection, reward-and-safety
-│   │   ├── rl-implement/          ← Gymnasium 환경(5-튜플)·SB3/CleanRL 학습·ONNX 실시간 추론 배포
-│   │   │   └── references/        ← environment-design, framework-guide, training-and-deployment
+│   │   ├── rl-implement/          ← Gymnasium 환경(5-튜플)·SB3/CleanRL 학습·ONNX 내보내기 + C#/C++ 구동 프로그램 추론 배포(정규화 패리티·구동측 안전 계층)
+│   │   │   └── references/        ← environment-design, framework-guide, training-and-deployment, cross-language-deployment
 │   │   ├── rl-test/               ← 성능·기능·안전 테스트 (다중 시드 통계·제약 위반율·sim-to-real)
 │   │   │   └── references/        ← evaluation-protocol, functional-safety-tests
 │   │   └── rl-setup/              ← 에이전트 4종 + CLAUDE.md 설치

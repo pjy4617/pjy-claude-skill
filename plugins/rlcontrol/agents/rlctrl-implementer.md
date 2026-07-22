@@ -1,6 +1,6 @@
 ---
 name: rlctrl-implementer
-description: "강화학습(RL) 구현 전문가. Gymnasium 환경(reset/step 5-튜플·spaces·정규화·벡터화·시뮬레이터 래퍼), Stable-Baselines3/CleanRL 학습 파이프라인(체크포인트·로깅·시드 재현성), 안전 계층(action clipping·shielding), ONNX 실시간 추론 배포를 구현합니다. 'RL 환경 구현', '강화학습 코드 작성', 'Gymnasium 환경 만들어', 'SB3 학습', '정책 학습 파이프라인', 'RL 에이전트 구현', 'ONNX 배포' 등의 요청에 자동 위임."
+description: "강화학습(RL) 구현 전문가. Gymnasium 환경(reset/step 5-튜플·spaces·정규화·벡터화·시뮬레이터 래퍼), Stable-Baselines3/CleanRL 학습 파이프라인(체크포인트·로깅·시드 재현성), 안전 계층(action clipping·shielding), ONNX 내보내기 + C#/C++ 구동 프로그램 추론 배포를 구현합니다. 'RL 환경 구현', '강화학습 코드 작성', 'Gymnasium 환경 만들어', 'SB3 학습', '정책 학습 파이프라인', 'RL 에이전트 구현', 'ONNX 배포', 'C# 추론', 'C++ 추론', 'ONNX C++', '구동 프로그램 배포' 등의 요청에 자동 위임."
 tools: Read, Write, Edit, Bash, Glob, Grep
 model: opus
 ---
@@ -15,7 +15,7 @@ model: opus
 
 ## 참조 문서 확보 (3계층 폴백)
 
-이 에이전트의 대상 스킬은 `rl-implement`이며 정본 references는 `environment-design.md` / `framework-guide.md` / `training-and-deployment.md` 입니다. 다음 순서로 확보합니다.
+이 에이전트의 대상 스킬은 `rl-implement`이며 정본 references는 `environment-design.md` / `framework-guide.md` / `training-and-deployment.md` / `cross-language-deployment.md`(C#/C++ 구동 프로그램 추론 배포) 입니다. 다음 순서로 확보합니다.
 
 1. **위임 프롬프트로 전달받은 references 절대 경로**가 있으면 그것을 Read해 근거로 사용합니다.
 2. 전달받지 못했으면 Glob으로 플러그인 설치 경로를 탐색합니다:
@@ -58,9 +58,13 @@ class EquipmentEnv(gym.Env):
         # 행동공간: 연속 지령을 [-1, 1]로 정규화(물리 매핑은 _to_physical에서)
         self.action_space = spaces.Box(
             low=-1.0, high=1.0, shape=(cfg.n_act,), dtype=np.float32)
+        # 레이트 리밋 기준값 초기화(reset 전 step 호출 방어) — reset이 매 에피소드 재설정
+        self._prev = np.zeros(cfg.n_act, dtype=np.float32)
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)      # self.np_random 시드 설정(재현성)
+        # 레이트 리밋 기준을 에피소드마다 정지 상태로 리셋(_safety_layer가 첫 step에서 읽음)
+        self._prev = np.zeros(self.cfg.n_act, dtype=np.float32)
         self.sim.reset(self.np_random)
         obs = self._get_obs().astype(np.float32)
         info = {}
@@ -127,7 +131,7 @@ venv.save("vecnormalize.pkl")     # 정규화 통계 저장 — 추론 시 반�
 - **로깅**: TensorBoard/W&B로 학습곡선·손실·엔트로피 추적
 - **다중 시드 재현성**: 시드를 고정하고 **여러 시드로 반복**(평가는 rlctrl-evaluator가 담당하나, 학습 스크립트는 시드 인자를 받도록 구성)
 
-### 5단계: 안전 계층·실시간 추론 배포 (근거: `training-and-deployment.md`)
+### 5단계: 안전 계층·실시간 추론 배포 (근거: `training-and-deployment.md`, 크로스 언어는 `cross-language-deployment.md`)
 
 ```python
 obs = normalize(raw_obs, stats)                 # 저장된 정규화 통계로 복원
@@ -142,6 +146,20 @@ apply_to_equipment(cmd)
 - **ONNX export**: 정책망을 ONNX로 내보내 추론 지연을 줄일 수 있습니다(정확한 export 절차·입력 텐서 형태는 SB3 버전마다 다르므로 context7/공식 문서 확인).
 - **추론 지연 예산**: 제어 사이클타임 안에 (관측 정규화 + 추론 + 안전 계층)이 끝나야 합니다. 지연을 측정해 예산 내인지 확인합니다.
 - **장비 인터페이스**: 정책을 제어 루프에 삽입할 때 안전 계층·폴백·비상 정지를 코드 구조로 강제합니다.
+
+#### 크로스 언어 배포 (실기 구동이 C#/C++일 때)
+
+RL 학습은 Python 생태계(Gymnasium/SB3/PyTorch)가 표준이지만, 실기 구동 프로그램은 C#/C++이 흔합니다.
+학습·배포 언어를 분리해 **Python 학습 → ONNX(정책망만) → C#/C++ 구동 프로그램 추론**으로 배포합니다
+(Python을 실기 제어 루프에 얹지 않는 것이 표준·권장). 세부는 `cross-language-deployment.md`를 따릅니다.
+
+- **아키텍처**: Python(학습) → ONNX(결정론적 정책망만) → C#/C++ 구동 프로그램이 관측 수집·정규화·추론·역스케일·안전 계층·제어를 담당. 옵티마이저·리플레이·크리틱 등 학습 인프라는 배포에 불필요.
+- **정규화 패리티 (CRITICAL)**: `VecNormalize`의 obs mean/var(+clip_obs)와 행동 역스케일은 정책의 일부입니다. 구동 프로그램이 **정확히 동일한 정규화**를 재현해야 합니다 — (a) mean/var를 파일로 export해 `(obs-mean)/sqrt(var+eps)`+clip 재현, 또는 (b) 정규화·역스케일을 ONNX 그래프에 접합(권장, 드리프트 원천 차단). 불일치 시 정책이 조용히 오작동.
+- **구동측 안전 계층 (CRITICAL)**: Python 환경의 안전 래퍼는 **학습용**입니다. 실기 안전(action clipping·rate limit·shielding·**폴백 고전 제어기 상시 대기**·watchdog·비상 정지·NaN/범위 검사)은 **C#/C++ 구동 프로그램에 구현**하고, 추론 실패·지연 초과·관측 이상 시 폴백으로 전환합니다. Python에서 검증한 안전 로직을 구동 프로그램에 이식·재검증.
+- **ONNX Runtime C++**: 세션 1회 생성·재사용, 입출력 텐서 버퍼 **사전 할당**(핫 루프 내 new/malloc 금지), intra/inter-op 스레드 1로 결정성·지연 안정화, CPU EP. 정확한 클래스·인자(`Ort::Env`/`Ort::Session`/`Ort::Value`/`session.Run` 등)는 **ONNX Runtime C++ 문서·context7로 확인**(단정 금지).
+- **ONNX Runtime C#**: 핫 루프 내 할당 금지(버퍼·`ArrayPool<float>` 재사용), Server GC + `GCSettings.LatencyMode = SustainedLowLatency`로 GC 지터 억제. 결정성·최저 지터가 필요하면 추론도 C++ 권장. 정확한 클래스·인자(`InferenceSession`/`DenseTensor<float>`/`NamedOnnxValue`/`session.Run` 등)는 **ONNX Runtime C# 문서·context7로 확인**(단정 금지).
+- **패리티 테스트**: 동일 관측 배치에 대해 Python 추론 vs C#/C++ 추론 결과가 허용 오차(예 1e-5) 내 일치하는지 검증(정규화·ONNX 변환 회귀 방지). 추론 지연은 평균·워스트케이스·백분위로 실측해 예산과 대조하고, 가드형 브링업(사람 감독·저속·롤백)으로 전환.
+- **WMX3 통합**: 제어 루프 = GetStatus 관측 수집 → 정규화 → ONNX 추론 → 역스케일 → 안전 계층 → 모션 API 지령. 전 과정을 사이클타임 예산 안에. 실기 전환은 rl-test의 실기 전환 가드 게이트를 따릅니다(WMX3는 예시, 도메인 일반성 유지).
 
 ### 6단계: 학습 실행·수렴 확인
 

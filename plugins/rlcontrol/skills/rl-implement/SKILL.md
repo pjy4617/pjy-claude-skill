@@ -40,7 +40,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent
 | ② | **Gymnasium 환경 구현**: `gymnasium.Env` 서브클래스, `reset(seed) -> (obs, info)`, `step(action) -> (obs, reward, terminated, truncated, info)` **5-튜플**, `observation_space`/`action_space`(Box/Discrete), 관측·행동 정규화, 벡터화, 시뮬레이터/장비 래퍼(안전 계층 삽입 지점), `check_env` 검증 | `references/environment-design.md` |
 | ③ | **프레임워크 선택·에이전트 구성**: SB3(생산 기본)/CleanRL(연구·커스터마이즈)/Tianshou/RLlib(분산), 오프라인은 d3rlpy, Safe RL은 omnisafe/safety-gymnasium | `references/framework-guide.md` |
 | ④ | **학습 파이프라인**: 하이퍼파라미터 관리·정규화 저장/복원·EvalCallback/CheckpointCallback·TensorBoard/W&B 로깅·**다중 시드 재현성** | `references/training-and-deployment.md` |
-| ⑤ | **안전 계층·실시간 추론 배포**: action clipping·shielding·폴백 고전 제어기 상시 대기·ONNX export·추론 지연 예산·장비 제어 루프에 정책 삽입 | `references/environment-design.md` + `references/training-and-deployment.md` |
+| ⑤ | **안전 계층·실시간 추론 배포**: action clipping·shielding·폴백 고전 제어기 상시 대기·ONNX export·추론 지연 예산·장비 제어 루프에 정책 삽입. 실기 구동이 C#/C++이면 크로스 언어 배포 | `references/environment-design.md` + `references/training-and-deployment.md` + `references/cross-language-deployment.md`(C#/C++ 구동) |
 | ⑥ | **학습 실행·수렴 확인**: 짧은 스모크 학습 → 학습곡선·평가 보상 상승 확인, 그다음 본 학습 (테스트/평가는 rl-test에 위임) | — |
 
 성능·기능 평가(다중 시드 통계·베이스라인 대비·제약 위반율·강건성·sim-to-real 검증)는
@@ -125,10 +125,15 @@ SEED = 0
 train_env = make_vec_env(lambda: PlantEnv(), n_envs=4, seed=SEED)
 train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True)
 
+# 평가 전용 환경 — 학습과 다른 시드 · 보상 정규화 끔 · 통계 갱신 정지(training=False)
+eval_env = make_vec_env(lambda: PlantEnv(), n_envs=1, seed=SEED + 100)
+eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=False, training=False)
+
 model = SAC("MlpPolicy", train_env, seed=SEED, verbose=1,
             tensorboard_log="./tb/")   # 하이퍼파라미터는 공식 문서/rl-zoo 기본값에서 출발
-# 평가 콜백: 학습 중 주기적으로 결정론적 정책 평가 + 최고 성능 체크포인트 저장
-eval_cb = EvalCallback(train_env, best_model_save_path="./ckpt/",
+# 평가 콜백: 별도 eval_env로 주기적 결정론적 정책 평가 + 최고 성능 체크포인트 저장
+# (EvalCallback이 매 평가마다 sync_envs_normalization으로 학습→평가 정규화 통계 자동 동기화)
+eval_cb = EvalCallback(eval_env, best_model_save_path="./ckpt/",
                        eval_freq=10_000, deterministic=True)
 model.learn(total_timesteps=200_000, callback=eval_cb)
 model.save("sac_plant")
@@ -149,6 +154,9 @@ train_env.save("vecnormalize.pkl")     # 정규화 통계 저장 (추론 시 동
   폴백으로 전환하고 비상 정지 조건을 둡니다.
 - **ONNX 실시간 추론 배포**: 학습 프레임워크 의존성 없이 정책만 ONNX로 export →
   추론 지연이 제어 루프 주기 예산 안에 드는지 측정. 정규화 통계도 함께 배포.
+- **크로스 언어 배포(실기 구동이 C#/C++)**: 실기 구동 프로그램이 C#/C++이면 Python 학습 →
+  ONNX → C#/C++ 추론이 표준 패턴입니다. 정규화 패리티·구동측 안전 계층·패리티 테스트는
+  `references/cross-language-deployment.md`를 따릅니다.
 - **시뮬 우선 → 가드형 실기 전환**: 시뮬레이터에서 검증(rl-test) → 사람 감독 하 실기 전환.
   (세부: `references/training-and-deployment.md` — 학습↔실기 안전 검증 게이트)
 
@@ -159,6 +167,7 @@ train_env.save("vecnormalize.pkl")     # 정규화 통계 저장 (추론 시 동
 | `references/environment-design.md` | Gymnasium 환경 구현 — `gymnasium.Env` 서브클래스, reset/step **5-튜플**, Box/Discrete spaces, 관측/행동 정규화, 벡터화(VecEnv), 시뮬레이터/장비 래퍼(안전 계층 삽입 지점), `check_env`, **Gym→Gymnasium 4→5튜플 마이그레이션** |
 | `references/framework-guide.md` | 프레임워크 비교·선택 — SB3/SB3-Contrib/CleanRL/Tianshou/Ray RLlib/d3rlpy/omnisafe·safety-gymnasium, 선택 기준, 최소 학습 예제(SB3 SAC), 버전 확인은 context7 |
 | `references/training-and-deployment.md` | 학습 파이프라인(하이퍼파라미터·정규화 저장/복원·콜백·로깅·**다중 시드 재현성**) + 실시간 추론 배포(`predict(deterministic=True)`·ONNX·추론 지연 예산·안전 계층·폴백)·학습↔실기 안전 검증 게이트 |
+| `references/cross-language-deployment.md` | **크로스 언어 배포** — Python 학습 → ONNX → C#/C++ 구동 프로그램 추론: 아키텍처, **정규화 패리티**, ONNX Runtime C++/C# 개념(실시간·GC 주의), **구동측 안전 계층**, WMX3 통합, 패리티 테스트. ONNX Runtime API 세부는 context7/공식 문서 확인 |
 
 ## 크로스 플러그인 시너지
 

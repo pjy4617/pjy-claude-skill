@@ -186,7 +186,7 @@ class SafetyWrapper(gym.Wrapper):
   시뮬레이터 스텝 시간과 환경 `dt`, 실기 사이클타임이 **일치**해야 sim-to-real 갭이 준다.
 - **장비 연동(실기)**: 관측 취득·명령 인가를 장비 API로 구현하되, 명령 인가 직전 안전
   클리핑/shield를 반드시 통과시키고, 이상 시 폴백 고전 제어기로 전환하는 경로를 둔다.
-  실기 전환 자체의 검증은 `rl-test`(rlctrl-evaluator)와 sim-to-real 게이트에서 다룬다.
+  실기 전환 자체의 검증은 `rl-test`(rlctrl-evaluator)의 실기 전환 가드 게이트에서 다룬다.
 - WMX3 모션 제어 기반 장비라면 `wmx3app`의 SimuPlatform을 이 래퍼로 감싸 학습·평가
   환경으로 쓸 수 있다(크로스 플러그인 시너지, 강제 아님).
 

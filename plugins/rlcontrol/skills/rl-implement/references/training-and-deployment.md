@@ -113,10 +113,12 @@ for seed in [0, 1, 2, 3, 4]:
 
 ```python
 # 배포 시에는 탐색을 끈 결정론적 정책
-obs = eval_env.reset()
+obs = eval_env.reset()                                   # VecEnv.reset()은 obs만 반환
 while running:
     action, _ = model.predict(obs, deterministic=True)   # 평균 행동
-    obs, reward, terminated, truncated, info = eval_env.step(action)
+    # eval_env는 §1.2의 VecNormalize.load로 만든 SB3 VecEnv → 4-튜플 규약(5-튜플 아님)
+    obs, rewards, dones, infos = eval_env.step(action)
+    # 에피소드 종료는 dones 배열, 시간 절단은 infos[i].get("TimeLimit.truncated")로 판별
 ```
 
 - **정규화 통계 복원**을 반드시 선행한다(§1.2). 통계 없이 `predict`하면 잘못된 관측 분포.

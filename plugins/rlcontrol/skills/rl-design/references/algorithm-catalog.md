@@ -25,7 +25,7 @@ Q(s,a)를 학습해 탐욕적으로 행동. **이산 행동공간 전용**(연�
 | **Double DQN** | 이산 | 오프폴리시 | 중~높음 | DQN 대비 과대추정 완화 | 높음 | SB3(DQN 옵션) | van Hasselt et al. 2016 |
 | **Dueling DQN** | 이산 | 오프폴리시 | 중~높음 | 상태가치/이점 분리로 개선 | 높음 | SB3(정책 아키텍처) | Wang et al. 2016 |
 | **PER (우선순위 리플레이)** | 이산(확장) | 오프폴리시 | 향상 | — (보조 기법) | 추가 HP | (구현별) | Schaul et al. 2016 |
-| **C51 / QR-DQN** | 이산 | 오프폴리시 | 중~높음 | 분포적 가치로 개선 | 높음 | SB3-Contrib(`QR_DQN`) | Bellemare et al. 2017(C51) / Dabney et al. 2018(QR-DQN) |
+| **C51 / QR-DQN** | 이산 | 오프폴리시 | 중~높음 | 분포적 가치로 개선 | 높음 | SB3-Contrib(`QR-DQN`) | Bellemare et al. 2017(C51) / Dabney et al. 2018(QR-DQN) |
 | **Rainbow** | 이산 | 오프폴리시 | 높음 | 위 기법 통합, 튜닝 복잡 | 높음 | (전용 구현) | Hessel et al. 2018 |
 
 제어 관점: **이산 결정**(예: N단 변속·이산 모드 선택·on/off 밸브)에만. 정밀 연속 제어에는 8절의 연속제어 계열이 표준.
