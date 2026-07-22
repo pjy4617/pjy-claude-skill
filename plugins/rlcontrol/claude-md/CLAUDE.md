@@ -97,6 +97,9 @@ RL 실패의 대부분은 잘못된 문제 정식화에서 온다. 어떤 문제
 - 제어 루프에 정책을 삽입할 때는 **입력에 안전 계층·출력에 action clipping/shielding**을 두고,
   이상 시 폴백 고전 제어기로 인계한다.
 - 학습↔실기 사이에 안전 검증 게이트를 두고, 통과 전 실기 배포 금지.
+- **지속 개선은 관리된 루프로**: 운영 데이터 재학습은 실기 온라인 학습이 아니라
+  **수집 → 오프라인 재학습 → 재검증 → 가드형 재배포** 루프(`rl-improve`)로 수행하고,
+  재학습 정책도 신규 정책과 동일하게 실기 전환 가드 게이트를 재통과시킨다(champion 보존·롤백).
 
 ### 배포 대상 규칙 (학습 Python·실기 구동 C#/C++)
 
@@ -126,6 +129,7 @@ RL 정책은 **Python**(Gymnasium/SB3/PyTorch)으로 학습하지만, 실기 구
 | 알고리즘 검토·환경/보상/안전 설계 | `rl-design` | `rlctrl-algorithm-designer` |
 | 구현 (Gymnasium 환경·SB3/CleanRL 학습·안전 계층·ONNX 배포) | `rl-implement` | `rlctrl-implementer` |
 | 성능·기능 테스트 (다중 시드·통계·강건성·sim-to-real) | `rl-test` | `rlctrl-evaluator` |
+| 지속 개선 (운영 데이터 재학습·재검증·가드형 재배포) | `rl-improve` | `rlctrl-implementer` + `rlctrl-evaluator` |
 
 리스크·리포트 심각도 등급은 **CRITICAL / MAJOR / MINOR / INFO** 4단계를 사용한다.
 

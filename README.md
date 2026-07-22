@@ -79,8 +79,8 @@ React 19 + Vite 8 + TS 프론트엔드 — Fluent UI v9 / shadcn/ui 택1, 범용
 <tr>
 <td align="center" width="25%">
 <b>RL Control</b><br>
-강화학습(RL) 제어 적용 검토(게이트: 고전 제어 우선 판별) → 알고리즘 설계 → Gymnasium/SB3 구현 → 성능·안전 테스트(다중 시드·sim-to-real) → ONNX·C#/C++ 추론 배포<br>
-5 스킬 + 4 에이전트
+강화학습(RL) 제어 적용 검토(게이트: 고전 제어 우선 판별) → 알고리즘 설계 → Gymnasium/SB3 구현 → 성능·안전 테스트(다중 시드·sim-to-real) → ONNX·C#/C++ 추론 배포 → 운영 데이터 지속 개선<br>
+6 스킬 + 4 에이전트
 </td>
 </tr>
 </table>
@@ -429,7 +429,7 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 /plugin install rlcontrol@pjy-skills
 ```
 
-5개 스킬이 한 번에 활성화됩니다(적용 검토·설계·구현·테스트 + 설정). 이후 에이전트를 설치합니다:
+6개 스킬이 한 번에 활성화됩니다(적용 검토·설계·구현·테스트·지속 개선 + 설정). 이후 에이전트를 설치합니다:
 
 ```
 /rl-setup
@@ -887,6 +887,7 @@ PCB 설계 입력 세 종류 — **①거버/드릴 출력 폴더 ②PADS 레이
 | 환경·학습 구현 | "Gymnasium 환경 만들고 SB3로 학습해줘" | rl-implement 스킬 + rlctrl-implementer 에이전트 |
 | 실시간 추론 배포 | "학습한 정책 ONNX로 배포해줘" / "C#/C++ 구동 프로그램에 배포해줘" | rl-implement 스킬 (안전 계층·추론 지연 예산·ONNX→C#/C++ 추론·정규화 패리티) |
 | 성능·안전 테스트 | "정책 성능 평가해줘" / "sim-to-real 검증해줘" | rl-test 스킬 + rlctrl-evaluator 에이전트 |
+| 지속 개선(운영 데이터 재학습) | "운영 데이터로 모델 더 학습해서 성능 높여줘" | rl-improve 스킬 (오프라인 재학습·champion/challenger·재배포 가드 게이트) |
 | 에이전트 설치 | "rlcontrol 설정해줘" | rl-setup 스킬 |
 
 #### RL Control 전체 워크플로우
@@ -900,6 +901,8 @@ PCB 설계 입력 세 종류 — **①거버/드릴 출력 폴더 ②PADS 레이
     ↓
 "성능·안전 테스트해줘"                       ← rl-test (다중 시드 통계·제약 위반율·강건성·sim-to-real)
     ↓ (PASS 시) 사람 감독 하 가드형 실기 전환
+    ↓ (운영 후)
+"운영 데이터로 모델 더 학습해줘"             ← rl-improve (수집→오프라인 재학습→재검증→가드형 재배포 루프)
 ```
 
 > **RL을 쓰면 안 되는 경우가 있습니다.** `rl-assess` 게이트는 "안전 크리티컬 + 시뮬레이터 없음 + 온라인 탐색 불가" 같은 조건에서 **No-Go(고전 제어 권장)** 판정을 내립니다 — 이것이 이 플러그인의 핵심 차별점입니다.
@@ -1073,7 +1076,7 @@ pjy-claude-skill/
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (빠른 시작, 명령어, 지원 입력, 파싱 함정)
 │   ├── rlcontrol/                 ← 강화학습(RL) 제어 적용 플러그인 (도메인)
 │   │   ├── plugin.json
-│   │   ├── skills/ (5개)          ← 적용 검토(게이트)·알고리즘 설계·구현·테스트 + 환경 설정
+│   │   ├── skills/ (6개)          ← 적용 검토(게이트)·알고리즘 설계·구현·테스트·지속 개선 + 환경 설정
 │   │   │   ├── rl-assess/         ← RL 적용 가능성 검토 (MDP 정식화·고전 제어 대비·Go/No-Go)
 │   │   │   │   └── references/    ← mdp-formulation / feasibility-checklist / rl-vs-classical
 │   │   │   ├── rl-design/         ← 알고리즘 선정 + 환경/보상/안전 설계
@@ -1082,6 +1085,8 @@ pjy-claude-skill/
 │   │   │   │   └── references/    ← environment-design / framework-guide / training-and-deployment / cross-language-deployment
 │   │   │   ├── rl-test/           ← 다중 시드 성능·기능·안전 테스트 (sim-to-real)
 │   │   │   │   └── references/    ← evaluation-protocol / functional-safety-tests
+│   │   │   ├── rl-improve/        ← 운영 데이터 지속 개선 (오프라인 재학습·champion/challenger·재배포 게이트)
+│   │   │   │   └── references/    ← continual-learning
 │   │   │   └── rl-setup/
 │   │   ├── agents/ (4개)          ← rlctrl-feasibility-analyst/algorithm-designer/implementer/evaluator
 │   │   ├── claude-md/

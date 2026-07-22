@@ -114,7 +114,7 @@ plugins/
 │   │   └── pcb-design-digest-setup/ ← 에이전트 설치 + 디렉토리 + CLAUDE.md 마커 1회 초기화 (MCP 불필요)
 │   ├── agents/                    ← pcb-design-analyst (깊은 PCB 분석 + 보드별 메모리 누적)
 │   └── docs/USAGE_GUIDE.md
-├── rlcontrol/                     ← 강화학습(RL) 제어 적용 플러그인 (5 스킬 + 4 에이전트, 도메인) — RL 적용 가능성 게이트(고전 제어 우선 판별)·알고리즘 설계·구현·성능/안전 테스트. 안전-크리티컬 전제(무제약 정책 실기 직배포 금지·시뮬레이터 우선)
+├── rlcontrol/                     ← 강화학습(RL) 제어 적용 플러그인 (6 스킬 + 4 에이전트, 도메인) — RL 적용 가능성 게이트(고전 제어 우선 판별)·알고리즘 설계·구현·성능/안전 테스트·운영 데이터 지속 개선. 안전-크리티컬 전제(무제약 정책 실기 직배포 금지·시뮬레이터 우선)
 │   ├── plugin.json
 │   ├── skills/
 │   │   ├── rl-assess/             ← RL 적용 가능성 검토 (게이트: MDP 정식화·고전 제어(PID/LQR/MPC) 대비·Go/No-Go 판정)
@@ -125,6 +125,8 @@ plugins/
 │   │   │   └── references/        ← environment-design, framework-guide, training-and-deployment, cross-language-deployment
 │   │   ├── rl-test/               ← 성능·기능·안전 테스트 (다중 시드 통계·제약 위반율·sim-to-real)
 │   │   │   └── references/        ← evaluation-protocol, functional-safety-tests
+│   │   ├── rl-improve/            ← 운영 데이터 기반 지속 개선 (오프라인 재학습·offline-to-online·champion/challenger·재배포 가드 게이트)
+│   │   │   └── references/        ← continual-learning
 │   │   └── rl-setup/              ← 에이전트 4종 + CLAUDE.md 설치
 │   ├── agents/                    ← rlctrl-feasibility-analyst/algorithm-designer/implementer/evaluator
 │   ├── claude-md/CLAUDE.md

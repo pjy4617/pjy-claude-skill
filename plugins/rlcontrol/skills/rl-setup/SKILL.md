@@ -73,11 +73,12 @@ mkdir -p ${PROJECT_ROOT}/.claude/agents
   ✅ rlctrl-implementer         — 구현 (Gymnasium 환경·SB3 학습 파이프라인·안전 계층·ONNX 배포)
   ✅ rlctrl-evaluator           — 성능·기능 테스트 (다중 시드 통계·베이스라인·강건성·sim-to-real)
 
-스킬 (5개): 플러그인으로 이미 활성화됨
+스킬 (6개): 플러그인으로 이미 활성화됨
   rl-assess     — 강화학습 적용 가능성 검토 (게이트 — RL 부적합 판정 가능)
   rl-design     — 알고리즘 검토 및 환경/보상/안전 설계
   rl-implement  — Gymnasium 환경·에이전트·학습 파이프라인 구현
   rl-test       — 성능·기능 테스트/평가 (다중 시드·sim-to-real)
+  rl-improve    — 운영 데이터 기반 지속 개선 (재학습·재검증·가드형 재배포)
   rl-setup      — 환경 초기 설정 (현재 스킬)
 
 CLAUDE.md: ✅ Reinforcement Learning for Control 설정 추가됨
