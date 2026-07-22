@@ -61,7 +61,10 @@ SEED = 0
 train_env = make_vec_env(lambda: PlantEnv(), n_envs=4, seed=SEED)
 train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True)
 
-# 2) 평가 전용 환경 (학습 통계로 정규화, 보상 정규화·학습 갱신은 끔)
+# 2) 평가 전용 환경 (보상 정규화·통계 갱신은 끔)
+#    주의: 생성 직후엔 항등 통계(mean 0/var 1)다. "학습 통계로 정규화"가 되는 것은
+#    EvalCallback이 평가 시점마다 sync_envs_normalization으로 학습 env 통계를 복사해 주기 때문 —
+#    EvalCallback 없이 이 eval_env를 단독 재사용하면 잘못된 통계로 평가하게 된다.
 eval_env = make_vec_env(lambda: PlantEnv(), n_envs=1, seed=SEED + 100)
 eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=False, training=False)
 
@@ -80,6 +83,9 @@ ckpt_cb = CheckpointCallback(save_freq=50_000, save_path="./ckpt/periodic/")
 model.learn(total_timesteps=200_000, callback=[eval_cb, ckpt_cb])
 model.save("sac_plant")
 train_env.save("vecnormalize.pkl")
+# 주의(시점 불일치): best_model.zip은 학습 "중간" 시점의 정책인데 위 vecnormalize.pkl은
+# "종료" 시점 통계다(통계는 학습 내내 갱신). best 모델을 배포 대상으로 고르면
+# best 갱신 시점에 통계도 함께 저장하는 커스텀 콜백으로 정책-통계 시점을 일치시킬 것.
 ```
 
 ```python

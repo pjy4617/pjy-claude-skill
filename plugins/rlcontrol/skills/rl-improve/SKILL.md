@@ -35,7 +35,9 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent
    에피소드/운전 사이클 경계·안전 이벤트/사람 개입 라벨). 부족하면 로깅 설계부터 보강.
 2. **재학습 트리거 판단** — 성능 열화(추종 오차·정착 시간·제약 위반 추세)·관측 분포 드리프트·
    장비 변경(정비·부품 교체)·데이터 누적량 중 무엇이 재학습을 정당화하는지 확인.
-3. **개선 경로 선택** — 아래 결정 표(상세: `references/continual-learning.md`):
+3. **개선 경로 선택** — **원인 진단 우선**: 2단계에서 확인한 열화 원인(드리프트·데이터 커버리지 부족·
+   sim-to-real 갭)에 맞는 경로를 고른다. 복수 해당 시 실기 무접촉 경로부터(C/A 우선, B는 마지막)
+   보수적으로 선택. 아래 결정 표(상세: `references/continual-learning.md`):
 
    | 상황 | 경로 |
    |------|------|
@@ -68,8 +70,10 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent
 - 재검증 기준: champion 대비 개선 목표·회귀 허용 범위·실기 전환 가드 게이트(10항목)
 - **references 정본 절대 경로**: `${CLAUDE_SKILL_DIR}/references/continual-learning.md` — 호출 시 실제
   절대 경로로 치환하여 전달(에이전트는 `.claude/agents/`로 단독 설치되어 상대 references 경로가 깨지기 때문).
-  재학습 알고리즘 상세는 `rl-design`의 `references/algorithm-catalog.md`(오프라인 RL 절), 평가 프로토콜은
-  `rl-test`의 `references/` 2종도 같은 방식으로 절대 경로 전달.
+  재학습 알고리즘 상세는 `${CLAUDE_SKILL_DIR}/../rl-design/references/algorithm-catalog.md`(오프라인 RL 절),
+  평가 프로토콜은 `${CLAUDE_SKILL_DIR}/../rl-test/references/evaluation-protocol.md`와
+  `${CLAUDE_SKILL_DIR}/../rl-test/references/functional-safety-tests.md`도 같은 방식으로 —
+  형제 스킬 경로도 호출 시 실제 절대 경로로 치환하여 전달.
 
 ## references 문서
 

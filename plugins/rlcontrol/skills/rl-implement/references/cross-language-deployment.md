@@ -40,7 +40,9 @@ export 절차·opset·SB3 내부 정책 API는 버전 의존적 → context7/공
 - **(a) 통계 파일 export + 구동측 재현**: 학습에서 obs mean/var·`clip_obs`(및 행동 스케일)를
   파일(JSON/바이너리)로 내보내고, 구동 프로그램이 매 스텝
   `obs_norm = clip((obs - mean) / sqrt(var + eps), -clip_obs, +clip_obs)`를 계산한다.
-  `eps`·클립 경계·dtype(float32)을 학습과 **비트 단위로 일치**시킨다.
+  `eps`·클립 경계·dtype(float32) **파라미터는 학습과 동일 값**으로 맞춘다. (판정은 결과의
+  비트 일치가 아니라 §8 패리티 테스트의 허용 오차 기준 — 내부 연산 정밀도 차이로
+  결과의 비트 단위 일치는 일반적으로 불가능하다.)
 - **(b) 정규화·역스케일을 ONNX 그래프에 접합 (권장)**: 정규화·역스케일 연산을 정책망 앞뒤에
   그래프로 합쳐 하나의 ONNX로 만든다. 구동 프로그램은 원시 관측을 넣고 물리 지령을 받으므로
   **정규화 드리프트를 원천 차단**한다. 접합 방법은 export 시점에 결정하고 §8 패리티 테스트로 검증.
@@ -59,7 +61,8 @@ Ort::SessionOptions opts;
 opts.SetIntraOpNumThreads(1);             // 결정성·지연 안정화(스레드 1)
 opts.SetInterOpNumThreads(1);
 // CPU EP 기본. GPU/가속 EP는 지연·지터 특성을 재검증한 뒤에만 사용.
-Ort::Session session(env, "policy.onnx", opts);
+// 주의: 모델 경로 인자는 ORTCHAR_T* — Windows 빌드에서는 wide 문자열(L"policy.onnx") 필요.
+Ort::Session session(env, ORT_TSTR("policy.onnx"), opts);
 
 // [2] 입출력 텐서 버퍼는 사전 할당 — 핫 루프 내 new/malloc 금지
 //     입출력 이름은 export 시 지정한 이름(예: "obs"/"action")과 일치시킨다.

@@ -61,14 +61,21 @@
 
 ```python
 # deterministic 정책으로 평가 전용 시드에서 다중 에피소드 롤아웃한다.
-# 주의: SB3 model.predict(obs, deterministic=True)는 (action, state) 튜플을 반환한다.
-#       predict의 정확한 시그니처·반환형은 context7/공식 문서로 확인할 것.
+# 주의 1: SB3 model.predict(obs, deterministic=True)는 (action, state) 튜플을 반환한다.
+#         predict의 정확한 시그니처·반환형은 context7/공식 문서로 확인할 것.
+# 주의 2: VecNormalize로 학습한 정책이면 관측을 "저장된 학습 통계"로 정규화해 넣어야 한다
+#         (저장본 그대로 로드·재계산 금지 — functional-safety-tests.md §6).
+#         원시 관측을 그대로 먹이면 잘못된 평가가 된다.
 def evaluate_policy_seeds(make_env, policy, eval_seeds, n_episodes=30):
-    returns = []                             # 시드별 에피소드 리턴 집계
+    per_seed_returns = {}                     # {시드: [에피소드 리턴 ...]} — run×에피소드 구조 유지
     for seed in eval_seeds:                   # 학습 시드와 겹치지 않는 평가 전용 시드
         env = make_env()
+        returns = []
         for ep in range(n_episodes):
-            obs, info = env.reset(seed=seed + ep)   # reset -> (observation, info)
+            # 에피소드 시드는 비충돌 인코딩을 쓴다 — `seed + ep`는 인접 시드와 범위가 겹쳐
+            # 같은 에피소드가 중복 계상되고 유효 표본이 부풀어 CI가 과소 추정된다.
+            # (연속 시드를 쓸 거면 시드 간격을 n_episodes 이상으로 벌려도 된다.)
+            obs, info = env.reset(seed=seed * 10_000 + ep)   # reset -> (observation, info)
             done = False
             ep_return = 0.0
             while not done:
@@ -78,7 +85,9 @@ def evaluate_policy_seeds(make_env, policy, eval_seeds, n_episodes=30):
                 done = terminated or truncated       # 종료 = terminated 또는 truncated
             returns.append(ep_return)
         env.close()
-    return returns                            # 이후 IQM·부트스트랩 CI로 집계(§3)
+        per_seed_returns[seed] = returns
+    # run(시드)×에피소드 구조를 그대로 반환 — §3의 IQM·층화 부트스트랩 CI가 이 구조를 요구한다
+    return per_seed_returns
 ```
 
 - **평가 에피소드 수**: 환경 확률성이 크면 시드당 수십 에피소드 이상을 권장한다. 결정적 환경이면 적어도 된다.

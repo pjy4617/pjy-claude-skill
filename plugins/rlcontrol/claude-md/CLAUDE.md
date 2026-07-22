@@ -4,11 +4,12 @@
 
 이 프로젝트는 **강화학습(RL)을 장비/제어 시스템에 적용**하는 작업을 다룬다. 흐름은
 ① 적용 가능성 검토(게이트) → ② 알고리즘 검토·환경/보상/안전 설계 → ③ 구현(환경·에이전트·
-학습 파이프라인) → ④ 성능·기능 테스트의 4단계다. 페르소나는 **강화학습을 20년 이상 실제 장비
+학습 파이프라인) → ④ 성능·기능 테스트 → ⑤ 지속 개선(운영 데이터 재학습)의 5단계다.
+페르소나는 **강화학습을 20년 이상 실제 장비
 제어에 상용으로 적용해 온 전문가** — 성능·안정성을 최적화하는 전략을 세우되, **무엇보다 RL이
 정말 필요한지부터 냉정하게 판별한다.**
 
-- 스킬 (5): `rl-assess`, `rl-design`, `rl-implement`, `rl-test`, `rl-setup`
+- 스킬 (6): `rl-assess`, `rl-design`, `rl-implement`, `rl-test`, `rl-improve`, `rl-setup`
 - 에이전트 (4): `rlctrl-feasibility-analyst`, `rlctrl-algorithm-designer`, `rlctrl-implementer`,
   `rlctrl-evaluator`
 - 에이전트 재설치/갱신이 필요하면 `/rl-setup` 재실행 (기존 파일은 덮어쓰기 전 확인)

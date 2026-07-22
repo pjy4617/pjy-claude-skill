@@ -67,6 +67,10 @@ model.learn(total_timesteps=CONFIG["total_timesteps"], callback=[eval_cb, ckpt_c
 - 평가는 **`deterministic=True`**(정책 평균 행동)로 한다 — 학습 시의 탐색 노이즈를 뺀
   실제 배포 성능에 가깝다.
 - 평가 환경 시드는 학습과 **다르게** 둔다(과적합/시드 누수 방지).
+- **best 모델과 통계의 시점 불일치 주의**: `best_model.zip`은 학습 **중간** 시점의 정책인데,
+  학습 종료 후 저장한 `vecnormalize.pkl`은 **종료** 시점 통계다(통계는 학습 내내 갱신).
+  best 모델을 배포 대상으로 고르면 best 갱신 시점에 통계도 함께 저장하는 커스텀 콜백으로
+  정책-통계 시점을 일치시킨다 — "통계는 정책의 일부"(§1.2)의 시간축 버전.
 
 ### 1.4 로깅
 
@@ -138,7 +142,10 @@ class PolicyWrapper(torch.nn.Module):
         super().__init__()
         self.policy = policy
     def forward(self, obs):
-        # 결정론적 행동 텐서만 반환 (버전별 내부 API는 공식 문서로 확인)
+        # 결정론적 행동 텐서만 반환 — SAC/TD3 계열 정책 기준.
+        # PPO/A2C의 ActorCriticPolicy.forward는 (actions, values, log_prob) 3-튜플을
+        # 반환하므로 이 래퍼를 그대로 쓰면 ONNX가 3출력이 된다 → actor(행동 분포 평균)만
+        # 분리 추출할 것. (버전별 내부 API는 공식 문서/context7로 확인)
         return self.policy(obs, deterministic=True)
 
 wrapper = PolicyWrapper(model.policy)
@@ -161,6 +168,10 @@ def infer(obs_raw):
 
 - **정규화 통계도 함께 배포**한다 — export 대상은 네트워크뿐이므로 관측 정규화는
   실기측에서 저장된 통계로 재현해야 한다.
+- **행동 재스케일 주의**: SB3 `predict()`는 정책 출력(tanh로 [-1,1] 압착)을 action_space
+  경계로 재스케일해 돌려준다. 이 플러그인 권장대로 행동공간이 [-1,1]이면 항등이라 문제없지만,
+  다른 Box 범위를 쓰면 ONNX 추출 정책의 출력([-1,1])과 `predict()` 출력이 달라진다 —
+  실기측 역스케일에 같은 매핑을 반영해야 패리티 테스트가 통과한다.
 - ONNX export 절차·SB3 내부 정책 API는 버전 의존적이다 → context7/공식 문서로 확인.
 
 ### 2.3 추론 지연 예산 (CRITICAL)

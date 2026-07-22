@@ -172,14 +172,27 @@ class SafetyWrapper(gym.Wrapper):
     학습·평가·배포 모두에서 정책과 플랜트 사이에 항상 존재해야 한다(CRITICAL).
     """
 
+    def __init__(self, env, violation_penalty=-100.0):
+        super().__init__(env)
+        # 페널티는 음수 규약 — 양수를 넣으면 위반에 보상을 주는 부호 반전 버그가 된다
+        assert violation_penalty <= 0.0, "violation_penalty는 0 이하(음수 규약)"
+        self._violation_penalty = float(violation_penalty)
+
     def step(self, action):
         safe = self._shield(action)              # 위반 행동 → 안전 행동 대체
         obs, reward, terminated, truncated, info = self.env.step(safe)
+        # Box 연속 행동 전제 — Discrete 스칼라 행동이면 `safe != action`으로 비교
         info["shield_active"] = bool((safe != action).any())
         if self._hard_limit_violated(obs):       # 하드 안전 한계 초과 → 즉시 종료
             terminated = True
-            reward += self._violation_penalty
+            reward += self._violation_penalty    # 음수 규약이므로 +=가 감점이 된다
         return obs, reward, terminated, truncated, info
+
+    # -- 플랜트별로 구현해야 하는 헬퍼(스텁) --
+    def _shield(self, action):
+        raise NotImplementedError    # 포화·레이트 리밋·규칙 기반 안전 행동 대체
+    def _hard_limit_violated(self, obs):
+        raise NotImplementedError    # 위치/속도/토크/온도 등 하드 한계 판정
 ```
 
 - **시뮬레이터 연동**: `_advance_plant`에서 시뮬레이터를 한 제어 주기(`dt`)만큼 전진시킨다.

@@ -55,7 +55,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent
 - 대상 시뮬레이터/장비 인터페이스 정보(API·사이클타임·관측/명령 형식)
 - 프레임워크 선호와 실시간 배포 대상 여부(ONNX·추론 지연 예산)
 - **references 정본 절대 경로**: `${CLAUDE_SKILL_DIR}/references/` 아래 문서들
-  (`environment-design.md`, `framework-guide.md`, `training-and-deployment.md`) —
+  (`environment-design.md`, `framework-guide.md`, `training-and-deployment.md`,
+  `cross-language-deployment.md` — C#/C++ 구동 배포 시 필수) —
   호출 시 실제 절대 경로로 치환하여 전달
   (에이전트는 `.claude/agents/`로 단독 설치되어 상대 references 경로가 깨지므로,
   스킬이 정본 절대 경로를 넘겨줘야 함 — wmx3app에서 확립된 패턴)
@@ -100,6 +101,9 @@ class PlantEnv(gym.Env):
         return obs, reward, terminated, truncated, info   # ← 5-튜플
 ```
 
+- 위 골격의 `_get_obs`/`_apply_safety_layer`/`_advance_plant`/`_compute_reward`/`_is_goal_or_failure`/
+  `_is_time_limit`(스텝 카운터 포함)는 **플랜트별로 구현해야 하는 헬퍼**입니다 — 이 골격만 복사하면
+  실행되지 않습니다(구현 골격·스텁 예: `references/environment-design.md`).
 - **Gym → Gymnasium 마이그레이션 주의**: 구 Gym의 4-튜플 `(obs, reward, done, info)`가
   Gymnasium에서 **5-튜플 `(obs, reward, terminated, truncated, info)`**로 바뀌었습니다.
   `done = terminated or truncated`로 뭉뚱그리면 **부트스트래핑이 틀려집니다**
