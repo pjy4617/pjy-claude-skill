@@ -114,6 +114,21 @@ plugins/
 │   │   └── pcb-design-digest-setup/ ← 에이전트 설치 + 디렉토리 + CLAUDE.md 마커 1회 초기화 (MCP 불필요)
 │   ├── agents/                    ← pcb-design-analyst (깊은 PCB 분석 + 보드별 메모리 누적)
 │   └── docs/USAGE_GUIDE.md
+├── rlcontrol/                     ← 강화학습(RL) 제어 적용 플러그인 (5 스킬 + 4 에이전트, 도메인) — RL 적용 가능성 게이트(고전 제어 우선 판별)·알고리즘 설계·구현·성능/안전 테스트. 안전-크리티컬 전제(무제약 정책 실기 직배포 금지·시뮬레이터 우선)
+│   ├── plugin.json
+│   ├── skills/
+│   │   ├── rl-assess/             ← RL 적용 가능성 검토 (게이트: MDP 정식화·고전 제어(PID/LQR/MPC) 대비·Go/No-Go 판정)
+│   │   │   └── references/        ← mdp-formulation, feasibility-checklist, rl-vs-classical
+│   │   ├── rl-design/             ← 알고리즘 검토·선정 + 환경/보상/안전 설계
+│   │   │   └── references/        ← algorithm-catalog, algorithm-selection, reward-and-safety
+│   │   ├── rl-implement/          ← Gymnasium 환경(5-튜플)·SB3/CleanRL 학습·ONNX 실시간 추론 배포
+│   │   │   └── references/        ← environment-design, framework-guide, training-and-deployment
+│   │   ├── rl-test/               ← 성능·기능·안전 테스트 (다중 시드 통계·제약 위반율·sim-to-real)
+│   │   │   └── references/        ← evaluation-protocol, functional-safety-tests
+│   │   └── rl-setup/              ← 에이전트 4종 + CLAUDE.md 설치
+│   ├── agents/                    ← rlctrl-feasibility-analyst/algorithm-designer/implementer/evaluator
+│   ├── claude-md/CLAUDE.md
+│   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json
     ├── skills/
@@ -160,7 +175,7 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 ## 새 플러그인 추가 절차
 
 플러그인 종류:
-- **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md/wmx3app): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
+- **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md/wmx3app/rlcontrol): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
 - **워크플로 플러그인**(parallel-delegation): 도메인 무관 절차. `claude-md/` 없음 + `*-setup`이 누락분만 보충
 - **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest): Claude Code 자체 환경 또는 컨텍스트 관리 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요).
 

@@ -1,0 +1,7 @@
+{
+  "name": "rlcontrol",
+  "version": "1.0.0",
+  "description": "강화학습(RL) 기반 제어 시스템 최적화 도구: ① 적용 가능성 검토(제어 문제의 MDP 정식화·고전 제어(PID/LQR/MPC) 대비 타당성·안전 크리티컬성·시뮬레이터/로그 데이터 가용성·실시간 추론 제약을 게이트로 평가해 Go/No-Go 판정) → ② 알고리즘 검토·설계(연속제어 SAC/TD3/DDPG·이산 DQN 계열·정책경사 PPO·모델기반·오프라인 RL(CQL/IQL)·Safe RL(제약 MDP/Lagrangian/shielding)·환경/보상/안전 계층 설계) → ③ 구현(Gymnasium 환경·Stable-Baselines3/CleanRL·정규화/벡터화·체크포인트/로깅·ONNX 실시간 추론 배포) → ④ 성능·기능 테스트(다중 시드 통계·베이스라인 대비·제약 위반율·외란/파라미터 강건성·sim-to-real 검증). 5개 스킬 + 4개 에이전트.",
+  "author": { "name": "pjy4617" },
+  "skills": "./skills/"
+}

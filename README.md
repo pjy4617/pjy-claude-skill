@@ -76,6 +76,13 @@ React 19 + Vite 8 + TS 프론트엔드 — Fluent UI v9 / shadcn/ui 택1, 범용
 2 스킬 + 1 에이전트
 </td>
 </tr>
+<tr>
+<td align="center" width="25%">
+<b>RL Control</b><br>
+강화학습(RL) 제어 적용 검토(게이트: 고전 제어 우선 판별) → 알고리즘 설계 → Gymnasium/SB3 구현 → 성능·안전 테스트(다중 시드·sim-to-real)<br>
+5 스킬 + 4 에이전트
+</td>
+</tr>
 </table>
 
 ---
@@ -236,6 +243,18 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 - 입력 ③KiCad: `.kicad_pcb`/`.kicad_sch`/`.kicad_pro` (S-expression 텍스트 → 전체 파싱, 좌표는 항상 mm)
 - 디스크 쓰기 권한: `<project>/.claude/pcb-designs/` (project scope) 또는 `~/.claude/pcb-designs/` (global scope)
 - 깊은 분석용 `pcb-design-analyst` 에이전트는 `pcb-design-digest-setup`이 `.claude/agents/`로 설치 (신규 설치 시 세션 재시작)
+
+</details>
+
+<details>
+<summary><b>RL Control 플러그인</b></summary>
+
+- Claude Code만 있으면 적용 가능성 검토·설계·리뷰 워크플로는 동작 (코드 실행 불필요 — RL이 필요한지부터 판정하는 게이트가 핵심)
+- 실제 학습·구현·평가까지 돌리려면 (**선택**): Python 3.10+, PyTorch, [Gymnasium](https://gymnasium.farama.org/), [Stable-Baselines3](https://stable-baselines3.readthedocs.io/) — 오프라인 RL은 d3rlpy, Safe RL은 omnisafe/safety-gymnasium
+- 실시간 추론 배포 시 (선택): ONNX / ONNX Runtime
+- 학습·평가 환경: 시뮬레이터 또는 로그 데이터 — 안전-크리티컬 장비는 **시뮬레이터 우선 검증 후 사람 감독 하 가드형 실기 전환**(무제약 정책 실기 직배포 금지)
+- (선택) Context7 MCP 설치 시 Gymnasium/Stable-Baselines3 등 라이브러리 API를 공식 문서로 확인 — 버전별 세부 API는 단정하지 않고 확인 후 사용
+- (선택) 장비가 WMX3 모션 제어 기반이면 `wmx3app`의 SimuPlatform을 Gymnasium 학습·평가 환경으로, `wmx3-app-test`의 실기 전환 체크리스트를 sim-to-real 게이트로 활용 가능
 
 </details>
 
@@ -404,6 +423,20 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 
 `pcb-design-analyst` 에이전트를 `.claude/agents/`에 설치하고 `.claude/pcb-designs/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP는 불필요**하며(거버·PADS `.asc`·KiCad 소스는 텍스트 파싱, PADS 바이너리 `.pcb`만 `strings` 부분 추출), 에이전트 신규 설치 시 Claude Code 세션 재시작이 필요할 수 있습니다. 이후 `/pcb-design-digest <거버 폴더 | .pcb/.asc | .kicad_pcb/.kicad_sch>`로 보드를 등록하면, 다음부터 "이 보드 외곽 몇 mm야?" 같은 질문이 다이제스트만으로 즉시 처리됩니다. idempotent — `--scope project|global|both`, `--agent-only`, `--skip-agent`, `--repair`, `--dry-run` 옵션.
 
+#### RL Control (강화학습 제어) 설치
+
+```
+/plugin install rlcontrol@pjy-skills
+```
+
+5개 스킬이 한 번에 활성화됩니다(적용 검토·설계·구현·테스트 + 설정). 이후 에이전트를 설치합니다:
+
+```
+/rl-setup
+```
+
+셋업 시 프로젝트 경로를 질문합니다. 지정한 경로에 4개 에이전트와 CLAUDE.md가 생성됩니다. 첫 관문인 `rl-assess`는 **강화학습이 정말 필요한지부터 냉정하게 판정**하며, 고전 제어(PID/LQR/MPC)로 충분하면 "RL 부적합 → 고전 제어 권장" 판정(No-Go)을 내릴 수 있습니다 — 이 게이트가 이 플러그인의 가장 큰 차별점입니다.
+
 #### 여러 플러그인 동시 설치
 
 ```
@@ -418,6 +451,7 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 /plugin install manual-digest@pjy-skills
 /plugin install react-vite@pjy-skills
 /plugin install pcb-design-digest@pjy-skills
+/plugin install rlcontrol@pjy-skills
 ```
 
 각 플러그인은 독립적이므로 원하는 것만 설치할 수 있습니다.
@@ -840,6 +874,42 @@ PCB 설계 입력 세 종류 — **①거버/드릴 출력 폴더 ②PADS 레이
 
 ---
 
+### RL Control 플러그인 — 이렇게 말하면 됩니다
+
+강화학습(RL)을 장비/제어 시스템에 적용하는 워크플로를 **적용 가능성 검토(게이트) → 알고리즘 설계 → 구현 → 성능·안전 테스트** 흐름으로 진행합니다. 20년 이상 상용 장비 제어에 RL을 적용해 온 전문가 관점에서, 무엇보다 **RL이 정말 필요한지부터 냉정하게 판별**합니다 — 대부분의 제어 문제는 고전 제어(PID/LQR/MPC)로 충분하고, RL은 안전성·재현성·샘플효율·검증난이도 리스크를 들여오기 때문입니다. 안전-크리티컬 장비는 시뮬레이터 우선 검증 → 사람 감독 하 가드형 실기 전환을 전제로 합니다.
+
+| 하고 싶은 것 | 이렇게 말하세요 | 동작하는 스킬/에이전트 |
+|-------------|---------------|---------------------|
+| 적용 가능성 검토(게이트) | "이 제어에 강화학습 쓸 수 있나 검토해줘" / "RL 타당성 검토" | rl-assess 스킬 + rlctrl-feasibility-analyst 에이전트 |
+| MDP 정식화 | "이 문제 MDP로 정식화해줘" | rl-assess 스킬 (상태/행동/보상/에피소드 경계) |
+| 알고리즘 선정·설계 | "SAC랑 PPO 중 뭐 써야 해?" / "보상 함수 설계해줘" | rl-design 스킬 + rlctrl-algorithm-designer 에이전트 |
+| 안전 강화학습 설계 | "안전 제약 있는 RL 설계해줘" | rl-design 스킬 (제약 MDP·Lagrangian·shielding) |
+| 환경·학습 구현 | "Gymnasium 환경 만들고 SB3로 학습해줘" | rl-implement 스킬 + rlctrl-implementer 에이전트 |
+| 실시간 추론 배포 | "학습한 정책 ONNX로 배포해줘" | rl-implement 스킬 (안전 계층·추론 지연 예산) |
+| 성능·안전 테스트 | "정책 성능 평가해줘" / "sim-to-real 검증해줘" | rl-test 스킬 + rlctrl-evaluator 에이전트 |
+| 에이전트 설치 | "rlcontrol 설정해줘" | rl-setup 스킬 |
+
+#### RL Control 전체 워크플로우
+
+```
+"이 제어에 강화학습 쓸 수 있나 검토해줘"   ← rl-assess (MDP 정식화·고전 제어 대비·타당성 체크리스트)
+    ↓  Go/No-Go 판정 — No면 고전 제어/하이브리드 권장, Go면 문제 규격서로
+"알고리즘 검토·설계해줘"                     ← rl-design (알고리즘 선정·환경/보상/안전 설계)
+    ↓
+"환경 구현하고 학습해줘"                     ← rl-implement (Gymnasium 5-튜플·SB3/CleanRL·ONNX 배포)
+    ↓
+"성능·안전 테스트해줘"                       ← rl-test (다중 시드 통계·제약 위반율·강건성·sim-to-real)
+    ↓ (PASS 시) 사람 감독 하 가드형 실기 전환
+```
+
+> **RL을 쓰면 안 되는 경우가 있습니다.** `rl-assess` 게이트는 "안전 크리티컬 + 시뮬레이터 없음 + 온라인 탐색 불가" 같은 조건에서 **No-Go(고전 제어 권장)** 판정을 내립니다 — 이것이 이 플러그인의 핵심 차별점입니다.
+>
+> **Gymnasium API 주의**: 구 Gym의 4-튜플이 아니라 **5-튜플** — `reset(seed=...) -> (obs, info)`, `step(action) -> (obs, reward, terminated, truncated, info)`. 라이브러리 버전별 세부 API는 Context7/공식 문서로 확인합니다.
+>
+> **WMX3 연동**: 장비가 WMX3 모션 제어 기반이면 `wmx3app`의 SimuPlatform을 Gymnasium 학습·평가 환경으로, `wmx3-app-test`의 실기 전환 체크리스트를 sim-to-real 게이트로 활용할 수 있습니다.
+
+---
+
 #### 펌웨어 생성 시 Claude가 물어보는 것들
 
 정보가 부족하면 Claude가 순서대로 질문합니다:
@@ -1001,6 +1071,21 @@ pjy-claude-skill/
 │   │   │   └── pcb-design-digest-setup/
 │   │   ├── agents/ (1개)          ← pcb-design-analyst (깊은 PCB 분석 + 보드별 메모리)
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (빠른 시작, 명령어, 지원 입력, 파싱 함정)
+│   ├── rlcontrol/                 ← 강화학습(RL) 제어 적용 플러그인 (도메인)
+│   │   ├── plugin.json
+│   │   ├── skills/ (5개)          ← 적용 검토(게이트)·알고리즘 설계·구현·테스트 + 환경 설정
+│   │   │   ├── rl-assess/         ← RL 적용 가능성 검토 (MDP 정식화·고전 제어 대비·Go/No-Go)
+│   │   │   │   └── references/    ← mdp-formulation / feasibility-checklist / rl-vs-classical
+│   │   │   ├── rl-design/         ← 알고리즘 선정 + 환경/보상/안전 설계
+│   │   │   │   └── references/    ← algorithm-catalog / algorithm-selection / reward-and-safety
+│   │   │   ├── rl-implement/      ← Gymnasium 환경(5-튜플)·SB3/CleanRL 학습·ONNX 배포
+│   │   │   │   └── references/    ← environment-design / framework-guide / training-and-deployment
+│   │   │   ├── rl-test/           ← 다중 시드 성능·기능·안전 테스트 (sim-to-real)
+│   │   │   │   └── references/    ← evaluation-protocol / functional-safety-tests
+│   │   │   └── rl-setup/
+│   │   ├── agents/ (4개)          ← rlctrl-feasibility-analyst/algorithm-designer/implementer/evaluator
+│   │   ├── claude-md/
+│   │   └── docs/USAGE_GUIDE.md
 │   └── react-vite/                ← React 19 + Vite 8 프론트엔드 플러그인
 │       ├── plugin.json
 │       ├── skills/ (2개)          ← 구현→검증 워크플로 + 에이전트 셋업
@@ -1072,6 +1157,7 @@ KiCad 9.x에서 바로 열 수 있습니다. 다만 S-expression 직접 생성�
 - **Manual Digest**: [`plugins/manual-digest/docs/USAGE_GUIDE.md`](plugins/manual-digest/docs/USAGE_GUIDE.md)
 - **React-Vite Frontend**: [`plugins/react-vite/docs/usage-guide.md`](plugins/react-vite/docs/usage-guide.md)
 - **PCB Design Digest**: [`plugins/pcb-design-digest/docs/USAGE_GUIDE.md`](plugins/pcb-design-digest/docs/USAGE_GUIDE.md)
+- **RL Control**: [`plugins/rlcontrol/docs/USAGE_GUIDE.md`](plugins/rlcontrol/docs/USAGE_GUIDE.md)
 
 ---
 
