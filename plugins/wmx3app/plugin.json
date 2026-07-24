@@ -1,7 +1,7 @@
 {
   "name": "wmx3app",
-  "version": "1.3.0",
-  "description": "WMX3.7 애플리케이션 풀스택 개발: 요구사항→시스템 설계(플랫폼 선택·축 구성·모션 기능 매핑·성능/안정성 전략) + C++/C# 구현(초기화 시퀀스·모션·이벤트·에러 처리·.NET Dispose) + 시뮬레이터 플랫폼 기반 테스트 + 기존 프로젝트 WMX3 사용 검토(API 오용·에러 처리 누락·성능·3.6u3→3.7 마이그레이션) + Robot Option 다관절 로봇 제어(기구학·Joint/Cartesian 좌표계·PTP/CP·XML/URDF 로봇 정의·충돌 감지) + EtherCAT ENI 파일 제작(WMX3 전용 ENI·ec_network.def·슬레이브 ESI(ETG.2000) 분석·PDO/CANopen 매핑·EcConfigurator/NetConfigurator 연계). 6개 스킬 + 5개 에이전트.",
+  "version": "1.4.0",
+  "description": "WMX3.7 애플리케이션 풀스택 개발: 요구사항→시스템 설계(플랫폼 선택·축 구성·모션 기능 매핑·성능/안정성 전략) + C++/C# 구현(초기화 시퀀스·모션·이벤트·에러 처리·.NET Dispose) + 시뮬레이터 플랫폼 기반 테스트 + 기존 프로젝트 WMX3 사용 검토(API 오용·에러 처리 누락·성능·3.6u3→3.7 마이그레이션) + Robot Option 다관절 로봇 제어(기구학·Joint/Cartesian 좌표계·PTP/CP·XML/URDF 로봇 정의·충돌 감지) + EtherCAT ENI 파일 제작(WMX3 전용 ENI·ec_network.def·슬레이브 ESI(ETG.2000) 분석·PDO/CANopen 매핑·EcConfigurator/NetConfigurator 연계) + Config Export(파라미터 export XML) 분석(설정 축 식별·기어비/토크/소프트리밋/원점 요약·안전 일관성 검토). 7개 스킬 + 5개 에이전트.",
   "author": { "name": "pjy4617" },
   "skills": "./skills/"
 }

@@ -38,8 +38,8 @@ PRD → 회로도 생성 + 8단계 리뷰 + BOM + 회로/PCB 분석(SI/PI) + KiC
 </td>
 <td align="center" width="25%">
 <b>WMX3 Application</b><br>
-WMX3.7 앱 설계 → C++/C# 구현 → 시뮬레이터 테스트 → 사용 검토(3.6u3→3.7 마이그레이션) + 로봇 옵션(PTP/CP·충돌 감지) + EtherCAT ENI 파일 제작·ESI 분석<br>
-6 스킬 + 5 에이전트
+WMX3.7 앱 설계 → C++/C# 구현 → 시뮬레이터 테스트 → 사용 검토(3.6u3→3.7 마이그레이션) + 로봇 옵션(PTP/CP·충돌 감지) + EtherCAT ENI 파일 제작·ESI 분석 + Config Export(파라미터 XML) 분석<br>
+7 스킬 + 5 에이전트
 </td>
 </tr>
 <tr>
@@ -600,6 +600,7 @@ WMX3.7 라이브러리를 **사용하는 애플리케이션**(장비 제어 SW)�
 | 3.7 마이그레이션 | "3.6u3 코드 3.7 이식 검토해줘" | wmx3-app-review / wmx3-app-implement |
 | 로봇 제어 | "6축 로봇 PTP/CP 시스템 설계해줘" | wmx3-app-design / wmx3-app-implement (Robot Option) |
 | ENI 파일 제작·ESI 분석 | "서보 4축 + IO 2대 구성 ENI 파일 만들어줘" / "보유 ESI 파일 분석해줘" | wmx3-app-eni 스킬 + wmx3app-eni-builder 에이전트 |
+| Config Export 분석 | "wmx_parameters.xml 분석해줘" / "엔진 파라미터 export 검토해줘" | wmx3-app-config-xml-analy 스킬 (파서 + 안전 검토) |
 | 에이전트 설치 | "wmx3app 설정해줘" | wmx3-app-setup 스킬 |
 
 #### WMX3 Application 전체 워크플로우
@@ -612,6 +613,8 @@ WMX3.7 라이브러리를 **사용하는 애플리케이션**(장비 제어 SW)�
 "시뮬레이터로 테스트해줘"        ← wmx3-app-test (SimuPlatform — 실 HW 없이 모션 검증)
     ↓
 "WMX3 사용법 점검해줘"           ← wmx3-app-review (7카테고리 체크리스트, CRITICAL/MAJOR/MINOR/INFO)
+
+"엔진 파라미터 export 분석해줘"  ← wmx3-app-config-xml-analy (파라미터 export XML — 설정 축 식별·안전 일관성 검토)
 ```
 
 > **wmx3md와의 차이**: wmx3md는 WMX3 엔진에 로드되는 **내부 모듈(rtdll) 개발**, wmx3app은 WMX3 API를 호출하는 **애플리케이션 개발**입니다.
@@ -1009,7 +1012,7 @@ pjy-claude-skill/
 │   │   └── docs/
 │   ├── wmx3app/                   ← WMX3.7 애플리케이션 개발 플러그인
 │   │   ├── plugin.json
-│   │   ├── skills/ (6개)          ← 시스템 설계, C++/C# 구현, 테스트, 사용 검토, ENI 제작, 환경 설정
+│   │   ├── skills/ (7개)          ← 시스템 설계, C++/C# 구현, 테스트, 사용 검토, ENI 제작, Config Export 분석, 환경 설정
 │   │   │   ├── wmx3-app-design/
 │   │   │   │   └── references/    ← 아키텍처 코어, 플랫폼 선택, 모션 기능 매핑, 성능/안정성, 로봇 옵션
 │   │   │   ├── wmx3-app-implement/
@@ -1020,6 +1023,9 @@ pjy-claude-skill/
 │   │   │   │   └── references/    ← 사용 검토 체크리스트 (7카테고리)
 │   │   │   ├── wmx3-app-eni/
 │   │   │   │   └── references/    ← eni-file-guide (WMX3 전용 ENI·ec_network.def·ESI 분석·PDO/CANopen 매핑)
+│   │   │   ├── wmx3-app-config-xml-analy/
+│   │   │   │   ├── references/    ← config-export-format(필드 사전), config-analysis-checklist(A~G 검토)
+│   │   │   │   └── assets/        ← parse_wmx_config.py (설정 축 식별·요약·자동 플래그·CSV)
 │   │   │   └── wmx3-app-setup/
 │   │   ├── agents/ (5개)          ← architect, implementer, test-engineer, usage-reviewer, eni-builder
 │   │   ├── claude-md/

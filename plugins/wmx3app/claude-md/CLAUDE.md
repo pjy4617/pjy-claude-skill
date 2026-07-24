@@ -98,12 +98,13 @@ wmx3app 플러그인 스킬의 `references/` 문서만으로 진행하고, `/man
 | 테스트 (시뮬레이터 리허설·gtest/xUnit 픽스처·시나리오·실기 전 체크) | `wmx3-app-test` | `wmx3app-test-engineer` |
 | 기존 프로젝트 WMX3 사용 검토 (API 오용·에러 처리·성능·마이그레이션) | `wmx3-app-review` | `wmx3app-usage-reviewer` |
 | ENI/EtherCAT 네트워크 구성 (WMX3 전용 ENI·ec_network.def·PDO/CANopen 매핑) | `wmx3-app-eni` | `wmx3app-eni-builder` |
+| Config Export 분석 (파라미터 export XML — 설정 축 식별·기어비/토크/소프트리밋/원점 요약·안전 일관성 검토) | `wmx3-app-config-xml-analy` | (스킬 내 파서 + 필요 시 위임) |
 
 검토 리포트의 심각도 등급은 **CRITICAL / MAJOR / MINOR / INFO** 4단계를 사용한다.
 
 ### 에이전트/스킬 구성
 
-- 스킬 (6): wmx3-app-setup, wmx3-app-design, wmx3-app-implement, wmx3-app-test, wmx3-app-review, wmx3-app-eni
+- 스킬 (7): wmx3-app-setup, wmx3-app-design, wmx3-app-implement, wmx3-app-test, wmx3-app-review, wmx3-app-eni, wmx3-app-config-xml-analy
 - 에이전트 (5): wmx3app-architect, wmx3app-implementer, wmx3app-test-engineer, wmx3app-usage-reviewer, wmx3app-eni-builder
 - 에이전트 재설치/갱신이 필요하면 `/wmx3-app-setup` 재실행 (기존 파일은 덮어쓰기 전 확인)
 - 사용 가이드: 플러그인 `docs/USAGE_GUIDE.md`

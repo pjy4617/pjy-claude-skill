@@ -42,6 +42,7 @@ WMX3.7 라이브러리를 **사용하는 애플리케이션**(장비 제어 SW)�
 | `wmx3-app-test` | "시뮬레이터 테스트해줘" | SimuPlatform 구성·gtest/xUnit 픽스처·시나리오 테스트·실기 전 체크 |
 | `wmx3-app-review` | "WMX 사용 검토해줘" | 기존 프로젝트 WMX3 사용 검토 (7카테고리 체크리스트, 심각도 4등급) |
 | `wmx3-app-eni` | "ENI 파일 만들어줘" | WMX3 전용 EtherCAT ENI 파일 제작·편집·검토 (슬레이브 ESI 분석·ec_network.def 연계·PDO/CANopen 매핑) |
+| `wmx3-app-config-xml-analy` | "wmx_parameters.xml 분석해줘" | WMX3 Config Export(파라미터 export XML) 분석 — 128축 중 설정 축 식별·기어비/토크/소프트리밋/원점 요약·안전 일관성 검토(심각도 4등급). 동봉 파서(`parse_wmx_config.py`)로 텍스트·CSV·JSON 산출 |
 
 ## 에이전트 목록 (5명)
 

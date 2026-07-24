@@ -46,7 +46,7 @@ plugins/
 │   ├── agents/
 │   ├── claude-md/CLAUDE.md
 │   └── docs/
-├── wmx3app/                       ← WMX3.7 애플리케이션 개발 플러그인 (6 스킬 + 5 에이전트) — wmx3md(엔진 내부 모듈 rtdll)와 달리 WMX3 API를 호출하는 응용 프로그램 개발. Robot Option 다관절 로봇 제어(PTP/CP·충돌 감지)·EtherCAT ENI 파일 제작·ESI 분석 포함
+├── wmx3app/                       ← WMX3.7 애플리케이션 개발 플러그인 (7 스킬 + 5 에이전트) — wmx3md(엔진 내부 모듈 rtdll)와 달리 WMX3 API를 호출하는 응용 프로그램 개발. Robot Option 다관절 로봇 제어(PTP/CP·충돌 감지)·EtherCAT ENI 파일 제작·ESI 분석·Config Export(파라미터 export XML) 분석 포함
 │   ├── plugin.json
 │   ├── skills/
 │   │   ├── wmx3-app-design/       ← 요구사항 → 시스템 설계 (플랫폼 선택·축 구성·모션 기능 매핑·성능/안정성)
@@ -59,6 +59,9 @@ plugins/
 │   │   │   └── references/        ← usage-review-checklist
 │   │   ├── wmx3-app-eni/          ← EtherCAT ENI 파일 제작 (WMX3 전용 ENI·ec_network.def·슬레이브 ESI 분석·PDO/CANopen 매핑)
 │   │   │   └── references/        ← eni-file-guide
+│   │   ├── wmx3-app-config-xml-analy/  ← WMX3 Config Export(파라미터 export XML) 분석 (설정 축 식별·기어비/토크/소프트리밋/원점 요약·안전 일관성 검토)
+│   │   │   ├── references/        ← config-export-format(필드 사전), config-analysis-checklist(A~G 7카테고리)
+│   │   │   └── assets/            ← parse_wmx_config.py (설정 축 diff·요약·자동 플래그, 텍스트/JSON)
 │   │   └── wmx3-app-setup/        ← 에이전트 5종 + CLAUDE.md 설치
 │   ├── agents/                    ← wmx3app-architect/implementer/test-engineer/usage-reviewer/eni-builder
 │   ├── claude-md/CLAUDE.md
