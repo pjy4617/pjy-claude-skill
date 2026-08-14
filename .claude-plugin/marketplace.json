@@ -83,6 +83,12 @@
       "version": "1.0.0"
     },
     {
+      "name": "prd-plan",
+      "source": "./plugins/prd-plan",
+      "description": "PRD → 실행 계획(PLAN) → 체크리스트를 작성/검수 역할 분리로 산출하는 워크플로 도구: ① 요구 인터뷰(메인 세션 AskUserQuestion — 서브에이전트는 사용자에게 질문할 수 없다는 제약을 설계에 내장)로 문제·사용자·성공지표·범위/비범위·제약 확정 → ② 30년 경력 PM 페르소나 작성 에이전트(prd-writer)가 프로파일별 PRD 작성(software[frontend React / backend C++·C#·Python / full-stack] · hardware-firmware · research-PoC, 요구사항마다 REQ-ID + 검증 가능한 수용 기준 AC, 모르는 값은 추측 대신 OPEN-### 미결 이슈) → ③ PMO 게이트 심사 페르소나 검수 에이전트(prd-reviewer — 쓰기 권한 없이 대화가 아닌 파일을 읽고 판정해 자기검증을 구조적으로 차단)가 7카테고리 CRITICAL/MAJOR/MINOR/INFO 등급 리포트 + 범위 폭주 방지 경계 규칙 → ④ 최대 3라운드 반영 루프, 잔여는 임의 통과 없이 에스컬레이션, approved 전이는 사용자만 → ⑤ PRD → WBS·의존 그래프·마일스톤·리스크 등록부·요구사항 커버리지 매트릭스(절대 날짜·시간 공수·인원 배정 생성 금지, 상대 규모 S/M/L/XL과 상대 순번만, 사용자 제공 값은 출처와 함께 가정 표에) → ⑥ 실행 체크리스트(TASK당 구현/검증 분리, AC마다 확인 항목, 실행 주체·완료 근거 칸 강제 — 근거 없는 [x]는 ERROR) + REQ↔TASK↔CHK 추적성 기계 검증(check_traceability.py: MUST 미커버·AC 부재·근거 없는 작업·선행 순환·미정의 참조·중복 ID 탐지, --status 진척 집계, --sync 변경 영향 경고, --json/--strict로 CI 게이트, Python 표준 라이브러리만). 대용량 문서는 doc-atomize 연동(입력은 읽기 전 분할, 검수 루프 중 분할 금지, 승인 후 분할 — 미설치 시 통독 폴백). hardware-firmware 프로파일 PRD는 kicad-design 입력 규격(기능 요구사항·인터페이스 목록·성능 사양·전원 요구)을 그대로 만족해 회로도 생성으로 바로 연결. 각 단계는 착수 확인 게이트로 시작해 PRD→PLAN→체크리스트가 사용자 확인 없이 자동으로 이어지지 않는다(미결 이슈가 범위·안전에 걸린 상태로 다음 문서를 만들면 두 번 만들게 되므로). 추적성 스크립트는 REQ↔TASK↔CHK뿐 아니라 AC·OPEN 참조 해소와 AC 번호 소속 일치까지 검사한다. 5개 스킬 + 2개 에이전트.",
+      "version": "1.2.0"
+    },
+    {
       "name": "orca-worktree",
       "source": "./plugins/orca-worktree",
       "description": "Orca 워크트리 setup/archive 훅(orca.yaml) 자동 생성·검증 + 프로젝트 설정 적합성 점검 메타 도구. git 워크트리에는 추적 파일만 따라오므로 node_modules·.venv·.env·.claude/settings.local.json·대용량 참조 자산이 빠진 채 새 워크트리가 만들어진다 — 레포를 프로파일링(락파일·빌드시스템·모노레포 하위 경로)하고 git status --ignored로 비추적 자산을 스캔해 재설치/복사/링크로 분류한 뒤 120초 예산 안의 단계만 남긴 scripts.setup을 작성한다. 실측된 함정을 기본 회피 — Orca가 러너에 주입하는 set -e(해제 안 하면 첫 실패에서 나머지 통째 누락), YAML 파싱 실패 시 훅 전체 무시, .gitignore가 심볼릭 링크에 매칭되지 않는 문제(info/exclude로 해결), archive에서 -L 없는 rm이 메인 원본을 지우는 사고. 검증은 임시 git worktree에 ORCA_* 환경변수를 주입하고 set -e를 재현한 실드라이런으로 소요시간·실패 단계·멱등성까지 증거로 남긴다. 3개 스킬: orca-setup-build(분석→생성→드라이런) + orca-project-config(레포 등록·base ref·워크트리 경로 설정 방법 + 3축 적합성 점검) + orca-setup-review(4등급 진단, 읽기 전용). 에이전트·MCP 불필요(Python 표준 라이브러리 + bash).",

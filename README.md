@@ -94,6 +94,12 @@ React 19 + Vite 8 + TS 프론트엔드 — Fluent UI v9 / shadcn/ui 택1, 범용
 Orca 워크트리 생성 시 실행할 setup 훅(<code>orca.yaml</code>) 자동 작성 → 임시 워크트리 <b>실드라이런</b> 검증(소요시간·멱등성) + 프로젝트 설정 적합성 3축 점검 (Orca 메타 도구)<br>
 3 스킬
 </td>
+<td align="center" width="25%">
+<b>PRD Plan</b><br>
+요구 인터뷰 → PRD → 실행 계획(WBS·의존·마일스톤) → 실행 체크리스트<br>
+<b>30년 경력 PM 작성 에이전트 + 쓰기 권한 없는 PMO 검수 에이전트</b>로 자기검증 차단 · REQ→TASK→CHK 추적성 기계 검증<br>
+5 스킬 + 2 에이전트
+</td>
 </tr>
 </table>
 
@@ -292,6 +298,18 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 - 생성물(`orca.yaml`, `tools/orca-setup.sh`)은 **커밋해야 팀에 공유**됩니다 (Orca 앱의 로컬 훅은 그 호스트에만 남습니다)
 - 훅은 Linux/macOS에서 `/bin/bash`, Windows에서 `%ComSpec%`(cmd.exe)로 실행됩니다 — bash 훅은 Windows 호스트에서 동작하지 않습니다
 - setup 훅 예산은 **120초**입니다 (빌드·테스트는 넣지 않습니다)
+
+</details>
+
+<details>
+<summary><b>PRD Plan 플러그인</b></summary>
+
+- Claude Code만 있으면 동작합니다. 아래 둘은 **선택**입니다
+- `python3`(표준 라이브러리만) — 추적성 검증 스크립트(`check_traceability.py`)용. 없으면 수동 대조로 대체합니다
+- Windows: `python3`가 MS Store alias로 exit 49면 `py -3` 또는 `python` 사용
+- `doc-atomize` 플러그인 — PRD/PLAN이 40KB를 넘을 때 무손실 분할용. 없으면 통독 폴백으로 동작합니다
+- 문서 쓰기 권한: `<project>/docs/{prd,plan,checklist,reviews}` (다른 문서 구조를 쓰고 있으면 셋업이 물어봅니다)
+- **에이전트 2종은 새 세션부터 인식**됩니다 — `/prd-setup` 직후 세션 재시작을 권합니다
 
 </details>
 
@@ -503,6 +521,29 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 
 git 워크트리에는 **추적되는 파일만** 따라옵니다 — `node_modules`·`.venv`·`.env`·`.claude/settings.local.json`·대용량 참조 자산은 빠진 채 새 워크트리가 만들어집니다. 이 플러그인은 레포를 프로파일링해 그 준비를 대신할 `orca.yaml`의 `scripts.setup`을 작성하고, **임시 git 워크트리에 `ORCA_*` 환경변수를 주입해 실제로 돌려본 뒤**(소요시간·실패 단계·멱등성) 넘깁니다. Orca가 러너에 주입하는 `set -e`(해제 안 하면 첫 실패에서 나머지가 통째로 누락), 120초 타임아웃, YAML 파싱 실패 시 훅 전체 무시, `.gitignore`가 심볼릭 링크에 매칭되지 않는 문제 같은 실측된 함정을 기본으로 회피합니다.
 
+#### PRD Plan (PRD → 계획 → 체크리스트) 설치
+
+```
+/plugin install prd-plan@pjy-skills
+```
+
+5개 스킬이 활성화됩니다. 이후 에이전트를 설치합니다:
+
+```
+/prd-setup
+```
+
+셋업 시 프로젝트 경로를 질문합니다. 지정한 경로에 **작성 에이전트(`prd-writer`)와 검수 에이전트(`prd-reviewer`) 2종**, CLAUDE.md 규약, `docs/{prd,plan,checklist,reviews}` 디렉토리가 생성됩니다.
+
+이 플러그인의 핵심은 **역할 분리**입니다. 작성은 "30년 경력 PM" 페르소나가, 검수는 "PMO 게이트 심사관" 페르소나가 맡되 **검수자에게는 쓰기 권한이 없고 대화가 아니라 저장된 파일을 읽고 판정**합니다 — 작성자가 자기 문서를 스스로 통과시키는 경로가 구조적으로 막힙니다. 여기에 `REQ → TASK → CHK` 추적성을 `check_traceability.py`가 기계 검증해 **MUST 요구 미커버, 수용 기준 없는 요구, 근거 없는 작업, 선행 순환, 근거 없는 완료 표시**를 exit code로 잡아냅니다. 절대 날짜·시간 공수는 만들지 않고(상대 규모 S/M/L/XL), 모르는 값은 `OPEN-###` 미결 이슈로 남깁니다.
+
+```
+/prd-write 서보 모니터링 툴      ← 인터뷰 → PRD → 검수 루프 → 승인
+/prd-plan docs/prd/PRD-x.md      ← WBS·의존·마일스톤
+/prd-checklist docs/plan/PLAN-x.md   ← 체크리스트 (--status / --sync)
+/prd-review <외부 문서>          ← 받은 문서 검수만 (읽기 전용)
+```
+
 #### 여러 플러그인 동시 설치
 
 ```
@@ -520,6 +561,7 @@ git 워크트리에는 **추적되는 파일만** 따라옵니다 — `node_modu
 /plugin install rlcontrol@pjy-skills
 /plugin install doc-atomize@pjy-skills
 /plugin install orca-worktree@pjy-skills
+/plugin install prd-plan@pjy-skills
 ```
 
 각 플러그인은 독립적이므로 원하는 것만 설치할 수 있습니다.
@@ -1056,6 +1098,51 @@ Orca가 새 워크트리를 만들 때 실행할 **setup 명령**을 레포에 �
 
 ---
 
+### PRD Plan 플러그인 — 이렇게 말하면 됩니다
+
+| 하고 싶은 것 | 이렇게 말하세요 | 실행되는 것 |
+|-------------|----------------|------------|
+| 환경 셋업(1회) | "prd-plan 셋업" / `/prd-setup` | 에이전트 2종 + CLAUDE.md + `docs/` 디렉토리 |
+| PRD 작성 | "서보 모니터링 툴 PRD 써줘" / `/prd-write <주제>` | 인터뷰 → 작성 위임 → 검수 위임 → 반영 루프 → 승인 |
+| 실행 계획 | "이 PRD로 계획 세워줘" / `/prd-plan docs/prd/PRD-x.md` | **착수 확인 게이트** → WBS·의존 그래프·마일스톤·리스크·커버리지 매트릭스 |
+| 체크리스트 | "체크리스트 만들어줘" / `/prd-checklist docs/plan/PLAN-x.md` | **착수 확인 게이트** → TASK당 구현/검증 항목 + AC 확인 항목 + 추적성 검증 |
+| 진척 확인 | "진척 어때?" / `/prd-checklist --status <경로>` | 완료·차단·다음 착수 후보 집계 |
+| 요구 변경 반영 | "요구 바뀌었어" / `/prd-checklist --sync <경로>` | 영향 항목에 ⚠️ + 재검증 항목 추가 |
+| 받은 문서 검수 | "이 기획서 봐줘" / `/prd-review <경로>` | 읽기 전용 등급 리포트 (수정 안 함) |
+
+```
+"PRD 써줘"                      ← /prd-write (인터뷰는 메인 세션, 작성/검수는 분리된 에이전트)
+"WBS 뽑아줘"                    ← /prd-plan
+"체크리스트 만들어줘"            ← /prd-checklist
+"이 PRD로 개발 시작해도 될까?"   ← /prd-review (착수 가능 / 보완 필요 / 재작성 권고)
+```
+
+**PRD 프로파일** — 요구 항목이 스택마다 다릅니다.
+
+| profile / stack | 추가 필수 항목 | 다음 단계 |
+|-----------------|----------------|-----------|
+| `software` / `frontend` | 화면 목록, UI 라이브러리(Fluent vs shadcn 택1), 실시간 갱신 방식, 브라우저·해상도, 접근성 | react-vite |
+| `software` / `backend` | 언어·런타임(C++/C#/Python), 실행 형태, 인터페이스 계약, 동시성·지연, 자원·실시간성(GC), 오류·복구 | 구현 |
+| `software` / `full-stack` | 위 둘 + **API 인터페이스 계약 섹션** | react-vite + 백엔드 |
+| `hardware-firmware` | 기능 요구 · 인터페이스 목록 · 성능 사양 · 전원 요구 | **kicad-design에 그대로 투입 가능** |
+| `research-PoC` | 가설 · 판정 기준 · 실험 요구 · **중단 기준** | rlcontrol(rl-assess) |
+
+**이 플러그인이 막는 것**
+
+| 흔한 실패 | 이 플러그인의 차단 장치 |
+|-----------|------------------------|
+| 작성자가 자기 문서를 스스로 승인 | 검수 에이전트는 **쓰기 권한 없음**, 대화가 아닌 **파일**을 읽고 판정 |
+| "빠르게", "안정적으로" 같은 측정 불가 기준 | 금지어 자가 검열 + AC 없는 요구사항 작성 금지(스크립트 ERROR) |
+| 지어낸 일정 "3월 2주차, 3인일" | 절대 날짜·시간 공수 생성 금지, 상대 규모 S/M/L/XL만 |
+| 모르는 값을 그럴싸하게 채움 | `(미정 — OPEN-###)` 미결 이슈로 강제 |
+| "했다고 치는" 완료 | 완료 표시에 **근거 칸 필수** — 비면 exit 1 |
+| 요구사항이 구현에서 누락 | MUST 요구 미커버 시 ERROR (`REQ → TASK → CHK` 기계 검증) |
+| 미결이 남은 채 다음 단계로 떠밀림 | PLAN·체크리스트는 **착수 확인 게이트**로 시작 — 단계 전이는 사용자가 결정 |
+
+> **OMC의 `plan`/`planner`와 다릅니다** — OMC는 세션 내 작업 계획(휘발성), 이쪽은 **저장되는 문서 + 검수 게이트 + 추적성**입니다. 체크리스트를 만든 뒤 실제 실행은 `parallel-delegation`이나 OMC에 넘기면 됩니다.
+
+---
+
 #### 펌웨어 생성 시 Claude가 물어보는 것들
 
 정보가 부족하면 Claude가 순서대로 질문합니다:
@@ -1257,6 +1344,22 @@ pjy-claude-skill/
 │   │   │   └── orca-setup-review/
 │   │   │       └── references/    ← review-checklist (6카테고리 30항목 + 등급 기준)
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (함정 목록, 시작하기 4단계, 트러블슈팅)
+│   ├── prd-plan/                  ← PRD → 계획 → 체크리스트 플러그인 (워크플로, 에이전트 2)
+│   │   ├── plugin.json
+│   │   ├── claude-md/CLAUDE.md    ← 문서 경로·ID 규약·절대 규칙·프로파일·라우팅표
+│   │   ├── agents/ (2개)          ← prd-writer(30년 PM, 작성) / prd-reviewer(PMO 심사, 쓰기 권한 없음)
+│   │   ├── skills/ (5개)
+│   │   │   ├── prd-write/         ← 인터뷰(메인 세션) → 작성 → 검수 루프 → 승인
+│   │   │   │   └── references/    ← prd-template-core(12섹션·REQ/AC 규격) / prd-profiles(software[frontend·backend·full-stack]·hardware-firmware·research-PoC) / interview-guide / quality-rubric(7카테고리·4등급·검수 경계) / large-doc-handling(doc-atomize 타이밍)
+│   │   │   ├── prd-plan/          ← PRD → WBS·의존·마일스톤·리스크
+│   │   │   │   └── references/    ← wbs-guide(TASK 규격·분해 원칙·커버리지 매트릭스) / estimation-policy(절대 날짜·시간 공수 금지)
+│   │   │   ├── prd-checklist/     ← 체크리스트 생성 + --status(진척) + --sync(변경 동기화)
+│   │   │   │   ├── references/    ← checklist-format (CHK 한 줄 규격·주체·완료 근거 칸)
+│   │   │   │   └── assets/        ← check_traceability.py (REQ↔TASK↔CHK 검증, 표준 라이브러리만, exit code 게이트)
+│   │   │   ├── prd-review/        ← 외부·기존 문서 검수만 (읽기 전용)
+│   │   │   │   └── references/    ← review-checklist (형식 차이 처리·착수 가능성 5항 판정)
+│   │   │   └── prd-setup/         ← 에이전트 2종 + CLAUDE.md + docs/ 디렉토리 설치
+│   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (OMC plan과의 차이, 흐름, 검증 코드표, FAQ)
 │   └── react-vite/                ← React 19 + Vite 8 프론트엔드 플러그인
 │       ├── plugin.json
 │       ├── skills/ (2개)          ← 구현→검증 워크플로 + 에이전트 셋업
@@ -1331,6 +1434,7 @@ KiCad 9.x에서 바로 열 수 있습니다. 다만 S-expression 직접 생성�
 - **RL Control**: [`plugins/rlcontrol/docs/USAGE_GUIDE.md`](plugins/rlcontrol/docs/USAGE_GUIDE.md)
 - **Doc Atomize**: [`plugins/doc-atomize/docs/USAGE_GUIDE.md`](plugins/doc-atomize/docs/USAGE_GUIDE.md)
 - **Orca Worktree**: [`plugins/orca-worktree/docs/USAGE_GUIDE.md`](plugins/orca-worktree/docs/USAGE_GUIDE.md)
+- **PRD Plan**: [`plugins/prd-plan/docs/USAGE_GUIDE.md`](plugins/prd-plan/docs/USAGE_GUIDE.md)
 
 ---
 

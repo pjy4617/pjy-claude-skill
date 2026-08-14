@@ -154,6 +154,22 @@ plugins/
 │   │   └── orca-setup-review/     ← 기존 orca.yaml 진단 (6카테고리 30항목, 읽기 전용)
 │   │       └── references/        ← review-checklist (등급 기준 + 리포트 형식)
 │   └── docs/USAGE_GUIDE.md
+├── prd-plan/                      ← PRD → 계획 → 체크리스트 플러그인 (5 스킬 + 2 에이전트, 워크플로) — 작성(prd-writer, 30년 PM 페르소나)과 검수(prd-reviewer, 쓰기 권한 없음·파일 기반 판정)를 분리해 자기검증을 구조적으로 차단. REQ→TASK→CHK 추적성 기계 검증, 절대 날짜·시간 공수 생성 금지, 근거 없는 완료 표시 차단
+│   ├── plugin.json
+│   ├── skills/
+│   │   ├── prd-write/             ← 인터뷰(메인 세션 — 서브에이전트는 질문 불가) → PRD 작성 → 검수 루프(최대 3R) → 사용자 승인
+│   │   │   └── references/        ← prd-template-core(프론트매터·12섹션·REQ/AC 규격·금지어), prd-profiles(software[frontend React / backend C++·C#·Python / full-stack]·hardware-firmware·research-PoC), interview-guide, quality-rubric(7카테고리·4등급·검수 경계), large-doc-handling(doc-atomize 타이밍 3구간)
+│   │   ├── prd-plan/              ← PRD → WBS·의존 그래프·마일스톤·리스크 등록부·커버리지 매트릭스
+│   │   │   └── references/        ← wbs-guide, estimation-policy(절대 날짜·인일 금지, S/M/L/XL만)
+│   │   ├── prd-checklist/         ← 체크리스트 생성 + --status(진척) + --sync(변경 영향 ⚠️)
+│   │   │   ├── references/        ← checklist-format (CHK 한 줄 규격·상태 마크·주체·완료 근거)
+│   │   │   └── assets/            ← check_traceability.py (MUST 미커버·AC 부재·근거 없는 작업·선행 순환·근거 없는 완료 탐지, --json/--strict, 표준 라이브러리)
+│   │   ├── prd-review/            ← 외부/기존 문서 독립 검수 (읽기 전용 리포트, 수정 없음)
+│   │   │   └── references/        ← review-checklist (형식 차이 처리·착수 가능성 5항)
+│   │   └── prd-setup/             ← 에이전트 2종 + CLAUDE.md + docs/{prd,plan,checklist,reviews} 설치
+│   ├── agents/                    ← prd-writer / prd-reviewer
+│   ├── claude-md/CLAUDE.md
+│   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json
     ├── skills/
@@ -201,7 +217,7 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 
 플러그인 종류:
 - **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md/wmx3app/rlcontrol): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
-- **워크플로 플러그인**(parallel-delegation): 도메인 무관 절차. `claude-md/` 없음 + `*-setup`이 누락분만 보충
+- **워크플로 플러그인**(parallel-delegation/prd-plan): 도메인 무관 절차. `parallel-delegation`은 `claude-md/` 없이 `*-setup`이 누락 역할만 보충하고, `prd-plan`은 산출물 규약(문서 경로·REQ/TASK/CHK ID·절대 규칙)이 있어 예외적으로 `claude-md/` 템플릿을 둔다
 - **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest/doc-atomize/orca-worktree): Claude Code 자체 환경, 컨텍스트 관리, 또는 개발 환경(Orca 워크트리) 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요), `doc-atomize`는 대용량 .md를 무손실 분할(요약 아님)하고 `<doc-id>.index.md`로 조회하며 에이전트 0개 + 디렉토리/마커 초기화 setup만(MCP 불필요, Python 표준 라이브러리), `orca-worktree`는 Orca 워크트리 생성 시 실행될 `orca.yaml` `scripts.setup`을 레포 프로파일링으로 작성하고 임시 git worktree 실드라이런으로 검증하며 에이전트 0개 + setup 스킬 없음(설치할 것이 없다 — 설치 즉시 사용).
 
 1. `plugins/<이름>/plugin.json` 생성 (`name`, `version`, `description`, `skills` 필드)

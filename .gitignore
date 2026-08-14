@@ -15,6 +15,9 @@ temp/
 # pcb-design-digest 산출물 (사용자별, 보드 다이제스트가 자동 생성)
 .claude/pcb-designs/
 
+# doc-atomize 산출물 (사용자별, 원자 분할 조각·인덱스가 자동 생성)
+.claude/atomized/
+
 # *-setup 스킬이 설치하는 에이전트 복사본 + 에이전트 런타임 메모리
 # (로컬/사용자별 생성물 — 플러그인 소스는 plugins/*/agents/ 에 있음)
 .claude/agents/
