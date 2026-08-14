@@ -88,6 +88,13 @@ React 19 + Vite 8 + TS 프론트엔드 — Fluent UI v9 / shadcn/ui 택1, 범용
 2 스킬
 </td>
 </tr>
+<tr>
+<td align="center" width="25%">
+<b>Orca Worktree</b><br>
+Orca 워크트리 생성 시 실행할 setup 훅(<code>orca.yaml</code>) 자동 작성 → 임시 워크트리 <b>실드라이런</b> 검증(소요시간·멱등성) + 프로젝트 설정 적합성 3축 점검 (Orca 메타 도구)<br>
+3 스킬
+</td>
+</tr>
 </table>
 
 ---
@@ -272,6 +279,19 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 - PDF/CHM/HTML 매뉴얼은 이 플러그인이 아니라 `manual-digest` 담당 (요약 vs 무손실 분할로 목적이 다름)
 - 디스크 쓰기 권한: `<project>/.claude/atomized/` (project scope) 또는 `~/.claude/atomized/` (global scope)
 - `--in-place`(원본 자리 재구성)는 git 저장소에서 **클린 상태 + 무손실 검증 통과**일 때만 원본을 제거합니다
+
+</details>
+
+<details>
+<summary><b>Orca Worktree 플러그인</b></summary>
+
+- [Orca](https://orca.stably.ai) 설치 + 대상 레포가 **git 저장소**(커밋 1개 이상 — 드라이런이 임시 워크트리를 만듭니다)
+- `python3`(표준 라이브러리만) + `bash` — 추가 패키지·MCP·에이전트 없음
+- Orca CLI는 선택입니다. 없거나 런타임이 꺼져 있어도 `orca.yaml` 작성·정적 검사·드라이런은 모두 동작하며, Orca 등록 상태 점검만 건너뜁니다
+- **리눅스 주의**: bare `orca`는 GNOME Orca **스크린리더**로 잡힐 수 있습니다. `$ORCA_CLI_COMMAND` → `orca-dev` → `orca-ide` → `orca` 순으로 해석합니다
+- 생성물(`orca.yaml`, `tools/orca-setup.sh`)은 **커밋해야 팀에 공유**됩니다 (Orca 앱의 로컬 훅은 그 호스트에만 남습니다)
+- 훅은 Linux/macOS에서 `/bin/bash`, Windows에서 `%ComSpec%`(cmd.exe)로 실행됩니다 — bash 훅은 Windows 호스트에서 동작하지 않습니다
+- setup 훅 예산은 **120초**입니다 (빌드·테스트는 넣지 않습니다)
 
 </details>
 
@@ -468,6 +488,21 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 
 `.claude/atomized/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP도 에이전트도 필요 없고**(Python 표준 라이브러리만 사용) 세션 재시작도 불필요합니다. 이후 `/doc-atomize <큰 .md>`로 문서를 등록하면, 다음부터 그 문서 질문은 인덱스 1개 + 조각 1~3개만 읽고 처리됩니다. `manual-digest`가 외부 매뉴얼을 **요약**해 등록한다면, 이쪽은 손안의 마크다운을 **무손실 분할**합니다 — 조각이 정본이라 원문 그대로 인용할 수 있습니다. `--in-place`로 repo 문서 자체를 재구성할 수도 있습니다(git 클린 + 무손실 검증 통과 시에만 원본 제거).
 
+#### Orca Worktree (워크트리 setup 훅) 설치
+
+```
+/plugin install orca-worktree@pjy-skills
+```
+
+3개 스킬이 활성화됩니다. **셋업 스킬이 없어 설치 후 바로 사용**합니다(에이전트·MCP 불필요, `python3` + `bash`만 필요).
+
+```
+/orca-project-config     ← 현재 설정 상태부터 점검 (읽기 전용)
+/orca-setup-build        ← setup 훅 생성 + 드라이런 검증
+```
+
+git 워크트리에는 **추적되는 파일만** 따라옵니다 — `node_modules`·`.venv`·`.env`·`.claude/settings.local.json`·대용량 참조 자산은 빠진 채 새 워크트리가 만들어집니다. 이 플러그인은 레포를 프로파일링해 그 준비를 대신할 `orca.yaml`의 `scripts.setup`을 작성하고, **임시 git 워크트리에 `ORCA_*` 환경변수를 주입해 실제로 돌려본 뒤**(소요시간·실패 단계·멱등성) 넘깁니다. Orca가 러너에 주입하는 `set -e`(해제 안 하면 첫 실패에서 나머지가 통째로 누락), 120초 타임아웃, YAML 파싱 실패 시 훅 전체 무시, `.gitignore`가 심볼릭 링크에 매칭되지 않는 문제 같은 실측된 함정을 기본으로 회피합니다.
+
 #### 여러 플러그인 동시 설치
 
 ```
@@ -484,6 +519,7 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 /plugin install pcb-design-digest@pjy-skills
 /plugin install rlcontrol@pjy-skills
 /plugin install doc-atomize@pjy-skills
+/plugin install orca-worktree@pjy-skills
 ```
 
 각 플러그인은 독립적이므로 원하는 것만 설치할 수 있습니다.
@@ -983,6 +1019,43 @@ PCB 설계 입력 세 종류 — **①거버/드릴 출력 폴더 ②PADS 레이
 
 ---
 
+### Orca Worktree 플러그인 — 이렇게 말하면 됩니다
+
+Orca가 새 워크트리를 만들 때 실행할 **setup 명령**을 레포에 맞게 작성하고, **임시 워크트리에서 실제로 돌려본 뒤** 넘깁니다. git 워크트리에는 추적되는 파일만 따라오므로 `node_modules`·`.venv`·`.env`·`.claude/settings.local.json`·대용량 참조 자산은 빠진 채 생성되고, 그대로 두면 새 워크트리에서 첫 명령이 실패합니다.
+
+| 상황 | 이렇게 말하세요 | 실행되는 것 |
+|------|----------------|-------------|
+| 설정 상태 점검 | "orca 설정 확인해줘" / `/orca-project-config` | 3축 점검(Orca 등록 · 레포 내 설정 · 레포 특성 대비 갭), 읽기 전용 |
+| Orca 등록·base ref 설정 | `/orca-project-config --setup` | `repo add` · `repo set-base-ref` · 워크트리 base path 안내·적용 |
+| setup 훅 작성 | "Orca setup 스크립트 만들어줘" / `/orca-setup-build` | 8단계(프로파일링→비추적 스캔→예산 배분→작성→정적 검사→드라이런) |
+| archive 훅도 함께 | `/orca-setup-build --archive` | setup이 만든 심볼릭 링크 정리 훅 (`-L` 가드 필수) |
+| 기존 훅만 돌려보기 | `/orca-setup-build --dry-run-only` | 임시 워크트리 실행 + 소요시간 + 멱등성 재실행 |
+| 기존 훅 진단 | "orca.yaml 검토해줘" / `/orca-setup-review` | 6카테고리 30항목 → CRITICAL/MAJOR/MINOR/INFO |
+
+```
+"Add a setup command to run when Orca creates new worktrees"   ← /orca-setup-build
+"새 워크트리 만들 때마다 install 하기 귀찮아"                    ← /orca-setup-build
+"orca 훅이 앞부분만 실행되고 끝나"                               ← /orca-setup-review (set -e 함정)
+"설정이 이 프로젝트에 맞는지 봐줘"                               ← /orca-project-config
+```
+
+**기본으로 회피하는 실측 함정**
+
+| 함정 | 증상 | 대응 |
+|---|---|---|
+| Orca가 러너에 `set -e` 주입 | 훅이 앞부분만 실행되고 조용히 끝남 | 본문 첫머리 `set +e` |
+| YAML 파싱 실패 = 훅 **전체 무시** | 에러 없이 "훅이 안 돈다" | 구조 검사 게이트 |
+| 120초 타임아웃 | 워크트리 생성이 중단됨 | 빌드 제외 + 드라이런 실측 |
+| `.gitignore`가 심볼릭 링크에 매칭 안 됨 | 워크트리마다 `?? old` 잡음 | `info/exclude` 등록 |
+| archive에서 `-L` 없는 `rm` | **메인 체크아웃의 원본이 사라짐** | 링크 확인 후에만 해제 |
+| 분리 스크립트 미커밋 | 새 워크트리마다 훅 실패 | 추적 여부 점검 |
+
+> **작성과 검토는 분리된 스킬입니다** — `orca-setup-build`가 쓰고 `orca-setup-review`가 읽기 전용으로 검토합니다. 같은 컨텍스트에서 자기가 쓴 스크립트를 자기가 승인하면 검토가 형식이 됩니다.
+>
+> **`orca.yaml`이 인식하는 최상위 키는 넷뿐입니다** — `scripts` · `issueCommand` · `defaultTabs` · `environmentRecipes`. 그 밖의 키는 **에러 없이 조용히 무시**되므로 오타가 곧 기능 상실입니다.
+
+---
+
 #### 펌웨어 생성 시 Claude가 물어보는 것들
 
 정보가 부족하면 Claude가 순서대로 질문합니다:
@@ -1172,6 +1245,18 @@ pjy-claude-skill/
 │   │   │   │   └── assets/        ← split_md.py (split·verify·reindex·update, 표준 라이브러리만)
 │   │   │   └── doc-atomize-setup/
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (5분 사용법, 실측 절감, 옵션 튜닝, FAQ)
+│   ├── orca-worktree/             ← Orca 워크트리 setup 훅 플러그인 (메타 도구, 에이전트 0)
+│   │   ├── plugin.json
+│   │   ├── skills/ (3개)          ← 훅 작성 + 프로젝트 설정/점검 + 훅 진단
+│   │   │   ├── orca-setup-build/
+│   │   │   │   ├── references/    ← orca-yaml-schema(키·훅·env·타임아웃) / repo-profiling(생태계별 단계·비용) / script-conventions(관용구·안티패턴)
+│   │   │   │   └── assets/        ← check_orca_yaml.py(구조+안티패턴+bash -n) / dryrun_setup.sh(임시 워크트리 실행) / templates/
+│   │   │   ├── orca-project-config/
+│   │   │   │   ├── references/    ← project-setup-guide (설정 체크리스트·셀렉터·원격 호스트)
+│   │   │   │   └── assets/        ← check_orca_project.sh (3축 점검, 읽기 전용)
+│   │   │   └── orca-setup-review/
+│   │   │       └── references/    ← review-checklist (6카테고리 30항목 + 등급 기준)
+│   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (함정 목록, 시작하기 4단계, 트러블슈팅)
 │   └── react-vite/                ← React 19 + Vite 8 프론트엔드 플러그인
 │       ├── plugin.json
 │       ├── skills/ (2개)          ← 구현→검증 워크플로 + 에이전트 셋업
@@ -1245,6 +1330,7 @@ KiCad 9.x에서 바로 열 수 있습니다. 다만 S-expression 직접 생성�
 - **PCB Design Digest**: [`plugins/pcb-design-digest/docs/USAGE_GUIDE.md`](plugins/pcb-design-digest/docs/USAGE_GUIDE.md)
 - **RL Control**: [`plugins/rlcontrol/docs/USAGE_GUIDE.md`](plugins/rlcontrol/docs/USAGE_GUIDE.md)
 - **Doc Atomize**: [`plugins/doc-atomize/docs/USAGE_GUIDE.md`](plugins/doc-atomize/docs/USAGE_GUIDE.md)
+- **Orca Worktree**: [`plugins/orca-worktree/docs/USAGE_GUIDE.md`](plugins/orca-worktree/docs/USAGE_GUIDE.md)
 
 ---
 

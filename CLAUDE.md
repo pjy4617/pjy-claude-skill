@@ -142,6 +142,18 @@ plugins/
 │   │   │   └── assets/            ← split_md.py (split·verify·reindex·update, Python 표준 라이브러리만)
 │   │   └── doc-atomize-setup/     ← 디렉토리 + INDEX.md + CLAUDE.md 마커 1회 초기화 (MCP·에이전트 불필요)
 │   └── docs/USAGE_GUIDE.md
+├── orca-worktree/                 ← Orca 워크트리 setup 훅 플러그인 (3 스킬, 에이전트 없음, 메타 도구) — Orca가 새 워크트리를 만들 때 실행할 orca.yaml scripts.setup을 레포에 맞게 작성하고 임시 워크트리 실드라이런으로 검증. harness가 Claude Code 하네스를 다룬다면 이쪽은 Orca 워크트리 준비를 다룬다
+│   ├── plugin.json
+│   ├── skills/
+│   │   ├── orca-setup-build/      ← 훅 작성 (8단계: 프로파일링→비추적 스캔→120초 예산 배분→작성→정적 검사→드라이런)
+│   │   │   ├── references/        ← orca-yaml-schema(인식 키 4종·환경변수·set -e 주입·CLI 플래그), repo-profiling(생태계별 단계·비용 등급), script-conventions(필수 관용구·안티패턴)
+│   │   │   └── assets/            ← check_orca_yaml.py(구조+안티패턴+bash -n, PyYAML 불필요), dryrun_setup.sh(임시 git worktree에 ORCA_* 주입 실행 + 멱등성 재실행), templates/(orca.yaml·orca-setup.sh)
+│   │   ├── orca-project-config/   ← Orca 프로젝트 설정 방법 + 3축 적합성 점검(등록/레포 내 설정/레포 특성 갭)
+│   │   │   ├── references/        ← project-setup-guide (설정 체크리스트 11항목·셀렉터 문법·원격 호스트·증상별 원인)
+│   │   │   └── assets/            ← check_orca_project.sh (읽기 전용, --json 지원, Orca 런타임 없이도 B·C축 동작)
+│   │   └── orca-setup-review/     ← 기존 orca.yaml 진단 (6카테고리 30항목, 읽기 전용)
+│   │       └── references/        ← review-checklist (등급 기준 + 리포트 형식)
+│   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json
     ├── skills/
@@ -190,7 +202,7 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 플러그인 종류:
 - **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md/wmx3app/rlcontrol): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
 - **워크플로 플러그인**(parallel-delegation): 도메인 무관 절차. `claude-md/` 없음 + `*-setup`이 누락분만 보충
-- **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest/doc-atomize): Claude Code 자체 환경 또는 컨텍스트 관리 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요), `doc-atomize`는 대용량 .md를 무손실 분할(요약 아님)하고 `<doc-id>.index.md`로 조회하며 에이전트 0개 + 디렉토리/마커 초기화 setup만(MCP 불필요, Python 표준 라이브러리).
+- **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest/doc-atomize/orca-worktree): Claude Code 자체 환경, 컨텍스트 관리, 또는 개발 환경(Orca 워크트리) 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요), `doc-atomize`는 대용량 .md를 무손실 분할(요약 아님)하고 `<doc-id>.index.md`로 조회하며 에이전트 0개 + 디렉토리/마커 초기화 setup만(MCP 불필요, Python 표준 라이브러리), `orca-worktree`는 Orca 워크트리 생성 시 실행될 `orca.yaml` `scripts.setup`을 레포 프로파일링으로 작성하고 임시 git worktree 실드라이런으로 검증하며 에이전트 0개 + setup 스킬 없음(설치할 것이 없다 — 설치 즉시 사용).
 
 1. `plugins/<이름>/plugin.json` 생성 (`name`, `version`, `description`, `skills` 필드)
 2. `plugins/<이름>/skills/<스킬명>/SKILL.md` 생성

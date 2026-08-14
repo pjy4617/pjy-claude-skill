@@ -81,6 +81,12 @@
       "source": "./plugins/doc-atomize",
       "description": "대용량 마크다운 무손실 원자 분할 메타 도구: 큰 .md를 헤딩 우선 + 크기 가드 하이브리드로 조각내고(요약이 아니라 분할 — 재조립하면 원본과 sha256 일치, 조각 자체가 정본이라 원문 인용 가능), 검색 진입점 <doc-id>.index.md(조회 프로토콜·라우팅 힌트·목차+포함 헤딩·키워드 역색인)를 생성해 이후 질문은 인덱스 1개 + 조각 1~3개만 읽고 답한다. 인덱스 파일명에 doc-id를 붙여 index.md 난립·INDEX.md 대소문자 혼동을 차단하고 Glob **/*.index.md 한 번으로 전 문서 인덱스를 열거한다. 병합된 절도 목차 ↳ 줄에 노출되어 실종되지 않으며, 갱신 시 큐레이션(요약·키워드·라우팅)을 슬러그 기준으로 승계하고 본문이 바뀐 요약에는 ⚠️ 표시. 파생물 모드(.claude/atomized/)와 원본 자리 재구성(--in-place, git 클린+검증 통과 시에만 원본 제거) 지원. MCP·에이전트 불필요(Python 표준 라이브러리만). 2개 스킬(doc-atomize 분할/갱신/검증/목록/삭제 + doc-atomize-setup 환경 1회 초기화).",
       "version": "1.0.0"
+    },
+    {
+      "name": "orca-worktree",
+      "source": "./plugins/orca-worktree",
+      "description": "Orca 워크트리 setup/archive 훅(orca.yaml) 자동 생성·검증 + 프로젝트 설정 적합성 점검 메타 도구. git 워크트리에는 추적 파일만 따라오므로 node_modules·.venv·.env·.claude/settings.local.json·대용량 참조 자산이 빠진 채 새 워크트리가 만들어진다 — 레포를 프로파일링(락파일·빌드시스템·모노레포 하위 경로)하고 git status --ignored로 비추적 자산을 스캔해 재설치/복사/링크로 분류한 뒤 120초 예산 안의 단계만 남긴 scripts.setup을 작성한다. 실측된 함정을 기본 회피 — Orca가 러너에 주입하는 set -e(해제 안 하면 첫 실패에서 나머지 통째 누락), YAML 파싱 실패 시 훅 전체 무시, .gitignore가 심볼릭 링크에 매칭되지 않는 문제(info/exclude로 해결), archive에서 -L 없는 rm이 메인 원본을 지우는 사고. 검증은 임시 git worktree에 ORCA_* 환경변수를 주입하고 set -e를 재현한 실드라이런으로 소요시간·실패 단계·멱등성까지 증거로 남긴다. 3개 스킬: orca-setup-build(분석→생성→드라이런) + orca-project-config(레포 등록·base ref·워크트리 경로 설정 방법 + 3축 적합성 점검) + orca-setup-review(4등급 진단, 읽기 전용). 에이전트·MCP 불필요(Python 표준 라이브러리 + bash).",
+      "version": "1.0.0"
     }
   ]
 }
