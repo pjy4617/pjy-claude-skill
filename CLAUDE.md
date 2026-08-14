@@ -134,6 +134,14 @@ plugins/
 │   ├── agents/                    ← rlctrl-feasibility-analyst/algorithm-designer/implementer/evaluator
 │   ├── claude-md/CLAUDE.md
 │   └── docs/USAGE_GUIDE.md
+├── doc-atomize/                   ← 마크다운 무손실 원자 분할 플러그인 (2 스킬, 에이전트 없음, 메타 도구) — manual-digest가 "요약"이라면 이쪽은 "분할": 조각을 합치면 원본과 sha256 일치, 조각 자체가 정본
+│   ├── plugin.json
+│   ├── skills/
+│   │   ├── doc-atomize/           ← 분할/갱신/검증/목록/삭제 (8단계, 무손실 검증이 게이트)
+│   │   │   ├── references/        ← split-rules(경계·크기·병합·엣지케이스), index-format(인덱스 5섹션·조각 프론트매터·metadata 스키마), retrieval-guide(조회 프로토콜·Grep 패턴·CLAUDE.md 마커)
+│   │   │   └── assets/            ← split_md.py (split·verify·reindex·update, Python 표준 라이브러리만)
+│   │   └── doc-atomize-setup/     ← 디렉토리 + INDEX.md + CLAUDE.md 마커 1회 초기화 (MCP·에이전트 불필요)
+│   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json
     ├── skills/
@@ -182,7 +190,7 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 플러그인 종류:
 - **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md/wmx3app/rlcontrol): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
 - **워크플로 플러그인**(parallel-delegation): 도메인 무관 절차. `claude-md/` 없음 + `*-setup`이 누락분만 보충
-- **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest): Claude Code 자체 환경 또는 컨텍스트 관리 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요).
+- **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest/doc-atomize): Claude Code 자체 환경 또는 컨텍스트 관리 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요), `doc-atomize`는 대용량 .md를 무손실 분할(요약 아님)하고 `<doc-id>.index.md`로 조회하며 에이전트 0개 + 디렉토리/마커 초기화 setup만(MCP 불필요, Python 표준 라이브러리).
 
 1. `plugins/<이름>/plugin.json` 생성 (`name`, `version`, `description`, `skills` 필드)
 2. `plugins/<이름>/skills/<스킬명>/SKILL.md` 생성

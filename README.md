@@ -82,6 +82,11 @@ React 19 + Vite 8 + TS 프론트엔드 — Fluent UI v9 / shadcn/ui 택1, 범용
 강화학습(RL) 제어 적용 검토(게이트: 고전 제어 우선 판별) → 알고리즘 설계 → Gymnasium/SB3 구현 → 성능·안전 테스트(다중 시드·sim-to-real) → ONNX·C#/C++ 추론 배포 → 운영 데이터 지속 개선<br>
 6 스킬 + 4 에이전트
 </td>
+<td align="center" width="25%">
+<b>Doc Atomize</b><br>
+대용량 마크다운을 <b>무손실</b> 원자 분할(요약 아님 — 재조립 시 sha256 일치) + <code>&lt;doc-id&gt;.index.md</code> 검색 인덱스 → 질문마다 조각 1~3개만 읽기 (Claude Code 메타 도구)<br>
+2 스킬
+</td>
 </tr>
 </table>
 
@@ -255,6 +260,18 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 - 학습·평가 환경: 시뮬레이터 또는 로그 데이터 — 안전-크리티컬 장비는 **시뮬레이터 우선 검증 후 사람 감독 하 가드형 실기 전환**(무제약 정책 실기 직배포 금지)
 - (선택) Context7 MCP 설치 시 Gymnasium/Stable-Baselines3 등 라이브러리 API를 공식 문서로 확인 — 버전별 세부 API는 단정하지 않고 확인 후 사용
 - (선택) 장비가 WMX3 모션 제어 기반이면 `wmx3app`의 SimuPlatform을 Gymnasium 학습·평가 환경으로, `wmx3-app-test`의 실기 전환 체크리스트를 sim-to-real 게이트로 활용 가능
+
+</details>
+
+<details>
+<summary><b>Doc Atomize 플러그인</b></summary>
+
+- Claude Code + `python3` (3.8 이상, **표준 라이브러리만** — 추가 패키지·MCP·에이전트 없음)
+- Windows: `python3`가 MS Store alias로 exit 49면 `py -3` 또는 `python` 사용
+- 입력: 마크다운(`.md`/`.markdown`) — **300줄 이상**일 때 이득이 있습니다(그 미만은 인덱스 유지비가 더 큼)
+- PDF/CHM/HTML 매뉴얼은 이 플러그인이 아니라 `manual-digest` 담당 (요약 vs 무손실 분할로 목적이 다름)
+- 디스크 쓰기 권한: `<project>/.claude/atomized/` (project scope) 또는 `~/.claude/atomized/` (global scope)
+- `--in-place`(원본 자리 재구성)는 git 저장소에서 **클린 상태 + 무손실 검증 통과**일 때만 원본을 제거합니다
 
 </details>
 
@@ -437,6 +454,20 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 
 셋업 시 프로젝트 경로를 질문합니다. 지정한 경로에 4개 에이전트와 CLAUDE.md가 생성됩니다. 첫 관문인 `rl-assess`는 **강화학습이 정말 필요한지부터 냉정하게 판정**하며, 고전 제어(PID/LQR/MPC)로 충분하면 "RL 부적합 → 고전 제어 권장" 판정(No-Go)을 내릴 수 있습니다 — 이 게이트가 이 플러그인의 가장 큰 차별점입니다.
 
+#### Doc Atomize (마크다운 원자 분할) 설치
+
+```
+/plugin install doc-atomize@pjy-skills
+```
+
+2개 스킬이 활성화됩니다. **첫 사용 전 1회 환경 초기화 필수**:
+
+```
+/doc-atomize-setup
+```
+
+`.claude/atomized/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP도 에이전트도 필요 없고**(Python 표준 라이브러리만 사용) 세션 재시작도 불필요합니다. 이후 `/doc-atomize <큰 .md>`로 문서를 등록하면, 다음부터 그 문서 질문은 인덱스 1개 + 조각 1~3개만 읽고 처리됩니다. `manual-digest`가 외부 매뉴얼을 **요약**해 등록한다면, 이쪽은 손안의 마크다운을 **무손실 분할**합니다 — 조각이 정본이라 원문 그대로 인용할 수 있습니다. `--in-place`로 repo 문서 자체를 재구성할 수도 있습니다(git 클린 + 무손실 검증 통과 시에만 원본 제거).
+
 #### 여러 플러그인 동시 설치
 
 ```
@@ -452,6 +483,7 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 /plugin install react-vite@pjy-skills
 /plugin install pcb-design-digest@pjy-skills
 /plugin install rlcontrol@pjy-skills
+/plugin install doc-atomize@pjy-skills
 ```
 
 각 플러그인은 독립적이므로 원하는 것만 설치할 수 있습니다.
@@ -916,6 +948,41 @@ PCB 설계 입력 세 종류 — **①거버/드릴 출력 폴더 ②PADS 레이
 
 ---
 
+### Doc Atomize 플러그인 — 이렇게 말하면 됩니다
+
+대용량 마크다운을 **무손실로 원자 분할**하고 검색 인덱스를 만듭니다. 요약이 아니라 분할이므로 **조각을 합치면 원본과 sha256이 일치**하고, 조각 자체가 정본이라 원문 그대로 인용할 수 있습니다. 이후 그 문서에 대한 질문은 원본을 다시 읽지 않고 `인덱스 1개 + 조각 1~3개`로 처리됩니다.
+
+| 상황 | 이렇게 말하세요 | 실행되는 것 |
+|------|----------------|-------------|
+| 환경 셋업(1회) | "doc-atomize 셋업" / `/doc-atomize-setup` | doc-atomize-setup 스킬 (디렉토리 + INDEX.md + CLAUDE.md 마커) |
+| 문서 분할 | "이 md 파일 쪼개줘" / `/doc-atomize <file.md>` | doc-atomize 스킬 (8단계: 분할→무손실 검증→요약 큐레이션→카탈로그 등록) |
+| repo 문서 재구성 | `/doc-atomize <file.md> --in-place` | 원본 자리에 인덱스+조각 생성 (git 클린 + 검증 통과 시에만 원본 제거) |
+| Global scope 등록 | `/doc-atomize <file.md> --scope global` | 모든 프로젝트 공유 |
+| 원본 변경 시 갱신 | `/doc-atomize --update <id>` | sha256 비교 → 변경 조각만 재생성, 큐레이션 승계 |
+| 무손실 재검증 | `/doc-atomize --verify <id>` | 재조립 sha256 대조 + 커버리지·링크 검사 |
+| 등록 문서 목록 | "등록된 문서 목록" / `/doc-atomize --list` | INDEX.md 출력 |
+| 문서 제거 | `/doc-atomize --remove <id>` | 디렉토리 + INDEX.md 항목 갱신 |
+
+```
+"doc-atomize 셋업"                ← doc-atomize-setup (MCP·에이전트 불필요, 세션 재시작 불필요)
+
+"이 PRD 매번 통째로 읽기 부담돼"    ← /doc-atomize docs/HW_PRD.md
+"큰 마크다운 분할해줘"             ← 헤딩 우선 + 크기 가드 하이브리드 분할
+"문서 원자화해줘"                  ← 조각 + <doc-id>.index.md 생성
+
+"원본 바뀌었어"                    ← /doc-atomize --update <id> (변경 조각만, 요약은 ⚠️로 재검토 표시)
+```
+
+**실측** (884줄 / 41.7 KB PRD): 조각 13개(평균 68줄), 인덱스 7.9 KB. 원본 통째 읽기 41.7 KB → 인덱스 + 조각 1개 11.5 KB (**28%**).
+
+> **manual-digest와 구분**: PDF/CHM 같은 외부 매뉴얼을 **요약**해 등록하는 것은 `manual-digest`(원본의 ~0.3%, 손실 있음), 손안의 큰 `.md`를 **무손실 분할**하는 것은 `doc-atomize`입니다.
+>
+> **인덱스 파일명 규칙**: 문서별 인덱스는 `index.md`가 아니라 `<doc-id>.index.md`입니다. 문서가 여러 개일 때 `index.md` 난립과 `INDEX.md`(마스터)와의 대소문자 혼동을 막고, `Glob **/*.index.md` 한 번으로 전 문서 인덱스를 열거할 수 있습니다.
+>
+> **300줄 미만은 분할하지 않습니다** — 인덱스 유지비가 이득보다 큽니다.
+
+---
+
 #### 펌웨어 생성 시 Claude가 물어보는 것들
 
 정보가 부족하면 Claude가 순서대로 질문합니다:
@@ -1097,6 +1164,14 @@ pjy-claude-skill/
 │   │   ├── agents/ (4개)          ← rlctrl-feasibility-analyst/algorithm-designer/implementer/evaluator
 │   │   ├── claude-md/
 │   │   └── docs/USAGE_GUIDE.md
+│   ├── doc-atomize/               ← 마크다운 무손실 원자 분할 플러그인 (메타 도구)
+│   │   ├── plugin.json
+│   │   ├── skills/ (2개)          ← 분할/갱신/검증/목록/삭제 + 환경 1회 초기화
+│   │   │   ├── doc-atomize/
+│   │   │   │   ├── references/    ← split-rules(경계·병합·엣지케이스) / index-format(스키마) / retrieval-guide(조회 프로토콜)
+│   │   │   │   └── assets/        ← split_md.py (split·verify·reindex·update, 표준 라이브러리만)
+│   │   │   └── doc-atomize-setup/
+│   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (5분 사용법, 실측 절감, 옵션 튜닝, FAQ)
 │   └── react-vite/                ← React 19 + Vite 8 프론트엔드 플러그인
 │       ├── plugin.json
 │       ├── skills/ (2개)          ← 구현→검증 워크플로 + 에이전트 셋업
@@ -1169,6 +1244,7 @@ KiCad 9.x에서 바로 열 수 있습니다. 다만 S-expression 직접 생성�
 - **React-Vite Frontend**: [`plugins/react-vite/docs/usage-guide.md`](plugins/react-vite/docs/usage-guide.md)
 - **PCB Design Digest**: [`plugins/pcb-design-digest/docs/USAGE_GUIDE.md`](plugins/pcb-design-digest/docs/USAGE_GUIDE.md)
 - **RL Control**: [`plugins/rlcontrol/docs/USAGE_GUIDE.md`](plugins/rlcontrol/docs/USAGE_GUIDE.md)
+- **Doc Atomize**: [`plugins/doc-atomize/docs/USAGE_GUIDE.md`](plugins/doc-atomize/docs/USAGE_GUIDE.md)
 
 ---
 
