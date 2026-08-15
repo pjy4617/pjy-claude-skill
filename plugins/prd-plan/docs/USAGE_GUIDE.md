@@ -49,8 +49,13 @@ docs/plan/PLAN-servo-monitor.md
    ↓ TASK당 구현/검증 항목 + AC 확인 항목 → 추적성 검증
 docs/checklist/CHECKLIST-servo-monitor.md
 
+   ↓ 이후 구현 세션은 코드 변경과 함께 체크리스트를 갱신한다
+     (착수 [~] / 완료 [x] + 근거 / 막힘 [!]) — /prd-setup이 설치한 CLAUDE.md 규약
+
 /prd-checklist --status docs/checklist/CHECKLIST-servo-monitor.md
 ```
+
+체크리스트 갱신은 스킬이 대신 해주지 않는다. 구현하는 세션이 직접 한다 — 그래서 그 규약을 `/prd-setup`이 프로젝트 CLAUDE.md에 심는다. 규약이 없으면 문서는 만들어진 날짜에 멈춘다.
 
 ## 스킬 5종
 
