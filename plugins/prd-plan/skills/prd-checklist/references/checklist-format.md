@@ -104,6 +104,9 @@ milestone: M1          # 마일스톤 단위로 파일을 나눈 경우에만
 ```bash
 python3 <plugin>/skills/prd-checklist/assets/check_traceability.py \
   --prd docs/prd/PRD-x.md --plan docs/plan/PLAN-x.md --checklist docs/checklist/CHECKLIST-x.md
+
+# 마일스톤 단위로 나눈 경우 — --checklist 를 여러 번 넘겨야 전체 기준으로 집계된다
+python3 ... --plan PLAN-x.md --checklist CHECKLIST-x-M1.md --checklist CHECKLIST-x-M2.md --status
 ```
 
 | 검출 | 등급 |
@@ -113,7 +116,7 @@ python3 <plugin>/skills/prd-checklist/assets/check_traceability.py \
 | 소속이 다른 번호의 AC 정의 (`AC_PREFIX`) | ERROR |
 | 미결 표에만 있고 본문 표기가 없는 OPEN (`OPEN_ORPHAN`) | WARN |
 | 존재하지 않는 TASK 참조 | ERROR |
-| CHK ID 중복 | ERROR |
+| CHK ID 중복 (`DUP_CHK`) — 같은 파일 내·**파일 간 모두** | ERROR (마일스톤 분리 시 연번을 이어서 부여한다) |
 | 참조 TASK 없음 | ERROR |
 | 실행 주체 표기 없음 | WARN |
 | 체크리스트 항목이 없는 TASK | WARN |

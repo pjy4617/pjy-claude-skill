@@ -87,7 +87,14 @@ docs/checklist/CHECKLIST-<slug>-M2.md
 ```
 
 - CHK 연번은 **파일을 넘어 이어서** 부여한다 (M1이 CHK-001~040이면 M2는 CHK-041부터). ID 재사용 금지 원칙은 그대로다
-- 검증 스크립트는 파일별로 돌리고, 전체 커버리지는 `--checklist`를 바꿔가며 확인한다
+- 검증 스크립트에 **`--checklist`를 여러 번 넘긴다** — 그래야 커버리지와 진척이 전체 기준으로 계산된다
+  ```bash
+  python3 <...>/check_traceability.py --prd <PRD> --plan <PLAN> \
+      --checklist docs/checklist/CHECKLIST-x-M1.md \
+      --checklist docs/checklist/CHECKLIST-x-M2.md --status
+  ```
+  한 파일만 넘기면 다른 파일이 커버하는 TASK가 `TASK_UNCHECKED`로 잘못 잡히고 진척률도 그 파일 기준이 된다.
+  연번을 잇지 않고 재사용하면 `DUP_CHK` ERROR로 잡힌다
 - 나누는 시점은 **마일스톤이 끝났을 때**가 안전하다 (진행 중 분리는 진척 이력이 흩어진다)
 
 ```
@@ -108,6 +115,8 @@ docs/checklist/CHECKLIST-<slug>-M2.md
 ```bash
 python3 <...>/check_traceability.py --checklist <경로> --status
 python3 <...>/check_traceability.py --prd <P> --plan <L> --checklist <C> --status --json
+# 마일스톤 단위로 나눴으면 전부 넘긴다 (일부만 넘기면 집계가 그 파일 기준이 된다)
+python3 <...>/check_traceability.py --plan <L> --checklist <M1> --checklist <M2> --status
 ```
 
 2. 결과를 정리해 보고한다:

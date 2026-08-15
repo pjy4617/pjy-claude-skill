@@ -9,6 +9,9 @@ Python 표준 라이브러리만 사용한다.
                                   --plan docs/plan/PLAN-x.md \
                                   --checklist docs/checklist/CHECKLIST-x.md
     python3 check_traceability.py --checklist docs/checklist/CHECKLIST-x.md --status
+    # 마일스톤 단위로 나눈 경우 — 전체 커버리지·진척을 한 번에 보려면 모두 넘긴다
+    python3 check_traceability.py --plan PLAN-x.md \
+        --checklist CHECKLIST-x-M1.md --checklist CHECKLIST-x-M2.md --status
     python3 check_traceability.py --prd ... --plan ... --json
 
 종료 코드:
@@ -287,9 +290,12 @@ def check_ac_refs(path, label, ac_defined, rep):
                           "{}:{}".format(path, idx))
 
 
-def parse_checklist(path, rep):
+def parse_checklist(path, rep, chks=None):
+    """여러 파일을 누적 파싱한다 (마일스톤 단위 분리 지원)."""
     lines = read_lines(path)
-    chks = {}
+    if chks is None:
+        chks = {}
+    seen_here = 0
     for idx, line in enumerate(lines, start=1):
         m = RE_CHK_LINE.match(line)
         if not m:
@@ -300,6 +306,7 @@ def parse_checklist(path, rep):
         ev = RE_EVIDENCE.search(rest)
         owner = RE_OWNER.search(rest)
         entry = {
+            "path": path,
             "line": idx,
             "mark": m.group("mark"),
             "state": MARK_STATE.get(m.group("mark"), "?"),
@@ -309,10 +316,16 @@ def parse_checklist(path, rep):
             "text": rest.strip(),
         }
         if cid in chks:
-            rep.error("DUP_CHK", "CHK ID가 중복 정의됨: {}".format(cid), "{}:{}".format(path, idx))
+            prev = chks[cid]
+            where = "{}:{}".format(prev["path"], prev["line"])
+            if prev["path"] != path:
+                rep.error("DUP_CHK", "CHK ID가 파일 간에 중복됨: {} (이미 {}) — 마일스톤 분리 시 연번을 이어서 부여한다".format(cid, where), "{}:{}".format(path, idx))
+            else:
+                rep.error("DUP_CHK", "CHK ID가 중복 정의됨: {}".format(cid), "{}:{}".format(path, idx))
         else:
             chks[cid] = entry
-    if not chks:
+            seen_here += 1
+    if seen_here == 0:
         rep.warn("NO_CHK", "체크리스트 항목을 찾지 못함 (- [ ] **CHK-001** (TASK-001) ... 형식 확인)", path)
     return chks
 
@@ -399,7 +412,7 @@ def cross_check(reqs, tasks, chks, paths, rep):
     # CHK -> TASK
     if chks:
         for cid, c in chks.items():
-            loc = "{}:{}".format(chkl, c["line"])
+            loc = "{}:{}".format(c.get("path", chkl), c["line"])
             if not c["tasks"]:
                 rep.error("CHK_NO_TASK", "{}: 참조 TASK가 없음".format(cid), loc)
             if tasks:
@@ -471,13 +484,15 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="PRD/PLAN/체크리스트 추적성 검증")
     ap.add_argument("--prd")
     ap.add_argument("--plan")
-    ap.add_argument("--checklist")
+    ap.add_argument("--checklist", action="append", metavar="PATH",
+                    help="체크리스트 경로. 마일스톤 단위로 나눴으면 여러 번 지정한다")
     ap.add_argument("--status", action="store_true", help="체크리스트 진척 요약 출력")
     ap.add_argument("--json", action="store_true", help="JSON으로 출력")
     ap.add_argument("--strict", action="store_true", help="WARN도 실패로 처리")
     args = ap.parse_args(argv)
 
-    given = [p for p in (args.prd, args.plan, args.checklist) if p]
+    checklists = args.checklist or []
+    given = [p for p in (args.prd, args.plan) if p] + checklists
     if not given:
         ap.error("--prd / --plan / --checklist 중 최소 하나가 필요합니다")
     for path in given:
@@ -489,17 +504,21 @@ def main(argv=None):
     reqs = parse_prd(args.prd, rep) if args.prd else {}
     ac_defined = check_ids(args.prd, reqs, rep) if args.prd else set()
     tasks = parse_plan(args.plan, rep) if args.plan else {}
-    chks = parse_checklist(args.checklist, rep) if args.checklist else {}
+    chks = {}
+    for cpath in checklists:
+        parse_checklist(cpath, rep, chks)
     if args.plan:
         check_ac_refs(args.plan, "PLAN", ac_defined, rep)
-    if args.checklist:
-        check_ac_refs(args.checklist, "체크리스트", ac_defined, rep)
+    for cpath in checklists:
+        check_ac_refs(cpath, "체크리스트", ac_defined, rep)
 
     cross_check(reqs if args.prd else None, tasks, chks,
-                (args.prd or "", args.plan or "", args.checklist or ""), rep)
+                (args.prd or "", args.plan or "", checklists[0] if checklists else ""), rep)
 
     stats = {"req": len(reqs), "task": len(tasks), "chk": len(chks)}
     status = status_summary(tasks, chks, reqs) if (args.status and chks) else None
+    if status and len(checklists) > 1:
+        status["files"] = len(checklists)
 
     if args.json:
         print(json.dumps({

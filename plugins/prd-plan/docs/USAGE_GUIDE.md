@@ -87,6 +87,7 @@ hardware 프로파일 PRD는 `kicad-design`이 요구하는 4항목을 그대로
 python3 <plugin>/skills/prd-checklist/assets/check_traceability.py \
   --prd docs/prd/PRD-x.md --plan docs/plan/PLAN-x.md --checklist docs/checklist/CHECKLIST-x.md
 python3 ... --checklist docs/checklist/CHECKLIST-x.md --status     # 진척
+python3 ... --checklist CHECKLIST-x-M1.md --checklist CHECKLIST-x-M2.md --status   # 마일스톤 분리 시 전부 넘긴다
 python3 ... --json --strict                                        # CI/훅 게이트
 ```
 
