@@ -155,7 +155,7 @@ plugins/
 │   │   └── orca-setup-review/     ← 기존 orca.yaml 진단 (6카테고리 30항목, 읽기 전용)
 │   │       └── references/        ← review-checklist (등급 기준 + 리포트 형식)
 │   └── docs/USAGE_GUIDE.md
-├── prd-plan/                      ← PRD → 계획 → 체크리스트 플러그인 (5 스킬 + 2 에이전트, 워크플로) — 작성(prd-writer, 30년 PM 페르소나)과 검수(prd-reviewer, 쓰기 권한 없음·파일 기반 판정)를 분리해 자기검증을 구조적으로 차단. REQ→TASK→CHK 추적성 기계 검증, 절대 날짜·시간 공수 생성 금지, 근거 없는 완료 표시 차단
+├── prd-plan/                      ← PRD → 계획 → 체크리스트 플러그인 (5 스킬 + 4 에이전트, 워크플로) — 작성(prd-writer, 30년 PM 페르소나)과 검수(prd-reviewer, 쓰기 권한 없음·파일 기반 판정)를 분리해 자기검증을 구조적으로 차단. REQ→TASK→CHK 추적성 기계 검증, 절대 날짜·시간 공수 생성 금지, 근거 없는 완료 표시 차단
 │   ├── plugin.json
 │   ├── skills/
 │   │   ├── prd-write/             ← 인터뷰(메인 세션 — 서브에이전트는 질문 불가) → PRD 작성 → 검수 루프(최대 3R) → 사용자 승인
@@ -169,7 +169,7 @@ plugins/
 │   │   ├── prd-review/            ← 외부/기존 문서 독립 검수 (읽기 전용 리포트, 수정 없음)
 │   │   │   └── references/        ← review-checklist (형식 차이 처리·착수 가능성 5항)
 │   │   └── prd-setup/             ← 에이전트 2종 + CLAUDE.md + docs/{prd,plan,checklist,reviews} 설치
-│   ├── agents/                    ← prd-writer / prd-reviewer
+│   ├── agents/ (4개)              ← prd-writer(작성) + 문서 종류별 전용 검수 3종: prd-reviewer(PRD·외부 문서, 7카테고리) / prd-plan-reviewer(PLAN, 커버리지 실질·의존 강제·순환 우회·분해 실질 6축) / prd-checklist-reviewer(체크리스트, 완결성·주체 분리·근거 칸·차단 표기·분리 구조 5축) — 검수자 전원 쓰기 권한 없음
 │   ├── claude-md/CLAUDE.md
 │   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)

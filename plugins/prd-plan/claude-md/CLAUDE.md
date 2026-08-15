@@ -30,7 +30,7 @@ python3 ~/.claude/plugins/**/prd-plan/skills/prd-checklist/assets/check_traceabi
 
 ## 절대 규칙
 
-1. **작성과 검수를 같은 컨텍스트에서 하지 않는다.** 작성은 `prd-writer`, 검수는 `prd-reviewer`(쓰기 권한 없음).
+1. **작성과 검수를 같은 컨텍스트에서 하지 않는다.** 작성은 `prd-writer`, 검수는 문서 종류별 전용 에이전트 — PRD·외부 문서는 `prd-reviewer`, PLAN은 `prd-plan-reviewer`, 체크리스트는 `prd-checklist-reviewer`. 검수자는 모두 **쓰기 권한이 없다**.
 2. **`status: approved`는 사용자만 전이한다.** 에이전트가 자기 문서를 승인하지 않는다.
 3. **모르는 값을 지어내지 않는다.** `(미정 — OPEN-###)`로 남기고 미결 이슈 표에 등록한다.
 4. **절대 날짜·시간 공수를 만들지 않는다.** 규모는 S/M/L/XL, 일정은 상대 순번·마일스톤 라벨. 사용자가 제공한 값만 출처와 함께 기재.

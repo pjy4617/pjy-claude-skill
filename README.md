@@ -97,8 +97,8 @@ Orca 워크트리 생성 시 실행할 setup 훅(<code>orca.yaml</code>) 자동 
 <td align="center" width="25%">
 <b>PRD Plan</b><br>
 요구 인터뷰 → PRD → 실행 계획(WBS·의존·마일스톤) → 실행 체크리스트<br>
-<b>30년 경력 PM 작성 에이전트 + 쓰기 권한 없는 PMO 검수 에이전트</b>로 자기검증 차단 · REQ→TASK→CHK 추적성 기계 검증<br>
-5 스킬 + 2 에이전트
+<b>30년 경력 PM 작성 에이전트 + 문서 종류별 전용 검수 에이전트 3종(쓰기 권한 없음)</b>으로 자기검증 차단 · REQ→TASK→CHK 추적성 기계 검증<br>
+5 스킬 + 4 에이전트
 </td>
 </tr>
 </table>
@@ -533,7 +533,7 @@ git 워크트리에는 **추적되는 파일만** 따라옵니다 — `node_modu
 /prd-setup
 ```
 
-셋업 시 프로젝트 경로를 질문합니다. 지정한 경로에 **작성 에이전트(`prd-writer`)와 검수 에이전트(`prd-reviewer`) 2종**, CLAUDE.md 규약, `docs/{prd,plan,checklist,reviews}` 디렉토리가 생성됩니다.
+셋업 시 프로젝트 경로를 질문합니다. 지정한 경로에 **에이전트 4종**(작성 `prd-writer` + 검수 `prd-reviewer`/`prd-plan-reviewer`/`prd-checklist-reviewer`), CLAUDE.md 규약, `docs/{prd,plan,checklist,reviews}` 디렉토리가 생성됩니다.
 
 이 플러그인의 핵심은 **역할 분리**입니다. 작성은 "30년 경력 PM" 페르소나가, 검수는 "PMO 게이트 심사관" 페르소나가 맡되 **검수자에게는 쓰기 권한이 없고 대화가 아니라 저장된 파일을 읽고 판정**합니다 — 작성자가 자기 문서를 스스로 통과시키는 경로가 구조적으로 막힙니다. 여기에 `REQ → TASK → CHK` 추적성을 `check_traceability.py`가 기계 검증해 **MUST 요구 미커버, 수용 기준 없는 요구, 근거 없는 작업, 선행 순환, 근거 없는 완료 표시**를 exit code로 잡아냅니다. 절대 날짜·시간 공수는 만들지 않고(상대 규모 S/M/L/XL), 모르는 값은 `OPEN-###` 미결 이슈로 남깁니다.
 

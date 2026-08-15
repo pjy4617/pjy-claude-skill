@@ -1,6 +1,6 @@
 ---
 name: prd-plan
-description: "승인된 PRD를 실행 계획(PLAN)으로 전개하는 워크플로. 요구사항(REQ)을 작업(TASK)으로 분해해 WBS·선행 의존 그래프·마일스톤·리스크 등록부를 만들고, 모든 TASK에 근거 REQ를 붙여 추적성을 보장한다. 절대 날짜와 임의 공수를 만들지 않고 상대 규모(S/M/L/XL)와 상대 순번만 쓴다. 작성은 prd-writer, 검수는 쓰기 권한 없는 prd-reviewer가 맡고 최대 3라운드 반영 루프를 돈다. 사용자가 '실행 계획 세워줘', 'PLAN 문서 만들어줘', 'WBS 작성', '작업 분해', '개발 계획 수립', '프로젝트 계획서', '/prd-plan <PRD경로>' 등을 요청할 때 적용. 착수 확인 게이트로 시작하므로 PRD 승인 직후 자동으로 이어지지 않는다 — 사용자가 계획 수립을 명시적으로 요청해야 한다."
+description: "승인된 PRD를 실행 계획(PLAN)으로 전개하는 워크플로. 요구사항(REQ)을 작업(TASK)으로 분해해 WBS·선행 의존 그래프·마일스톤·리스크 등록부를 만들고, 모든 TASK에 근거 REQ를 붙여 추적성을 보장한다. 절대 날짜와 임의 공수를 만들지 않고 상대 규모(S/M/L/XL)와 상대 순번만 쓴다. 작성은 prd-writer, 검수는 쓰기 권한 없는 PLAN 전용 검수자 prd-plan-reviewer가 맡고 최대 3라운드 반영 루프를 돈다. 사용자가 '실행 계획 세워줘', 'PLAN 문서 만들어줘', 'WBS 작성', '작업 분해', '개발 계획 수립', '프로젝트 계획서', '/prd-plan <PRD경로>' 등을 요청할 때 적용. 착수 확인 게이트로 시작하므로 PRD 승인 직후 자동으로 이어지지 않는다 — 사용자가 계획 수립을 명시적으로 요청해야 한다."
 user-invocable: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion
 ---
@@ -18,7 +18,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task, AskUserQuestion
 ## 사전 조건
 
 - 입력 PRD 경로 (또는 `*.index.md`)
-- 에이전트 2종 (미설치면 `/prd-setup`)
+- 에이전트 4종 — 작성 `prd-writer` + 검수 `prd-plan-reviewer` (미설치면 `/prd-setup`)
 - `python3` (추적성 검증, 선택)
 
 ---
@@ -108,7 +108,9 @@ ERROR가 있으면 검수 위임 전에 작성 에이전트로 되돌린다 (사
 
 ### 6단계 — 검수 위임 + 반영 루프 (최대 3라운드)
 
-`prd-reviewer`를 별도 Task로 호출한다. 상위 문서로 **PRD 경로를 반드시 함께** 준다 (추적성 판정에 필요).
+**`prd-plan-reviewer`**(PLAN 전용 검수자)를 별도 Task로 호출한다. 상위 문서로 **PRD 경로를 반드시 함께** 준다 — 커버리지·근거 판정에 필수다.
+
+이 에이전트는 기계가 잡지 못하는 6축을 본다: 커버리지의 실질 · 순서가 의존으로 강제되는가 · 순환을 끊은 방식의 타당성 · 차단 정의의 일관성 · 분해의 실질(XL을 L에 밀어넣지 않았는가) · 검증 작업의 독립성.
 
 ```
 검수 대상: <PLAN 경로>

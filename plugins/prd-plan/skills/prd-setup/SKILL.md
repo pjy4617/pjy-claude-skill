@@ -1,6 +1,6 @@
 ---
 name: prd-setup
-description: "prd-plan 플러그인 환경 초기 설정. 작성 에이전트(prd-writer)와 검수 에이전트(prd-reviewer) 2종, CLAUDE.md 규약, docs/prd·plan·checklist·reviews 디렉토리를 프로젝트에 설치한다. 플러그인 설치 후 최초 1회 실행. idempotent — 여러 번 실행해도 안전하며 누락분만 보충한다. 'prd-plan 설정', 'PRD 플러그인 셋업', 'prd 에이전트 설치', '/prd-setup', 'PRD 환경 초기화' 등의 요청에 자동 적용."
+description: "prd-plan 플러그인 환경 초기 설정. 작성 에이전트(prd-writer) 1종과 문서 종류별 검수 에이전트 3종(prd-reviewer: PRD·외부 문서 / prd-plan-reviewer: PLAN / prd-checklist-reviewer: 체크리스트), CLAUDE.md 규약, docs/prd·plan·checklist·reviews 디렉토리를 프로젝트에 설치한다. 플러그인 설치 후 최초 1회 실행. idempotent — 여러 번 실행해도 안전하며 누락분만 보충한다. 'prd-plan 설정', 'PRD 플러그인 셋업', 'prd 에이전트 설치', '/prd-setup', 'PRD 환경 초기화' 등의 요청에 자동 적용."
 user-invocable: true
 allowed-tools: Bash, Read, Write, Edit, Glob, AskUserQuestion
 ---
@@ -38,9 +38,16 @@ PLUGIN_DIR = ${CLAUDE_SKILL_DIR}/../../
 mkdir -p ${PROJECT_ROOT}/.claude/agents
 ```
 
-복사 대상 (`PLUGIN_DIR/agents/`):
-- `prd-writer.md` — 30년 경력 PM 페르소나 작성 전문가 (PRD·PLAN·체크리스트 작성, 리뷰 반영)
-- `prd-reviewer.md` — PMO 게이트 심사 페르소나 검수 전문가 (**쓰기 권한 없음**, 리포트만 반환)
+복사 대상 (`PLUGIN_DIR/agents/`) — 작성 1 + 검수 3:
+
+| 파일 | 역할 | 권한 |
+|------|------|------|
+| `prd-writer.md` | 30년 경력 PM 페르소나 작성 전문가 (PRD·PLAN·체크리스트 작성, 리뷰 반영) | 읽기+쓰기 |
+| `prd-reviewer.md` | **PRD·외부 문서** 검수 (7카테고리) | **쓰기 없음** |
+| `prd-plan-reviewer.md` | **PLAN 전용** 검수 (커버리지 실질·의존 강제·순환 우회·분해 실질 6축) | **쓰기 없음** |
+| `prd-checklist-reviewer.md` | **체크리스트 전용** 검수 (완결성·주체 분리·근거 칸·차단 표기·분리 구조 5축) | **쓰기 없음** |
+
+> 검수자를 문서 종류별로 나눈 이유: 각 문서에서 사고가 나는 지점이 다릅니다. PLAN은 "작업을 다 해도 요구가 달성되지 않는" 연결과 순서 미강제, 체크리스트는 "다 체크해도 완료를 증명 못 하는" 주체 혼입과 근거 부재입니다. 범용 검수자 하나로는 이 관점이 프롬프트에 매번 실려야 합니다.
 
 각 파일을 Read해서 `${PROJECT_ROOT}/.claude/agents/`에 동일한 이름으로 Write합니다.
 이미 존재하면 덮어쓰기 전에 사용자에게 확인합니다.
@@ -88,7 +95,7 @@ ls ~/.claude/plugins/**/doc-atomize 2>/dev/null     # 대용량 문서 분할용
 ### 7단계 — 검증 및 리포트
 
 ```bash
-ls ${PROJECT_ROOT}/.claude/agents/prd-writer.md ${PROJECT_ROOT}/.claude/agents/prd-reviewer.md
+ls ${PROJECT_ROOT}/.claude/agents/prd-{writer,reviewer,plan-reviewer,checklist-reviewer}.md
 ls -d ${PROJECT_ROOT}/docs/prd ${PROJECT_ROOT}/docs/plan ${PROJECT_ROOT}/docs/checklist ${PROJECT_ROOT}/docs/reviews
 grep -c "prd-plan:start" ${PROJECT_ROOT}/.claude/CLAUDE.md
 ```
@@ -97,7 +104,7 @@ grep -c "prd-plan:start" ${PROJECT_ROOT}/.claude/CLAUDE.md
 
 ```
 prd-plan 설치 완료: <PROJECT_ROOT>
-에이전트: prd-writer ✅ / prd-reviewer ✅
+에이전트: prd-writer ✅ / prd-reviewer ✅ / prd-plan-reviewer ✅ / prd-checklist-reviewer ✅
 디렉토리: docs/prd, docs/plan, docs/checklist, docs/reviews ✅
 CLAUDE.md: 마커 주입 ✅ (신규 생성 | 기존에 추가)
 선택 의존성: python3 ✅ / doc-atomize ⚠️ 미설치

@@ -54,7 +54,15 @@ python3 <plugin>/skills/prd-checklist/assets/check_traceability.py --prd <P> [--
 
 ### 4단계 — 검수 위임
 
-`prd-reviewer`를 Task로 호출한다.
+문서 종류에 맞는 검수자를 Task로 호출한다.
+
+| 대상 | 검수자 |
+|------|--------|
+| PRD · 혼합 문서 · 규격 밖 외부 문서 | `prd-reviewer` |
+| 실행 계획(PLAN) | `prd-plan-reviewer` |
+| 체크리스트 | `prd-checklist-reviewer` |
+
+전용 에이전트가 설치되어 있지 않으면 `prd-reviewer`로 대체하고 그 사실을 보고에 남긴다.
 
 ```
 검수 대상: <경로>  (종류: PRD|PLAN|체크리스트)
