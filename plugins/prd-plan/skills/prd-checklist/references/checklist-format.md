@@ -17,8 +17,11 @@ source_plan: PLAN-<slug> (v1.0)
 source_prd: PRD-<slug> (v1.2)
 status: active | done | superseded
 version: 1.0
+milestone: M1          # 마일스톤 단위로 파일을 나눈 경우에만
 ---
 ```
+
+> **이 문서는 doc-atomize로 분할하지 않는다.** 자주 바뀌고 전수 집계로 읽히므로 원자화의 전제와 맞지 않는다. 커지면 `CHECKLIST-<slug>-M1.md`처럼 **마일스톤 단위로 파일을 나누고** CHK 연번은 파일을 넘어 이어서 부여한다.
 
 ## 항목 한 줄 규격 (기계 파싱 대상 — 형식 엄수)
 

@@ -77,6 +77,19 @@ ERROR가 있으면 작성 에이전트로 되돌린다. exit code 1이면 진행
 
 ### 6단계 — 마무리
 
+**체크리스트는 doc-atomize로 분할하지 않는다** — 크기와 무관하다. 항목을 체크할 때마다 재분할이 돌고, 주 조회인 전수 집계(진척률·착수 후보)에서 조각이 이득을 주지 못하기 때문이다 (`prd-write/references/large-doc-handling.md` → 읽히는 문서만 분할한다).
+
+커져서 다루기 힘들면 **마일스톤 단위로 파일을 나눈다**:
+
+```
+docs/checklist/CHECKLIST-<slug>-M1.md      # 프론트매터에 milestone: M1 추가
+docs/checklist/CHECKLIST-<slug>-M2.md
+```
+
+- CHK 연번은 **파일을 넘어 이어서** 부여한다 (M1이 CHK-001~040이면 M2는 CHK-041부터). ID 재사용 금지 원칙은 그대로다
+- 검증 스크립트는 파일별로 돌리고, 전체 커버리지는 `--checklist`를 바꿔가며 확인한다
+- 나누는 시점은 **마일스톤이 끝났을 때**가 안전하다 (진행 중 분리는 진척 이력이 흩어진다)
+
 ```
 체크리스트 생성 완료: docs/checklist/CHECKLIST-<slug>.md
 항목: CHK n건 (구현 n / 검증 n / 사용자 결정 n)
@@ -144,3 +157,4 @@ git diff --stat -- docs/prd docs/plan
 - PLAN에 없는 작업을 체크리스트에서 새로 만들기 (필요하면 PLAN 갱신 권고)
 - 진척률을 위해 항목을 합치거나 삭제하기
 - **착수 확인 없이 체크리스트 생성 시작** (1단계 게이트 필수)
+- 체크리스트를 doc-atomize로 분할하기 (커지면 마일스톤 단위 파일 분리)
