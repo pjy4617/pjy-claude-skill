@@ -26,7 +26,7 @@
       "name": "wmx3app",
       "source": "./plugins/wmx3app",
       "description": "WMX3.7 애플리케이션 풀스택 개발: 요구사항→시스템 설계(플랫폼 선택·축 구성·모션 기능 매핑·성능/안정성 전략) + C++/C# 구현(초기화 시퀀스·모션·이벤트·에러 처리·.NET Dispose) + 시뮬레이터 플랫폼 기반 테스트 + 기존 프로젝트 WMX3 사용 검토(API 오용·에러 처리 누락·성능·3.6u3→3.7 마이그레이션) + Robot Option 다관절 로봇 제어(기구학·Joint/Cartesian 좌표계·PTP/CP·XML/URDF 로봇 정의·충돌 감지) + EtherCAT ENI 파일 제작(WMX3 전용 ENI·ec_network.def·슬레이브 ESI(ETG.2000) 분석·PDO/CANopen 매핑·EcConfigurator/NetConfigurator 연계) + Config Export(파라미터 export XML) 분석(설정 축 식별·기어비/토크/소프트리밋/원점 요약·안전 일관성 검토). 7개 스킬 + 5개 에이전트.",
-      "version": "1.4.0"
+      "version": "1.4.1"
     },
     {
       "name": "manual",
@@ -38,25 +38,25 @@
       "name": "kicad",
       "source": "./plugins/kicad",
       "description": "KiCad 회로도 풀스택 도구: PRD/설계사양서 기반 회로도 생성 + 8단계 설계 리뷰(PDF 시각 검토, 라이브러리 비교, 데이터시트 검증) + BOM 마크다운 생성 + 회로/PCB 정밀 분석(ERC/DRC, 넷 추적, 트랙/라우팅, 신호·전원 무결성, Seeed kicad-mcp-server 연동·폴백) + KiCad 10.0 사용법 안내(공식 매뉴얼 다이제스트: 프로젝트 매니저·pcbnew PCB 에디터·gerbview·kicad-cli). STM32, FPGA, IO 보드, EtherCAT 슬레이브 등 모든 도메인 지원. 5개 스킬 + 4개 에이전트.",
-      "version": "1.2.0"
+      "version": "1.2.1"
     },
     {
       "name": "parallel-delegation",
       "source": "./plugins/parallel-delegation",
       "description": "서브에이전트 병렬 위임 워크플로 + 3-role 에이전트(구현/테스트/구현품질검증): 독립 작업을 단일 응답에 다수 Agent 호출로 묶어 동시 실행. 자기 검증의 함정 차단을 위한 역할 분리 패턴 + 카탈로그 자동 발견·description 매칭 메커니즘. 누락 역할만 보충 설치하는 setup 스킬 포함(사용자 정의·OMC 에이전트 우선). 2개 스킬 + 3개 에이전트.",
-      "version": "1.1.0"
+      "version": "1.1.1"
     },
     {
       "name": "harness",
       "source": "./plugins/harness",
       "description": "Claude Code 하네스 진화 도구: CLAUDE.md(규칙 전달) + Permissions(위험 차단) + Hooks(자동 검증) + MCP(테스트 도구) + Subagent(AI 분리) + 진화 원칙(메타) 6단계를 진단·추천·확정 워크플로우로 단계적으로 보강합니다. 신규 셋업보다는 이미 쓰는 프로젝트의 하네스를 진화시키는 데 초점. 1개 스킬.",
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "name": "manual-digest",
       "source": "./plugins/manual-digest",
       "description": "대용량 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD) 및 소스코드 디렉토리(codebase) 다이제스트 플러그인: 한 번 추출→요약하면 이후 작업은 ~0.3% 압축된 마크다운 다이제스트만 참조하고, 디테일 필요 시 원본의 특정 페이지/섹션(문서) 또는 파일/심볼(코드)만 핀포인트로 추출. PDF는 @sylphx/pdf-reader-mcp MCP, 코드베이스는 Read/Grep/Glob(MCP 불필요) 사용. project/global 두 스코프 지원, CLAUDE.md 마커 자동 주입으로 Claude가 매뉴얼/코드 질문에 자동으로 다이제스트를 1차 참조하도록 가이드. 2개 스킬: manual-digest(인제스트/갱신/목록/삭제) + manual-digest-setup(환경 1회 초기화).",
-      "version": "1.1.0"
+      "version": "1.1.1"
     },
     {
       "name": "react-vite",
@@ -92,7 +92,7 @@
       "name": "orca-worktree",
       "source": "./plugins/orca-worktree",
       "description": "Orca 워크트리 setup/archive 훅(orca.yaml) 자동 생성·검증 + 프로젝트 설정 적합성 점검 메타 도구. git 워크트리에는 추적 파일만 따라오므로 node_modules·.venv·.env·.claude/settings.local.json·대용량 참조 자산이 빠진 채 새 워크트리가 만들어진다 — 레포를 프로파일링(락파일·빌드시스템·모노레포 하위 경로)하고 git status --ignored로 비추적 자산을 스캔해 재설치/복사/링크로 분류한 뒤 120초 예산 안의 단계만 남긴 scripts.setup을 작성한다. 실측된 함정을 기본 회피 — Orca가 러너에 주입하는 set -e(해제 안 하면 첫 실패에서 나머지 통째 누락), YAML 파싱 실패 시 훅 전체 무시, .gitignore가 심볼릭 링크에 매칭되지 않는 문제(info/exclude로 해결), archive에서 -L 없는 rm이 메인 원본을 지우는 사고. 검증은 임시 git worktree에 ORCA_* 환경변수를 주입하고 set -e를 재현한 실드라이런으로 소요시간·실패 단계·멱등성까지 증거로 남긴다. 3개 스킬: orca-setup-build(분석→생성→드라이런) + orca-project-config(레포 등록·base ref·워크트리 경로 설정 방법 + 3축 적합성 점검) + orca-setup-review(4등급 진단, 읽기 전용). 에이전트·MCP 불필요(Python 표준 라이브러리 + bash).",
-      "version": "1.0.0"
+      "version": "1.0.1"
     }
   ]
 }

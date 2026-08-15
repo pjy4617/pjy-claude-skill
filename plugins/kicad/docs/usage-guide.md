@@ -27,9 +27,12 @@ PRD(설계사양서)로부터 회로도를 생성하고, 생성된 회로도를 
 
 ### 플러그인 설치
 
-```bash
-# pjy-skills 마켓플레이스에서 설치
-claude marketplace install kicad
+```
+# pjy-skills 마켓플레이스 등록 (최초 1회)
+/plugin marketplace add pjy4617/pjy-claude-skill
+
+# 플러그인 설치
+/plugin install kicad@pjy-skills
 ```
 
 ### 에이전트 설치 (타겟 프로젝트)

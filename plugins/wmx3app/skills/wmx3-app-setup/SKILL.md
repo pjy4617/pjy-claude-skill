@@ -75,13 +75,14 @@ WMX3 애플리케이션 개발 스킬 환경 설치 완료!
   ✅ wmx3app-usage-reviewer  — WMX3 사용 검토 (읽기 전용, 7카테고리 체크리스트)
   ✅ wmx3app-eni-builder     — EtherCAT ENI 파일 제작 (WMX3 전용 ENI·ec_network.def·PDO/CANopen 매핑)
 
-스킬 (6개): 플러그인으로 이미 활성화됨
-  wmx3-app-setup      — 환경 초기 설정 (현재 스킬)
-  wmx3-app-design     — 요구사항 → WMX3 시스템 설계
-  wmx3-app-implement  — C++/C# 구현
-  wmx3-app-test       — 시뮬레이터 플랫폼 기반 테스트
-  wmx3-app-review     — 기존 프로젝트 WMX3 사용 검토
-  wmx3-app-eni        — EtherCAT ENI 파일 제작
+스킬 (7개): 플러그인으로 이미 활성화됨
+  wmx3-app-setup            — 환경 초기 설정 (현재 스킬)
+  wmx3-app-design           — 요구사항 → WMX3 시스템 설계
+  wmx3-app-implement        — C++/C# 구현
+  wmx3-app-test             — 시뮬레이터 플랫폼 기반 테스트
+  wmx3-app-review           — 기존 프로젝트 WMX3 사용 검토
+  wmx3-app-eni              — EtherCAT ENI 파일 제작
+  wmx3-app-config-xml-analy — Config Export(파라미터 export XML) 분석
 
 CLAUDE.md: ✅ WMX3 애플리케이션 개발 설정 추가됨
 

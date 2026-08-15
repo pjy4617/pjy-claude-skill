@@ -61,18 +61,23 @@ if [ "$SKIP_MCP" != "true" ]; then
         echo "[1/5] pdf-reader MCP: 이미 등록됨 (state: $STATE)"
     else
         echo "[1/5] pdf-reader MCP: 미등록 → 등록 진행"
+        # Windows(Git Bash/MSYS)에서만 cmd /c 래퍼 사용 — Linux/macOS에는 cmd가 없다
+        case "$(uname -s 2>/dev/null)" in
+            MINGW*|MSYS*|CYGWIN*) MCP_CMD_PREFIX="cmd /c " ;;
+            *)                    MCP_CMD_PREFIX="" ;;
+        esac
         if [ "$DRY_RUN" = "true" ]; then
-            echo "  (dry-run) claude mcp add pdf-reader --scope user -- cmd /c npx -y @sylphx/pdf-reader-mcp"
+            echo "  (dry-run) claude mcp add pdf-reader --scope user -- ${MCP_CMD_PREFIX}npx -y @sylphx/pdf-reader-mcp"
         else
-            claude mcp add pdf-reader --scope user -- cmd /c npx -y "@sylphx/pdf-reader-mcp"
+            claude mcp add pdf-reader --scope user -- ${MCP_CMD_PREFIX}npx -y "@sylphx/pdf-reader-mcp"
             echo ""
-            echo "  ⚠️  세션 재시작 필요 — Claude Code를 종료 후 다시 시작해야 read_pdf 도구가 활성화됩니다."
+            echo "  주의: 세션 재시작 필요 — Claude Code를 종료 후 다시 시작해야 read_pdf 도구가 활성화됩니다."
         fi
     fi
 fi
 ```
 
-> **Windows PowerShell 환경**: `cmd /c npx -y @sylphx/pdf-reader-mcp`로 등록한다 (cmd 래퍼가 stdio 안정성 확보).
+> **Windows 환경**: `cmd /c npx -y @sylphx/pdf-reader-mcp`로 등록한다 (cmd 래퍼가 stdio 안정성 확보 — 위 스크립트가 `uname`으로 자동 분기). Linux/macOS는 래퍼 없이 `npx` 직접 등록.
 
 ### 3. manuals 디렉토리 초기화
 

@@ -153,7 +153,7 @@ stack: <한 줄 요약>
 
 ## metadata.json (코드베이스 전용 필드)
 
-부록 A 공통 필드에 더해:
+공통 필드(`metadata-schema.md`)에 더해:
 ```json
 {
   "format": "codebase",

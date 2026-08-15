@@ -165,11 +165,11 @@ extractor: <mcp-pdf-reader|claude-read|expand-archive|hh-decompile>
 - 코드베이스: **심볼/파일 → 위치** 테이블 (카테고리별). 핀포인트는 페이지가 아닌 `파일`(+비자명한 핵심 `:line`).
 
 #### metadata.json
-부록 A 스키마 준수. 필수 + 선택 필드(`extractor_package`, `subsection_count`, `sampling_strategy` 등). 코드베이스는 `sha256/pages` 대신 `loc/src_files/test_files/stack/version(git ref)/sampling_strategy/<purpose>_targets` 사용 (`references/codebase-extract.md`).
+`references/metadata-schema.md` 스키마 준수. 필수 + 선택 필드(`extractor_package`, `subsection_count`, `sampling_strategy` 등). 코드베이스는 `sha256/pages` 대신 `loc/src_files/test_files/stack/version(git ref)/sampling_strategy/<purpose>_targets` 사용 (`references/codebase-extract.md`).
 
 ### 8. 마스터 카탈로그 갱신
 - `<scope>/.claude/manuals/INDEX.md`에 1줄 항목 추가
-- 같은 scope의 `CLAUDE.md` 마커 블록(§부록 C) 카탈로그 요약 갱신 (`<!-- manual-digest:start -->`...`<!-- manual-digest:end -->`)
+- 같은 scope의 `CLAUDE.md` 마커 블록(형식: manual-digest-setup SKILL.md의 MARKER_BLOCK) 카탈로그 요약 갱신 (`<!-- manual-digest:start -->`...`<!-- manual-digest:end -->`)
 
 ## 결정성 (NFR-6)
 

@@ -1,6 +1,8 @@
 ---
 name: parallel-delegation
-description: How to delegate independent work units to multiple subagents in parallel via the Agent tool — bundling Agent calls in a single response so they execute concurrently rather than sequentially. Use this skill whenever the user gives a multi-part task (e.g., "build A and B and C", "refactor X and add tests", "implement frontend + backend"), when the request spans multiple independent files/domains, when exploration + implementation can run side-by-side, when the user says "in parallel" / "동시에" / "한꺼번에", or mentions subagents / agent teams / multi-agent workflows — even if they do not explicitly say "delegate". Trigger this skill BEFORE reaching for sequential single-agent execution on any task that decomposes cleanly into independent units. 서브에이전트 병렬 위임, 다중 에이전트 동시 실행, 작업 분해 패턴.
+description: 서브에이전트 병렬 위임 워크플로 — 독립 작업 단위를 하나의 응답 안에 다수의 Agent 도구 호출로 묶어 동시 실행한다. 다부분 작업("A랑 B랑 C 만들어줘", "리팩토링하고 테스트도 추가"), 여러 독립 파일/도메인에 걸친 요청, 탐색+구현 병행, 사용자가 "병렬로"/"동시에"/"한꺼번에"를 말하거나 서브에이전트/에이전트 팀/멀티 에이전트 워크플로를 언급할 때, 명시적으로 "위임"이라 하지 않아도 순차 단일 에이전트 실행보다 먼저 적용. 서브에이전트 병렬 위임, 다중 에이전트 동시 실행, 작업 분해 패턴. Parallel subagent delegation — bundle multiple Agent calls in a single response so they execute concurrently ("in parallel", multi-part tasks, independent files/domains).
+user-invocable: true
+allowed-tools: Read, Glob, Grep, Agent
 ---
 
 # 서브에이전트 병렬 위임 (Parallel Subagent Delegation)

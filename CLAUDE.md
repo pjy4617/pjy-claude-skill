@@ -96,11 +96,11 @@ plugins/
 │   ├── agents/
 │   ├── claude-md/CLAUDE.md
 │   └── docs/
-├── harness/                       ← 하네스 진화 플러그인 (2 스킬, 에이전트 없음, 메타 도구)
+├── harness/                       ← 하네스 진화 플러그인 (1 스킬, 에이전트 없음, 메타 도구)
 │   ├── plugin.json
 │   ├── skills/
 │   │   ├── harness-design/        ← CLAUDE.md/Permissions/Hooks/MCP/Subagent 6단계 진단·보강
-│   │   └── harness-design-workspace/
+│   │   └── harness-design-workspace/  ← 벤치마크 작업물 (SKILL.md 없음 — 스킬 아님)
 │   └── (claude-md 없음 / setup 없음 — 현재 디렉토리 진단)
 ├── manual-digest/                 ← 대용량 매뉴얼 다이제스트 플러그인 (2 스킬, 에이전트 없음)
 │   ├── plugin.json

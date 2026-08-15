@@ -1,7 +1,7 @@
 {
   "name": "orca-worktree",
-  "version": "1.0.0",
-  "description": "Orca 워크트리 setup/archive 훅(orca.yaml) 자동 생성·검증 메타 도구: 레포를 프로파일링(락파일·빌드시스템·모노레포)하고 git이 따라오지 않는 비추적 자산(.env·settings.local.json·.serena·대용량 참조 디렉토리)을 스캔해 새 워크트리가 즉시 작업 가능한 상태가 되는 scripts.setup을 작성한다. Orca가 러너에 주입하는 set -e, 120초 타임아웃, YAML 파싱 실패 시 훅 전체 무시, .gitignore가 심볼릭 링크에 매칭되지 않는 문제 등 실측된 함정을 기본으로 회피하고, 임시 git worktree에서 ORCA_* 환경변수를 주입한 실드라이런으로 소요시간·실패 단계를 증거로 남긴다. 2개 스킬: orca-setup-build(분석→생성→드라이런 검증) + orca-setup-review(기존 orca.yaml 4등급 진단, 읽기 전용). 에이전트·MCP 불필요(Python 표준 라이브러리 + bash).",
+  "version": "1.0.1",
+  "description": "Orca 워크트리 setup/archive 훅(orca.yaml) 자동 생성·검증 메타 도구: 레포를 프로파일링(락파일·빌드시스템·모노레포)하고 git이 따라오지 않는 비추적 자산(.env·settings.local.json·.serena·대용량 참조 디렉토리)을 스캔해 새 워크트리가 즉시 작업 가능한 상태가 되는 scripts.setup을 작성한다. Orca가 러너에 주입하는 set -e, 120초 타임아웃, YAML 파싱 실패 시 훅 전체 무시, .gitignore가 심볼릭 링크에 매칭되지 않는 문제 등 실측된 함정을 기본으로 회피하고, 임시 git worktree에서 ORCA_* 환경변수를 주입한 실드라이런으로 소요시간·실패 단계를 증거로 남긴다. 3개 스킬: orca-setup-build(분석→생성→드라이런 검증) + orca-project-config(Orca 프로젝트 설정 안내·3축 적합성 점검) + orca-setup-review(기존 orca.yaml 4등급 진단, 읽기 전용). 에이전트·MCP 불필요(Python 표준 라이브러리 + bash).",
   "author": {
     "name": "pjy4617"
   },

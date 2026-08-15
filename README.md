@@ -50,7 +50,7 @@ CHM/MD/DOCX → Sphinx 다국어(한/영/일) 매뉴얼 + 품질 리뷰<br>
 </td>
 <td align="center" width="25%">
 <b>Parallel Delegation</b><br>
-서브에이전트 병렬 위임 워크플로 + 3-role 에이전트(구현/테스트/구현품질검증) (Claude Code 메타 도구)<br>
+서브에이전트 병렬 위임 워크플로 + 3-role 에이전트(구현/테스트/구현품질검증) (워크플로)<br>
 2 스킬 + 3 에이전트
 </td>
 <td align="center" width="25%">
@@ -377,7 +377,7 @@ Claude Code 터미널에서 다음을 입력합니다. **한 번만 하면 됩�
 /plugin install wmx3app@pjy-skills
 ```
 
-6개 스킬이 한 번에 활성화됩니다. 이후 에이전트를 설치합니다:
+7개 스킬이 한 번에 활성화됩니다. 이후 에이전트를 설치합니다:
 
 ```
 /wmx3-app-setup
@@ -1280,7 +1280,7 @@ pjy-claude-skill/
 │   │   ├── agents/ (4개)          ← designer, reviewer, bom-generator, pcb-analyzer
 │   │   ├── claude-md/
 │   │   └── docs/
-│   ├── parallel-delegation/       ← 서브에이전트 병렬 위임 플러그인 (메타 도구)
+│   ├── parallel-delegation/       ← 서브에이전트 병렬 위임 플러그인 (워크플로)
 │   │   ├── plugin.json
 │   │   ├── skills/ (2개)           ← 병렬 위임 워크플로 + 3-role 에이전트 셋업
 │   │   ├── agents/ (3개)           ← pd-implementer, pd-tester, pd-verifier

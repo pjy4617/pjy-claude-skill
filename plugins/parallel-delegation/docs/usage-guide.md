@@ -23,9 +23,12 @@
 
 ### 플러그인 설치
 
-```bash
-# pjy-skills 마켓플레이스에서 설치
-claude marketplace install parallel-delegation
+```
+# pjy-skills 마켓플레이스 등록 (최초 1회)
+/plugin marketplace add pjy4617/pjy-claude-skill
+
+# 플러그인 설치
+/plugin install parallel-delegation@pjy-skills
 ```
 
 ### 3-role 에이전트 설치 (권장)

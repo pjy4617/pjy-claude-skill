@@ -1,6 +1,6 @@
 {
   "name": "kicad",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "KiCad 회로도 풀스택 도구: PRD/설계사양서 기반 회로도 생성 + 8단계 설계 리뷰(PDF 시각 검토, 라이브러리 비교, 데이터시트 검증) + BOM 마크다운 생성 + 회로/PCB 정밀 분석(ERC/DRC, 넷 추적, 트랙/라우팅, 신호·전원 무결성, Seeed MCP 연동) + KiCad 10.0 사용법 안내(공식 매뉴얼 다이제스트: 프로젝트 매니저·pcbnew·gerbview·kicad-cli). STM32, FPGA, IO 보드, EtherCAT 슬레이브 등 모든 도메인 지원. 5개 스킬 + 4개 에이전트",
   "author": {
     "name": "pjy4617"
