@@ -25,7 +25,7 @@ import sys
 import unicodedata
 from datetime import date
 
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.0.1"
 
 # ── 기본 크기 정책 (줄 수 기준) ────────────────────────────────────────────
 DEFAULT_MIN_LINES = 40      # 이 미만이면 인접 형제와 병합 후보
@@ -799,9 +799,63 @@ def cmd_verify(args):
 # reindex / update
 # ══════════════════════════════════════════════════════════════════════════
 
+def remap_routing_hints(meta, parts):
+    """라우팅 힌트의 조각 ID를 현재 조각 목록에 맞게 재매핑한다.
+
+    update로 절 구조가 바뀌면 조각의 번호 접두(NNN-)가 밀리거나 슬러그가
+    병합/분할되는데, 힌트가 옛 ID를 그대로 물고 있으면 reindex가 깨진 링크를
+    인덱스에 재주입한다. 매칭 순서: 완전 일치 → 번호 제외 슬러그 일치 →
+    슬러그 부분 일치(병합/분할 대응). 끝내 못 찾은 ID는 버리고 보고한다 —
+    죽은 링크를 남기는 것보다 큐레이터가 다시 채우는 쪽이 낫다.
+
+    반환: (변경 여부, 재매핑 건수, 제거된 ID 목록)
+    """
+    hints = meta.get("routing_hints") or []
+    if not hints:
+        return False, 0, []
+    names = [p["name"] for p in parts]
+    name_set = set(names)
+
+    def bare(name):
+        return re.sub(r"^\d{3}-", "", name)
+
+    by_slug = {}
+    for n in names:
+        by_slug.setdefault(bare(n), n)
+
+    changed, fixed, dropped = False, 0, []
+    for h in hints:
+        new = []
+        for pid in h.get("parts") or []:
+            if pid in name_set:
+                new.append(pid)
+                continue
+            s = bare(pid)
+            if s in by_slug:
+                new.append(by_slug[s])
+                changed = True
+                fixed += 1
+                continue
+            cands = [n for k, n in by_slug.items() if k and (k in s or s in k)]
+            if cands:
+                new.extend(cands)
+                changed = True
+                fixed += 1
+            else:
+                dropped.append(pid)
+                changed = True
+        h["parts"] = list(dict.fromkeys(new))
+    return changed, fixed, dropped
+
+
 def cmd_reindex(args):
     out_dir = os.path.abspath(args.dir)
-    meta, _ = load_meta(out_dir)
+    meta, meta_path = load_meta(out_dir)
+    changed, fixed, dropped = remap_routing_hints(meta, meta["parts"])
+    if changed:
+        write_text(meta_path, json.dumps(meta, ensure_ascii=False, indent=2) + "\n")
+        print("라우팅 힌트 재매핑: %d건 갱신%s" % (
+            fixed, (" / 대상 조각 소실로 제거: %s" % ", ".join(dropped)) if dropped else ""))
     write_text(os.path.join(out_dir, "%s.index.md" % meta["id"]), build_index_md(meta))
     print("인덱스 재생성: %s/%s.index.md (조각 %d개)" % (out_dir, meta["id"], len(meta["parts"])))
     return 0
@@ -882,6 +936,8 @@ def cmd_update(args):
                "generated": new_meta["generated"]})
     new_meta["index_frontmatter"] = fm
 
+    hint_changed, hint_fixed, hint_dropped = remap_routing_hints(new_meta, parts)
+
     write_text(meta_path, json.dumps(new_meta, ensure_ascii=False, indent=2) + "\n")
     write_text(os.path.join(out_dir, "%s.index.md" % old["id"]), build_index_md(new_meta))
 
@@ -897,6 +953,9 @@ def cmd_update(args):
     stale = [p["name"] for p in parts if p.get("summary_stale")]
     if stale:
         print("  ⚠️ 요약 재검토 필요: %s" % ", ".join(stale[:10]))
+    if hint_changed:
+        print("  라우팅 힌트 재매핑: %d건 갱신%s" % (
+            hint_fixed, (" / 대상 조각 소실로 제거: %s" % ", ".join(hint_dropped)) if hint_dropped else ""))
     print("  무손실 검증 : %s" % msg)
     return 0 if ok else 2
 
