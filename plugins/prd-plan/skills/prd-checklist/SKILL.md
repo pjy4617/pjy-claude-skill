@@ -79,12 +79,24 @@ ERROR가 있으면 작성 에이전트로 되돌린다. exit code 1이면 진행
 
 **체크리스트는 doc-atomize로 분할하지 않는다** — 크기와 무관하다. 항목을 체크할 때마다 재분할이 돌고, 주 조회인 전수 집계(진척률·착수 후보)에서 조각이 이득을 주지 못하기 때문이다 (`prd-write/references/large-doc-handling.md` → 읽히는 문서만 분할한다).
 
-커져서 다루기 힘들면 **마일스톤 단위로 파일을 나눈다**:
+커져서 다루기 힘들면 **마일스톤 단위로 파일을 나눈다.** 손으로 하지 말고 도구를 쓴다 — 프론트매터 승계·차단 표 배분·항목 보존 검증이 자동으로 처리된다.
+
+```bash
+python3 <plugin>/skills/prd-checklist/assets/split_checklist.py \
+    docs/checklist/CHECKLIST-<slug>.md --dry-run   # 계획 먼저 확인
+python3 ... split_checklist.py docs/checklist/CHECKLIST-<slug>.md --force
+```
+
+산출 구조 — **인덱스 1개 + 마일스톤 n개**:
 
 ```
-docs/checklist/CHECKLIST-<slug>-M1.md      # 프론트매터에 milestone: M1 추가
-docs/checklist/CHECKLIST-<slug>-M2.md
+CHECKLIST-<slug>.md          인덱스 (읽는 방법·선행 관계·파일 목록·진척 요약·검증 명령)
+CHECKLIST-<slug>-M1.md       M1 항목 + M1에 걸린 차단 표 행
+CHECKLIST-<slug>-M2.md       ...
 ```
+
+스크립트는 **CHK ID를 건드리지 않는다.** 항목 수가 보존되지 않거나 ID가 중복되면 파일을 쓰지 않고 exit 1로 멈춘다.
+`## M1 — 제목` 구획이 없으면 나눌 수 없으므로, 체크리스트는 처음부터 마일스톤으로 구획해 작성한다.
 
 - CHK 연번은 **파일을 넘어 이어서** 부여한다 (M1이 CHK-001~040이면 M2는 CHK-041부터). ID 재사용 금지 원칙은 그대로다
 - 검증 스크립트에 **`--checklist`를 여러 번 넘긴다** — 그래야 커버리지와 진척이 전체 기준으로 계산된다

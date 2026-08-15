@@ -449,7 +449,16 @@ def status_summary(tasks, chks, reqs):
             if c["state"] == "완료":
                 slot["완료"] += 1
     done_tasks = [t for t, v in per_task.items() if v["total"] and v["total"] == v["완료"]]
+    per_file = {}
+    for c in chks.values():
+        slot = per_file.setdefault(os.path.basename(c.get("path", "")), {"total": 0, "완료": 0, "차단": 0})
+        slot["total"] += 1
+        if c["state"] == "완료":
+            slot["완료"] += 1
+        elif c["state"] == "차단":
+            slot["차단"] += 1
     return {
+        "per_file": per_file,
         "checklist_total": total,
         "counts": counts,
         "progress_pct": round(100.0 * counts["완료"] / total, 1) if total else 0.0,
@@ -474,8 +483,20 @@ def print_text(rep, stats, status):
         print("진척: {완료}/{total} 완료 ({pct}%) · 진행중 {진행중} · 차단 {차단} · 미착수 {미착수}".format(
             total=status["checklist_total"], pct=status["progress_pct"], **status["counts"]))
         print("작업 완료: {}/{} TASK".format(status["tasks_done"], status["tasks_with_items"]))
-        if status["blocked_items"]:
-            print("차단 항목: {}".format(", ".join(sorted(status["blocked_items"]))))
+        blocked = sorted(status["blocked_items"])
+        if blocked:
+            head = ", ".join(blocked[:10])
+            more = " … 외 {}건".format(len(blocked) - 10) if len(blocked) > 10 else ""
+            print("차단 항목({}건): {}{}".format(len(blocked), head, more))
+            if len(blocked) > 10:
+                print("  (전체 목록은 --json 으로 확인)")
+        pf = status.get("per_file") or {}
+        if len(pf) > 1:
+            print("")
+            print("파일별:")
+            for name in sorted(pf):
+                v = pf[name]
+                print("  {:<46} {:>4}건  완료 {:>3}  차단 {:>3}".format(name, v["total"], v["완료"], v["차단"]))
 
 
 # ---------------------------------------------------------------- main

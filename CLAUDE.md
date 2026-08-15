@@ -164,7 +164,8 @@ plugins/
 │   │   │   └── references/        ← wbs-guide, estimation-policy(절대 날짜·인일 금지, S/M/L/XL만)
 │   │   ├── prd-checklist/         ← 체크리스트 생성 + --status(진척) + --sync(변경 영향 ⚠️)
 │   │   │   ├── references/        ← checklist-format (CHK 한 줄 규격·상태 마크·주체·완료 근거)
-│   │   │   └── assets/            ← check_traceability.py (MUST 미커버·AC 부재·근거 없는 작업·선행 순환·근거 없는 완료 탐지, --json/--strict, 표준 라이브러리)
+│   │   │   └── assets/            ← check_traceability.py (MUST 미커버·AC 부재·근거 없는 작업·선행 순환·근거 없는 완료·AC/OPEN 참조 탐지, --checklist 다중 입력으로 마일스톤 분리 집계, --json/--strict)
+│   │   │                            + split_checklist.py (마일스톤 단위 파일 분리 — 인덱스 1 + 마일스톤 n, 항목 보존 검증)
 │   │   ├── prd-review/            ← 외부/기존 문서 독립 검수 (읽기 전용 리포트, 수정 없음)
 │   │   │   └── references/        ← review-checklist (형식 차이 처리·착수 가능성 5항)
 │   │   └── prd-setup/             ← 에이전트 2종 + CLAUDE.md + docs/{prd,plan,checklist,reviews} 설치
