@@ -84,8 +84,8 @@ React 19 + Vite 8 + TS 프론트엔드 — Fluent UI v9 / shadcn/ui 택1, 범용
 </td>
 <td align="center" width="25%">
 <b>Doc Atomize</b><br>
-대용량 마크다운을 <b>무손실</b> 원자 분할(요약 아님 — 재조립 시 sha256 일치) + <code>&lt;doc-id&gt;.index.md</code> 검색 인덱스 → 질문마다 조각 1~3개만 읽기 (Claude Code 메타 도구)<br>
-2 스킬
+대용량 마크다운을 <b>무손실</b> 원자 분할(요약 아님 — 재조립 시 sha256 일치) + <code>&lt;doc-id&gt;.index.md</code> 검색 인덱스 → 질문마다 조각 1~3개만 읽기<br><b>원본을 고치면 훅이 바뀐 조각만 자동 재분할</b> (Claude Code 메타 도구)<br>
+2 스킬 + 자동 갱신 훅
 </td>
 </tr>
 <tr>
@@ -504,7 +504,7 @@ PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manu
 /doc-atomize-setup
 ```
 
-`.claude/atomized/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP도 에이전트도 필요 없고**(Python 표준 라이브러리만 사용) 세션 재시작도 불필요합니다. 이후 `/doc-atomize <큰 .md>`로 문서를 등록하면, 다음부터 그 문서 질문은 인덱스 1개 + 조각 1~3개만 읽고 처리됩니다. `manual-digest`가 외부 매뉴얼을 **요약**해 등록한다면, 이쪽은 손안의 마크다운을 **무손실 분할**합니다 — 조각이 정본이라 원문 그대로 인용할 수 있습니다. `--in-place`로 repo 문서 자체를 재구성할 수도 있습니다(git 클린 + 무손실 검증 통과 시에만 원본 제거).
+`.claude/atomized/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP도 에이전트도 필요 없고**(Python 표준 라이브러리만 사용) 세션 재시작도 불필요합니다. 설치하면 **PostToolUse 훅**도 함께 켜져, 등록된 원본을 수정하는 즉시 바뀐 조각만 자동 재분할하고 무손실을 재검증합니다(등록 전 문서는 무반응, 훅이 실패해도 편집은 막히지 않음). 이후 `/doc-atomize <큰 .md>`로 문서를 등록하면, 다음부터 그 문서 질문은 인덱스 1개 + 조각 1~3개만 읽고 처리됩니다. `manual-digest`가 외부 매뉴얼을 **요약**해 등록한다면, 이쪽은 손안의 마크다운을 **무손실 분할**합니다 — 조각이 정본이라 원문 그대로 인용할 수 있습니다. `--in-place`로 repo 문서 자체를 재구성할 수도 있습니다(git 클린 + 무손실 검증 통과 시에만 원본 제거).
 
 #### Orca Worktree (워크트리 setup 훅) 설치
 
@@ -1036,7 +1036,7 @@ PCB 설계 입력 세 종류 — **①거버/드릴 출력 폴더 ②PADS 레이
 | 문서 분할 | "이 md 파일 쪼개줘" / `/doc-atomize <file.md>` | doc-atomize 스킬 (8단계: 분할→무손실 검증→요약 큐레이션→카탈로그 등록) |
 | repo 문서 재구성 | `/doc-atomize <file.md> --in-place` | 원본 자리에 인덱스+조각 생성 (git 클린 + 검증 통과 시에만 원본 제거) |
 | Global scope 등록 | `/doc-atomize <file.md> --scope global` | 모든 프로젝트 공유 |
-| 원본 변경 시 갱신 | `/doc-atomize --update <id>` | sha256 비교 → 변경 조각만 재생성, 큐레이션 승계 |
+| 원본 변경 시 갱신 | **자동**(PostToolUse 훅) 또는 `/doc-atomize --update <id>` | sha256 비교 → 변경 조각만 재생성, 큐레이션 승계, ⚠️로 요약 재검토 표시 |
 | 무손실 재검증 | `/doc-atomize --verify <id>` | 재조립 sha256 대조 + 커버리지·링크 검사 |
 | 등록 문서 목록 | "등록된 문서 목록" / `/doc-atomize --list` | INDEX.md 출력 |
 | 문서 제거 | `/doc-atomize --remove <id>` | 디렉토리 + INDEX.md 항목 갱신 |
@@ -1331,6 +1331,7 @@ pjy-claude-skill/
 │   │   │   │   ├── references/    ← split-rules(경계·병합·엣지케이스) / index-format(스키마) / retrieval-guide(조회 프로토콜)
 │   │   │   │   └── assets/        ← split_md.py (split·verify·reindex·update, 표준 라이브러리만)
 │   │   │   └── doc-atomize-setup/
+│   │   ├── hooks/                 ← hooks.json + sync_atomized.py (원본 수정 시 자동 재분할)
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (5분 사용법, 실측 절감, 옵션 튜닝, FAQ)
 │   ├── orca-worktree/             ← Orca 워크트리 setup 훅 플러그인 (메타 도구, 에이전트 0)
 │   │   ├── plugin.json

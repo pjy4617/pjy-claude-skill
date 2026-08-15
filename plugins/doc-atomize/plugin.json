@@ -1,6 +1,6 @@
 {
   "name": "doc-atomize",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "대용량 마크다운 무손실 원자 분할 메타 도구: 큰 .md를 헤딩 우선 + 크기 가드 하이브리드로 조각내고(요약이 아니라 분할 — 재조립하면 원본과 sha256 일치), 검색 진입점 <doc-id>.index.md(라우팅 힌트·목차·포함 헤딩·키워드 역색인)를 생성해 이후 질문은 조각 1~3개만 읽고 답한다. 파일명에 doc-id를 붙여 index.md 난립·대소문자 혼동을 차단하고, Glob **/*.index.md 한 번으로 전 문서 인덱스를 열거한다. 파생물 모드(.claude/atomized/)와 원본 자리 재구성(--in-place) 모두 지원, MCP 불필요(Python 표준 라이브러리만). 2개 스킬: doc-atomize(분할/갱신/검증/목록/삭제) + doc-atomize-setup(환경 1회 초기화).",
   "author": {
     "name": "pjy4617"

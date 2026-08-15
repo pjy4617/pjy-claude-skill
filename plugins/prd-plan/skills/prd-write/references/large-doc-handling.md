@@ -55,7 +55,11 @@ PDF·CHM·DOCX 등 마크다운이 아닌 원본은 `doc-atomize`가 아니라 *
 | 기본(파생물) | `.claude/atomized/<id>/` 에 인덱스+조각, `docs/`의 원본 유지 | **기본값.** git에 PRD 원본을 그대로 남기고 싶을 때 |
 | `--in-place` | `docs/prd/` 자리에 인덱스+조각 재구성(검증 통과 시 원본 제거) | 문서 자체를 조각 정본으로 운영할 때. git 클린 상태에서만 |
 
-승인 후 문서가 다시 수정되면(요구 변경) `/doc-atomize --update <id>`로 변경 조각만 재생성하고, 체크리스트는 `prd-checklist --sync`로 영향 항목을 표시한다.
+승인 후 문서가 다시 수정되면(요구 변경) **doc-atomize의 PostToolUse 훅이 변경 조각만 자동 재생성**한다 — 등록된 원본을 Edit/Write 하는 순간 갱신되므로 `--update`를 따로 부를 필요가 없다. 훅이 꺼져 있거나 `split_md.py`를 찾지 못하면 안내만 오므로 그때 `/doc-atomize --update <id>`를 실행한다.
+
+훅이 해주지 않는 것 두 가지는 **사람이 마무리한다**:
+1. 본문이 바뀐 조각에 붙는 `⚠️` — 요약을 다시 쓰고 `reindex`
+2. 체크리스트 영향 — `/prd-checklist --sync`로 재검증 항목 추가
 
 ## 미설치 폴백
 

@@ -134,13 +134,14 @@ plugins/
 │   ├── agents/                    ← rlctrl-feasibility-analyst/algorithm-designer/implementer/evaluator
 │   ├── claude-md/CLAUDE.md
 │   └── docs/USAGE_GUIDE.md
-├── doc-atomize/                   ← 마크다운 무손실 원자 분할 플러그인 (2 스킬, 에이전트 없음, 메타 도구) — manual-digest가 "요약"이라면 이쪽은 "분할": 조각을 합치면 원본과 sha256 일치, 조각 자체가 정본
+├── doc-atomize/                   ← 마크다운 무손실 원자 분할 플러그인 (2 스킬 + PostToolUse 훅, 에이전트 없음, 메타 도구) — manual-digest가 "요약"이라면 이쪽은 "분할": 조각을 합치면 원본과 sha256 일치, 조각 자체가 정본
 │   ├── plugin.json
 │   ├── skills/
 │   │   ├── doc-atomize/           ← 분할/갱신/검증/목록/삭제 (8단계, 무손실 검증이 게이트)
 │   │   │   ├── references/        ← split-rules(경계·크기·병합·엣지케이스), index-format(인덱스 5섹션·조각 프론트매터·metadata 스키마), retrieval-guide(조회 프로토콜·Grep 패턴·CLAUDE.md 마커)
 │   │   │   └── assets/            ← split_md.py (split·verify·reindex·update, Python 표준 라이브러리만)
 │   │   └── doc-atomize-setup/     ← 디렉토리 + INDEX.md + CLAUDE.md 마커 1회 초기화 (MCP·에이전트 불필요)
+│   ├── hooks/                     ← hooks.json(PostToolUse) + sync_atomized.py — 등록된 원본을 Edit/Write 하면 변경 조각만 자동 재분할·무손실 재검증 (등록 전 문서 무반응, 항상 exit 0)
 │   └── docs/USAGE_GUIDE.md
 ├── orca-worktree/                 ← Orca 워크트리 setup 훅 플러그인 (3 스킬, 에이전트 없음, 메타 도구) — Orca가 새 워크트리를 만들 때 실행할 orca.yaml scripts.setup을 레포에 맞게 작성하고 임시 워크트리 실드라이런으로 검증. harness가 Claude Code 하네스를 다룬다면 이쪽은 Orca 워크트리 준비를 다룬다
 │   ├── plugin.json
