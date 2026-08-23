@@ -1037,11 +1037,12 @@ PCB 설계 입력 세 종류 — **①거버/드릴 출력 폴더 ②PADS 레이
 | 상황 | 이렇게 말하세요 | 실행되는 것 |
 |------|----------------|-------------|
 | 환경 셋업(1회) | "doc-atomize 셋업" / `/doc-atomize-setup` | doc-atomize-setup 스킬 (디렉토리 + INDEX.md + CLAUDE.md 마커) |
-| 문서 분할 | "이 md 파일 쪼개줘" / `/doc-atomize <file.md>` | doc-atomize 스킬 (8단계: 분할→무손실 검증→요약 큐레이션→카탈로그 등록) |
+| 문서 분할 | "이 md 파일 쪼개줘" / `/doc-atomize <file.md>` | doc-atomize 스킬 (8단계: 분할→무손실 검증→요약·라우팅 큐레이션→감사 게이트→카탈로그 등록) |
 | repo 문서 재구성 | `/doc-atomize <file.md> --in-place` | 원본 자리에 인덱스+조각 생성 (git 클린 + 검증 통과 시에만 원본 제거) |
 | Global scope 등록 | `/doc-atomize <file.md> --scope global` | 모든 프로젝트 공유 |
 | 원본 변경 시 갱신 | **자동**(PostToolUse 훅) 또는 `/doc-atomize --update <id>` | sha256 비교 → 변경 조각만 재생성, 큐레이션 승계, ⚠️로 요약 재검토 표시 |
 | 무손실 재검증 | `/doc-atomize --verify <id>` | 재조립 sha256 대조 + 커버리지·링크 검사 |
+| 큐레이션 감사 | `/doc-atomize --audit <id>` | 빈 문장 요약·제목 재진술·라우팅 힌트 부족을 S/R 코드로 검출, 힌트당 평균 조각 수 출력(목표 1.5 이하) |
 | 등록 문서 목록 | "등록된 문서 목록" / `/doc-atomize --list` | INDEX.md 출력 |
 | 문서 제거 | `/doc-atomize --remove <id>` | 디렉토리 + INDEX.md 항목 갱신 |
 

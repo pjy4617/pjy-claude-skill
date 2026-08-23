@@ -137,9 +137,9 @@ plugins/
 ├── doc-atomize/                   ← 마크다운 무손실 원자 분할 플러그인 (2 스킬 + PostToolUse 훅, 에이전트 없음, 메타 도구) — manual-digest가 "요약"이라면 이쪽은 "분할": 조각을 합치면 원본과 sha256 일치, 조각 자체가 정본
 │   ├── plugin.json
 │   ├── skills/
-│   │   ├── doc-atomize/           ← 분할/갱신/검증/목록/삭제 (8단계, 무손실 검증이 게이트)
-│   │   │   ├── references/        ← split-rules(경계·크기·병합·엣지케이스), index-format(인덱스 5섹션·조각 프론트매터·metadata 스키마), retrieval-guide(조회 프로토콜·Grep 패턴·CLAUDE.md 마커)
-│   │   │   └── assets/            ← split_md.py (split·verify·reindex·update, Python 표준 라이브러리만)
+│   │   ├── doc-atomize/           ← 분할/갱신/검증/감사/목록/삭제 (8단계, 무손실 검증 + 큐레이션 감사 2중 게이트)
+│   │   │   ├── references/        ← split-rules(경계·크기·병합·엣지케이스), index-format(인덱스 5섹션·조각 프론트매터·metadata 스키마·감사 규칙 S1~S8/R1~R8), retrieval-guide(조회 프로토콜·Grep 패턴·조회당 조각 수 측정·CLAUDE.md 마커)
+│   │   │   └── assets/            ← split_md.py (split·verify·reindex·update·audit, Python 표준 라이브러리만)
 │   │   └── doc-atomize-setup/     ← 디렉토리 + INDEX.md + CLAUDE.md 마커 1회 초기화 (MCP·에이전트 불필요)
 │   ├── hooks/                     ← hooks.json(PostToolUse) + sync_atomized.py — 등록된 원본을 Edit/Write 하면 변경 조각만 자동 재분할·무손실 재검증 (등록 전 문서 무반응, 항상 exit 0)
 │   └── docs/USAGE_GUIDE.md

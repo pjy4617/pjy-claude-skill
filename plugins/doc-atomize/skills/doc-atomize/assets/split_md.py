@@ -25,7 +25,7 @@ import sys
 import unicodedata
 from datetime import date
 
-TOOL_VERSION = "1.0.1"
+TOOL_VERSION = "1.1.0"
 
 # ── 기본 크기 정책 (줄 수 기준) ────────────────────────────────────────────
 DEFAULT_MIN_LINES = 40      # 이 미만이면 인접 형제와 병합 후보
@@ -712,6 +712,11 @@ def cmd_split(args):
     if len(parts) > 80:
         print("  ⚠️ 조각이 %d개로 많습니다 — 인덱스가 무거워집니다. --max-lines를 키워 재분할을 검토하세요."
               % len(parts))
+    _, ast = audit_meta(meta)
+    print("  큐레이션    : 자동 요약 %d개 / 라우팅 힌트 %d개 — BLOCK %d건"
+          % (ast["auto"], ast["hints"], ast["block"]))
+    print("                다음: metadata.json의 summary·routing_hints를 채우고 reindex → "
+          "`audit --strict`로 게이트 통과 확인")
     return 0 if ok else 2
 
 
@@ -858,6 +863,11 @@ def cmd_reindex(args):
             fixed, (" / 대상 조각 소실로 제거: %s" % ", ".join(dropped)) if dropped else ""))
     write_text(os.path.join(out_dir, "%s.index.md" % meta["id"]), build_index_md(meta))
     print("인덱스 재생성: %s/%s.index.md (조각 %d개)" % (out_dir, meta["id"], len(meta["parts"])))
+    _, ast = audit_meta(meta)
+    print("  큐레이션 감사: BLOCK %d / WARN %d, 힌트 %d개(평균 조각 %.2f개), 커버리지 %.0f%%"
+          % (ast["block"], ast["warn"], ast["hints"], ast["hint_avg_parts"], ast["coverage_pct"]))
+    if ast["block"]:
+        print("  → `audit` 로 상세 확인 (BLOCK이 남으면 조회당 조각 수가 늘어난다)")
     return 0
 
 
@@ -957,7 +967,205 @@ def cmd_update(args):
         print("  라우팅 힌트 재매핑: %d건 갱신%s" % (
             hint_fixed, (" / 대상 조각 소실로 제거: %s" % ", ".join(hint_dropped)) if hint_dropped else ""))
     print("  무손실 검증 : %s" % msg)
+    _, ast = audit_meta(new_meta)
+    print("  큐레이션 감사: BLOCK %d / WARN %d (요약 재검토 %d건 포함)"
+          % (ast["block"], ast["warn"], len(stale)))
     return 0 if ok else 2
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# audit — 큐레이션 품질 검사
+#
+# 조회 비용을 정하는 것은 조각 크기가 아니라 "조회당 읽는 조각 수"다. 그 수를
+# 정하는 것은 요약과 라우팅 힌트의 질이다. 요약이 "이 절은 ~를 설명한다"면
+# 조각을 고르지 못해 여러 개를 열게 되고, 조각을 잘게 쪼갠 이득이 사라진다.
+# 여기서는 그 부실함을 기계적으로 검출한다 — 의미 판단은 여전히 사람 몫이지만,
+# "어느 조각을 다시 써야 하는가"는 기계가 짚어줄 수 있다.
+# ══════════════════════════════════════════════════════════════════════════
+
+# 빈 문장 패턴: 서술 동사로 끝나면서 고유명사·수치가 거의 없는 요약
+GENERIC_TAIL = re.compile(
+    r"(설명|기술|정의|서술|소개|안내|정리|기재|명시|다룬|다룸)"
+    r"(한다|합니다|함|하는|된다|되어\s*있다|하고\s*있다|다)?\s*[.。]?\s*$")
+GENERIC_HEAD = re.compile(r"^\s*(이|본|해당|위)\s*(절|장|항|섹션|문단|문서|조각|부분|항목)")
+ANCHOR_TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9_.+\-]{1,}|\d+(?:\.\d+)?")
+
+SUMMARY_MAXLEN = 90
+HINT_MIN = 5              # 이보다 적으면 BLOCK
+HINT_TARGET_MAX = 3       # 힌트 하나가 이보다 많은 조각을 가리키면 좁히기 실패
+HINT_AVG_GOAL = 1.5       # 힌트당 평균 조각 수 목표
+
+
+def _norm_title(s):
+    """번호 접두·구두점·공백을 털어낸 비교용 문자열."""
+    s = re.sub(r"^\s*\d+(\.\d+)*[.)]?\s*", "", s or "")
+    s = re.sub(r"[\s·:,()\[\]/—\-_`\"']+", "", s)
+    return s.lower()
+
+
+def _anchors(s):
+    """요약에 든 식별 토큰(부품번호·API명·수치). 0개면 '그 조각에만 있는 정보'가 없다는 신호."""
+    return [t for t in ANCHOR_TOKEN.findall(s or "") if t.upper() not in STOPWORDS]
+
+
+def audit_meta(meta):
+    """큐레이션 품질을 점검해 (findings, stats)를 돌려준다.
+
+    findings: {"level": "BLOCK"|"WARN", "code", "where", "message"}
+    level 규칙 — BLOCK은 "이 상태로는 라우팅이 동작하지 않는다",
+    WARN은 "동작은 하지만 조회당 조각 수가 늘어난다".
+    """
+    parts = meta.get("parts") or []
+    hints = meta.get("routing_hints") or []
+    findings = []
+
+    def add(level, code, where, msg):
+        findings.append({"level": level, "code": code, "where": where, "message": msg})
+
+    by_name = {p["name"]: p for p in parts}
+    curated = 0
+
+    for p in parts:
+        name = p["name"]
+        summary = (p.get("summary") or "").strip()
+        title = p.get("title") or ""
+        if p.get("summary_source") == "curated":
+            curated += 1
+
+        if not summary or summary == "(요약 필요)":
+            add("BLOCK", "S1", name, "요약이 비어 있다 — 본문을 읽고 한 줄로 쓴다")
+        else:
+            if _norm_title(summary) == _norm_title(title):
+                add("BLOCK", "S3", name,
+                    "요약이 제목과 같다 — 제목은 이미 목차에 있으므로 정보량 0")
+            contains = p.get("contains") or []
+            if contains:
+                fb = " / ".join(h[0] for h in contains[:3])
+                if len(fb) > SUMMARY_MAXLEN:
+                    fb = fb[:SUMMARY_MAXLEN - 1] + "…"
+                if summary == fb:
+                    add("BLOCK", "S4", name,
+                        "요약이 하위 헤딩 나열 자동 폴백 그대로다 — 그 헤딩들은 목차 ↳ 줄에 이미 있다")
+            if summary.startswith("표: "):
+                add("BLOCK", "S5", name,
+                    "요약이 표 헤더 자동 폴백 그대로다 — 표가 무엇을 정하는지 한 줄로 쓴다")
+            anchors = _anchors(summary)
+            if GENERIC_HEAD.search(summary):
+                add("BLOCK", "S2", name,
+                    "요약이 빈 문장이다 (\"이 절은 …\") — 주어를 빼고 내용만 쓴다")
+            elif GENERIC_TAIL.search(summary) and len(anchors) < 2:
+                add("BLOCK", "S2", name,
+                    "요약이 빈 문장이다 (서술 동사로 끝나고 고유명사·수치가 없다)")
+            elif not anchors:
+                add("WARN", "S7", name,
+                    "요약에 식별 토큰(부품번호·API명·수치)이 없다 — 조각 변별력이 약하다")
+            if len(summary) > SUMMARY_MAXLEN:
+                add("WARN", "S6", name,
+                    "요약이 %d자다 (상한 %d) — 인덱스는 통째로 읽히는 파일이다"
+                    % (len(summary), SUMMARY_MAXLEN))
+
+        if p.get("summary_stale"):
+            add("WARN", "S8", name, "본문이 바뀐 뒤 요약을 재검토하지 않았다 (summary_stale)")
+        if not (p.get("keywords") or []):
+            add("WARN", "K1", name, "키워드가 비어 있다 — 역색인에서 이 조각이 잡히지 않는다")
+
+    # ── 라우팅 힌트 ───────────────────────────────────────────────────────
+    n = len(parts)
+    covered = set()
+    seen_q = {}
+    for h in hints:
+        q = (h.get("question") or "").strip()
+        targets = h.get("parts") or []
+        covered.update(targets)
+        if not q:
+            add("BLOCK", "R7", "-", "질문 문구가 빈 힌트가 있다")
+            continue
+        if _norm_title(q) in seen_q:
+            add("WARN", "R6", q, "같은 질문 문구가 중복된다")
+        seen_q[_norm_title(q)] = True
+        if not targets:
+            add("BLOCK", "R7", q, "가리키는 조각이 없는 힌트다")
+        elif len(targets) > HINT_TARGET_MAX:
+            add("WARN", "R3", q,
+                "조각 %d개를 가리킨다 — 좁히지 못하는 힌트는 조회당 조각 수를 늘린다" % len(targets))
+        for t in targets:
+            if t not in by_name:
+                add("BLOCK", "R8", q, "존재하지 않는 조각을 가리킨다: %s" % t)
+        if len(targets) == 1 and targets[0] in by_name:
+            if _norm_title(q) == _norm_title(by_name[targets[0]].get("title") or ""):
+                add("WARN", "R4", q,
+                    "질문 문구가 조각 제목 그대로다 — 목차 중복이라 새 진입 경로가 아니다")
+
+    need = HINT_MIN if n <= 15 else min(12, max(HINT_MIN, (n + 3) // 4))
+    if n >= 4:
+        if not hints:
+            add("BLOCK", "R1", "-", "라우팅 힌트가 없다 — 인덱스의 첫 진입 경로가 비어 있다")
+        elif len(hints) < HINT_MIN:
+            add("BLOCK", "R2", "-", "라우팅 힌트가 %d개다 (최소 %d)" % (len(hints), HINT_MIN))
+        elif len(hints) < need:
+            add("WARN", "R2", "-",
+                "라우팅 힌트가 %d개다 (조각 %d개면 %d개 권장)" % (len(hints), n, need))
+
+    # 큰 조각이 어떤 힌트에도 안 걸리면 그 조각은 Grep으로만 도달 가능하다
+    big_uncovered = []
+    if parts and n >= 4:
+        avg_lines = sum(p["nlines"] for p in parts) / float(len(parts))
+        big = [p for p in parts if p["nlines"] >= avg_lines]
+        big_uncovered = [p["name"] for p in big if p["name"] not in covered]
+        if big and len(big_uncovered) > len(big) / 2.0:
+            add("WARN", "R5", "-",
+                "평균 이상 크기 조각 %d개 중 %d개가 어떤 힌트에도 걸리지 않는다: %s"
+                % (len(big), len(big_uncovered), ", ".join(big_uncovered[:8])))
+
+    hint_avg = (sum(len(h.get("parts") or []) for h in hints) / float(len(hints))) if hints else 0.0
+    stats = {
+        "parts": n,
+        "curated": curated,
+        "auto": n - curated,
+        "hints": len(hints),
+        "hint_avg_parts": round(hint_avg, 2),
+        "hint_goal": HINT_AVG_GOAL,
+        "covered_parts": len(covered & set(by_name)),
+        "coverage_pct": round(100.0 * len(covered & set(by_name)) / n, 1) if n else 0.0,
+        "big_uncovered": big_uncovered,
+        "block": sum(1 for f in findings if f["level"] == "BLOCK"),
+        "warn": sum(1 for f in findings if f["level"] == "WARN"),
+    }
+    return findings, stats
+
+
+def cmd_audit(args):
+    out_dir = os.path.abspath(args.dir)
+    meta, _ = load_meta(out_dir)
+    findings, stats = audit_meta(meta)
+
+    if args.json:
+        print(json.dumps({"id": meta["id"], "stats": stats, "findings": findings},
+                         ensure_ascii=False, indent=2))
+    else:
+        print("큐레이션 감사: %s (조각 %d개)" % (meta["id"], stats["parts"]))
+        print("  요약         : 큐레이션 %d / 자동 %d" % (stats["curated"], stats["auto"]))
+        print("  라우팅 힌트  : %d개, 힌트당 평균 조각 %.2f개 (목표 ≤%.1f)"
+              % (stats["hints"], stats["hint_avg_parts"], stats["hint_goal"]))
+        print("  힌트 커버리지: %d/%d 조각 (%.0f%%)"
+              % (stats["covered_parts"], stats["parts"], stats["coverage_pct"]))
+        print("  판정         : BLOCK %d / WARN %d" % (stats["block"], stats["warn"]))
+        limit = None if args.all else 30
+        shown = findings if limit is None else findings[:limit]
+        for f in sorted(shown, key=lambda x: (x["level"] != "BLOCK", x["code"])):
+            print("  %-5s %-3s %-34s %s" % (f["level"], f["code"], f["where"], f["message"]))
+        if limit is not None and len(findings) > limit:
+            print("  … 그 외 %d건 (--all로 전체 표시)" % (len(findings) - limit))
+        if stats["block"]:
+            print("결과: 큐레이션 미흡 — metadata.json을 고치고 reindex 후 재검사한다.")
+        elif stats["warn"]:
+            print("결과: 통과(경고 있음) — WARN은 조회당 조각 수를 늘리는 요인이다.")
+        else:
+            print("결과: 통과.")
+
+    if args.strict and stats["block"]:
+        return 1
+    return 0
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -988,6 +1196,13 @@ def main(argv=None):
     rp = sub.add_parser("reindex", help="metadata.json → index.md 재생성")
     rp.add_argument("dir")
     rp.set_defaults(func=cmd_reindex)
+
+    aup = sub.add_parser("audit", help="큐레이션 품질 검사 (요약·라우팅 힌트)")
+    aup.add_argument("dir")
+    aup.add_argument("--json", action="store_true")
+    aup.add_argument("--strict", action="store_true", help="BLOCK이 있으면 exit 1 (게이트용)")
+    aup.add_argument("--all", action="store_true", help="지적을 30건 넘겨도 전부 표시")
+    aup.set_defaults(func=cmd_audit)
 
     up = sub.add_parser("update", help="원본 변경분 반영")
     up.add_argument("dir")
