@@ -450,7 +450,7 @@ PCB 신호/전원 무결성(SI/PI)까지 정밀 분석하려면 `/kicad-setup --
 
 PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manuals/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP 신규 등록 시 Claude Code 세션 재시작이 필요합니다.** idempotent — 여러 번 실행해도 안전하며 누락분만 보충합니다 (`--scope project|global|both`, `--mcp-only`, `--skip-mcp`, `--repair`, `--dry-run` 옵션).
 
-> **선택 의존성 — doc-atomize**: 함께 설치하면 700줄/50 KB를 넘는 큰 다이제스트를 무손실 분할해, 매뉴얼 질문마다 `digest.md`를 통째로 읽는 대신 조각 인덱스 + 조각 1~3개만 읽습니다. 설치하지 않아도 인제스트는 정상 동작하고 분할만 생략됩니다.
+> **선택 의존성 — doc-atomize**: 함께 설치하면 700줄/50 KB를 넘는 큰 다이제스트를 무손실 분할해, 매뉴얼 질문마다 `digest.md`를 통째로 읽는 대신 조각 인덱스 + 조각 1~3개만 읽습니다. 분할 후에는 조각 요약·라우팅 힌트 큐레이션이 게이트이며 `audit --strict`가 통과해야 등록이 끝납니다 — 조회 비용은 조각 크기가 아니라 **조회당 여는 조각 수**가 정하기 때문입니다. 설치하지 않아도 인제스트는 정상 동작하고 분할만 생략됩니다.
 
 #### React-Vite (React 19 프론트엔드 개발) 설치
 
@@ -866,7 +866,7 @@ PCB 레이아웃 진행
 | 코드베이스 등록 | "이 레포 코드 다이제스트 만들어줘" / `/manual-digest <dir>` | manual-digest 스킬 (`format: codebase`, MCP 불필요) |
 | Global scope 등록 | `/manual-digest <path> --scope global` | 모든 프로젝트 공유 |
 | 원본 변경 시 갱신 | `/manual-digest --update <id>` | 문서=sha256 / 코드=git ref 비교 → 변경분만 재요약 (+분할본 자동 갱신) |
-| 큰 다이제스트 분할 | "다이제스트 쪼개줘" / `/manual-digest --atomize <id>` | doc-atomize `split_md.py`로 무손실 분할 (700줄/50 KB 초과 시 자동 제안) |
+| 큰 다이제스트 분할 | "다이제스트 쪼개줘" / `/manual-digest --atomize <id>` | doc-atomize `split_md.py`로 무손실 분할 (700줄/50 KB 초과 시 자동 제안) → 조각 요약·라우팅 힌트 큐레이션 후 `audit --strict` 게이트 |
 | 분할 해제 | `/manual-digest --deatomize <id>` | 조각 제거, `digest.md` 단독 조회로 복귀 |
 | 등록 매뉴얼 목록 | "등록된 매뉴얼 목록" / `/manual-digest --list` | INDEX.md 출력 |
 | 매뉴얼 제거 | `/manual-digest --remove <id>` | 디렉토리 + INDEX.md + CLAUDE.md 카탈로그 갱신 |

@@ -197,6 +197,7 @@
 | `다이제스트가 커서 매번 무거움` | `/manual-digest --atomize <id>` (doc-atomize 필요) |
 | `분할했는데 split_md.py를 못 찾음` | `/plugin`에서 doc-atomize 설치, 또는 `DOC_ATOMIZE_SPLIT_MD` 환경변수로 경로 지정 |
 | `분할 verify FAIL` | 분할본 자동 삭제 후 원상 복구 — `digest.md`는 무손상, 조회는 종전대로 |
-| `갱신 후 조각에 ⚠️ 표시` | 본문이 바뀐 조각 — 요약을 다시 쓰고 `split_md.py reindex` |
+| `갱신 후 조각에 ⚠️ 표시` | 본문이 바뀐 조각 — 요약을 다시 쓰고 `split_md.py reindex` → `audit --strict` |
+| `분할 후 audit BLOCK` | 요약이 제목 재진술·자동 폴백이거나 라우팅 힌트 부족 — metadata.json 수정 후 `reindex`. 분할본은 지우지 않는다 |
 
 

@@ -203,6 +203,8 @@ wc -c "<scope_root>/.claude/manuals/<id>/digest.md"
 - `digest.md`는 **지우지 않는다** (`--mode in-place` 금지). verify·update가 원본을 필요로 한다
 - 분할본은 `.claude/atomized/`가 아니라 **매뉴얼 디렉토리 안**에 둔다 (카탈로그 이원화·훅 충돌 방지)
 - `doc-atomize` 플러그인이 없어 `split_md.py`를 못 찾으면 **인제스트를 실패시키지 않는다** — 분할만 건너뛰고 안내
+- 분할 후 **큐레이션이 게이트다**: 조각 요약을 다시 쓰고 `routing_hints`를 채운 뒤 `reindex` → `audit --strict`가 통과해야 metadata 기록·카탈로그 표기로 넘어간다. 조회 비용은 조각 크기가 아니라 **조회당 여는 조각 수**가 정하고, 그 수는 요약·힌트의 질이 정한다
+- `audit` BLOCK은 `verify` FAIL과 대응이 다르다 — 분할본을 지우지 않고 큐레이션을 더 해서 통과시킨다
 
 ## 결정성 (NFR-6)
 
@@ -210,6 +212,7 @@ LLM 요약은 비결정적이지만 다음 보장:
 - 동일 sha256(문서) / 동일 git ref(코드베이스) 재인제스트 → "이미 등록됨" 안내, 요약 재실행 안 함
 - `--update`는 변경분만 재요약(문서=변경 섹션, 코드베이스=`git diff --stat`로 식별한 변경 디렉토리), 비변경분 보존
 - 분할본이 있는 매뉴얼은 `--update` 마지막에 `split_md.py update <...>/digest.atomized`를 **반드시** 이어서 실행한다 — 건너뛰면 다이제스트와 조각이 어긋난 채 조회된다
+- 갱신 후에는 `⚠️`가 붙은 조각 요약을 다시 쓰고 `reindex` → `audit --strict`로 게이트를 다시 통과시킨다. 절이 늘거나 쪼개졌으면 그 조각을 가리키는 라우팅 힌트도 새로 필요하다
 - 산출물 형식 (스키마, JSON 키, 헤딩 구조)은 결정적
 
 ## 활용 (Claude의 동작 규칙)
@@ -251,7 +254,9 @@ LLM 요약은 비결정적이지만 다음 보장:
 | 다이제스트가 700줄/50 KB 초과 | 9단계 분할 판정 — 사용자 동의 후 `digest.atomized/` 생성 (`references/digest-atomize.md`) |
 | `split_md.py` 못 찾음 (doc-atomize 미설치) | 분할만 건너뛰고 인제스트는 성공 처리, `/plugin` 설치 후 `--atomize <id>` 안내 |
 | 분할 verify FAIL | `digest.atomized/` 삭제 후 원상 복구, 원인 보고 (`digest.md`는 무손상) |
-| 분할본 있는 매뉴얼 `--update` | 재요약 후 `split_md.py update` 이어서 실행 + `⚠️` 붙은 조각 요약 재작성 |
+| 분할본 있는 매뉴얼 `--update` | 재요약 후 `split_md.py update` 이어서 실행 + `⚠️` 붙은 조각 요약 재작성 → `audit --strict` 재통과 |
+| 분할 `audit` BLOCK 잔존 | 분할본은 유지. 요약이 제목 재진술·자동 폴백이거나 라우팅 힌트가 부족한 것 — metadata 수정 후 `reindex` → 재감사 |
+| 힌트당 평균 조각 수 > 1.5 | 힌트가 넓게 걸쳐 좁히지 못함 — 질문 단위로 쪼개 조각 1개씩 지시 |
 
 ## 흔한 함정
 
