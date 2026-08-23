@@ -62,7 +62,7 @@ CLAUDE.md / Permissions / Hooks / MCP / Subagent / 진화 6단계 진단·진화
 <tr>
 <td align="center" width="25%">
 <b>Manual Digest</b><br>
-대용량 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD) + 소스코드 디렉토리(codebase) 한 번 추출·요약 → ~0.3% 다이제스트만 1차 참조 (Claude Code 메타 도구)<br>
+대용량 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD) + 소스코드 디렉토리(codebase) 한 번 추출·요약 → ~0.3% 다이제스트만 1차 참조<br><b>다이제스트가 커지면 doc-atomize로 무손실 분할</b> → 인덱스 1개 + 조각 1~3개만 읽기 (Claude Code 메타 도구)<br>
 2 스킬
 </td>
 <td align="center" width="25%">
@@ -449,6 +449,8 @@ PCB 신호/전원 무결성(SI/PI)까지 정밀 분석하려면 `/kicad-setup --
 ```
 
 PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manuals/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP 신규 등록 시 Claude Code 세션 재시작이 필요합니다.** idempotent — 여러 번 실행해도 안전하며 누락분만 보충합니다 (`--scope project|global|both`, `--mcp-only`, `--skip-mcp`, `--repair`, `--dry-run` 옵션).
+
+> **선택 의존성 — doc-atomize**: 함께 설치하면 700줄/50 KB를 넘는 큰 다이제스트를 무손실 분할해, 매뉴얼 질문마다 `digest.md`를 통째로 읽는 대신 조각 인덱스 + 조각 1~3개만 읽습니다. 설치하지 않아도 인제스트는 정상 동작하고 분할만 생략됩니다.
 
 #### React-Vite (React 19 프론트엔드 개발) 설치
 
@@ -860,13 +862,15 @@ PCB 레이아웃 진행
 | 하고 싶은 것 | 이렇게 말하세요 | 동작하는 스킬 |
 |-------------|---------------|--------------|
 | 환경 셋업(1회) | "manual-digest 셋업" / `/manual-digest-setup` | manual-digest-setup 스킬 |
-| 매뉴얼 등록 | "이 PDF 등록해줘" / `/manual-digest <path>` | manual-digest 스킬 (8단계) |
+| 매뉴얼 등록 | "이 PDF 등록해줘" / `/manual-digest <path>` | manual-digest 스킬 (9단계, 마지막이 분할 판정) |
 | 코드베이스 등록 | "이 레포 코드 다이제스트 만들어줘" / `/manual-digest <dir>` | manual-digest 스킬 (`format: codebase`, MCP 불필요) |
 | Global scope 등록 | `/manual-digest <path> --scope global` | 모든 프로젝트 공유 |
-| 원본 변경 시 갱신 | `/manual-digest --update <id>` | 문서=sha256 / 코드=git ref 비교 → 변경분만 재요약 |
+| 원본 변경 시 갱신 | `/manual-digest --update <id>` | 문서=sha256 / 코드=git ref 비교 → 변경분만 재요약 (+분할본 자동 갱신) |
+| 큰 다이제스트 분할 | "다이제스트 쪼개줘" / `/manual-digest --atomize <id>` | doc-atomize `split_md.py`로 무손실 분할 (700줄/50 KB 초과 시 자동 제안) |
+| 분할 해제 | `/manual-digest --deatomize <id>` | 조각 제거, `digest.md` 단독 조회로 복귀 |
 | 등록 매뉴얼 목록 | "등록된 매뉴얼 목록" / `/manual-digest --list` | INDEX.md 출력 |
 | 매뉴얼 제거 | `/manual-digest --remove <id>` | 디렉토리 + INDEX.md + CLAUDE.md 카탈로그 갱신 |
-| 자동 활용 | (도메인 매뉴얼 질문) | Claude가 INDEX.md → digest.md → 필요 시 원본 핀포인트 |
+| 자동 활용 | (도메인 매뉴얼 질문) | Claude가 INDEX.md → digest.md(분할 시 조각 인덱스) → 필요 시 원본 핀포인트 |
 
 #### 지원 포맷
 
@@ -1294,9 +1298,9 @@ pjy-claude-skill/
 │   │   └── docs/usage-guide.md    ← 사용 가이드 (모드별 흐름, 시나리오 예제, 함정)
 │   ├── manual-digest/             ← 대용량 매뉴얼 다이제스트 플러그인 (메타 도구)
 │   │   ├── plugin.json
-│   │   ├── skills/ (2개)          ← 인제스트/갱신/목록/삭제 + 환경 1회 초기화
+│   │   ├── skills/ (2개)          ← 인제스트/갱신/분할/목록/삭제 + 환경 1회 초기화
 │   │   │   ├── manual-digest/
-│   │   │   │   └── references/    ← 7개 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase)
+│   │   │   │   └── references/    ← 7개 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase) + digest-atomize(큰 다이제스트 무손실 분할)
 │   │   │   └── manual-digest-setup/
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (빠른 시작, 명령어, scope, 트러블슈팅)
 │   ├── pcb-design-digest/         ← PCB 설계 다이제스트 플러그인 (거버/PADS/KiCad, 메타 도구)

@@ -15,6 +15,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 - **사용자 동의 우선** — 변경 예정 항목 미리 출력 + 확인 후 적용. `--dry-run`으로 미리 검토 가능
 - **백업** — CLAUDE.md 수정 전 `CLAUDE.md.bak.<timestamp>` 백업
 - **부분 실패 안전** — 한 단계 실패해도 다른 단계 결과 손실 없음
+- **선택 의존성 비강제** — `doc-atomize`(큰 다이제스트 분할용)는 없어도 셋업·인제스트가 정상 동작한다. 존재 여부만 리포트한다
 
 ## 옵션
 
@@ -122,12 +123,18 @@ init_manuals_dir() {
 
 _(아직 등록된 매뉴얼이 없습니다. `/manual-digest <path>`로 첫 매뉴얼을 등록하세요.)_
 
+| id | 제목 | 포맷 | 분할 | 요약 |
+|----|------|------|------|------|
+
 ## 참조 규칙
 
 1. 매뉴얼 관련 질문 시 → 본 INDEX.md를 먼저 확인
-2. 관련 `digest.md`를 1차 참조 → 부족하면 `index.md`로 페이지 포인터 → 원본 핀포인트
-3. 답변에 출처(§/p./scope) 명시
-4. 인덱싱되지 않은 매뉴얼이면 `/manual-digest <path>` 등록 제안
+2. "분할" 칸이 비어 있으면(`—`) `digest.md`를 1차 참조.
+   채워져 있으면 `digest.md`를 통째로 읽지 말고 `<id>/digest.atomized/<id>-digest.index.md`를 먼저 읽고
+   후보 조각 1~3개만 `parts/`에서 Read
+3. 부족하면 `index.md`로 페이지/파일 포인터 → 원본 핀포인트
+4. 답변에 출처(§/p./scope) 명시 — 조각을 인용해도 출처는 원본 기준으로 쓴다
+5. 인덱싱되지 않은 매뉴얼이면 `/manual-digest <path>` 등록 제안
 EOF
             echo "    INDEX.md 헤더 작성"
         fi
@@ -163,8 +170,10 @@ inject_marker() {
 
 1. `.claude/manuals/INDEX.md` (project) + `~/.claude/manuals/INDEX.md` (global) 양쪽 확인
 2. 관련 매뉴얼의 `digest.md` 우선 참조 → 부족하면 `index.md` 페이지 포인터로 원본 핀포인트
-3. 답변에 출처(§/p./scope) 명시
-4. 인덱싱되지 않은 매뉴얼이면 `/manual-digest <path>` 등록 제안
+3. **분할된 다이제스트**: INDEX.md "분할" 칸이 채워진 매뉴얼은 `digest.md`를 통째로 읽지 않는다 —
+   `<id>/digest.atomized/<id>-digest.index.md`를 먼저 읽고 후보 조각 1~3개만 `parts/`에서 Read
+4. 답변에 출처(§/p./scope) 명시 — 조각 인용 시에도 출처는 원본 기준(§/p.)
+5. 인덱싱되지 않은 매뉴얼이면 `/manual-digest <path>` 등록 제안
 
 PDF 핀포인트 추출: `mcp__pdf-reader__read_pdf` `pages: "<범위 또는 혼합 범위>"`
 <!-- manual-digest:end -->
@@ -242,6 +251,19 @@ if [ "$MCP_ONLY" != "true" ]; then
                  grep -q "manual-digest:start" "$HOME/.claude/CLAUDE.md" 2>/dev/null && echo "  ✓ global CLAUDE.md 마커 주입됨" ;;
     esac
 fi
+
+# 선택 의존성: doc-atomize (큰 다이제스트 무손실 분할용) — 없어도 인제스트는 정상 동작
+SPLIT_MD=""
+if [ -n "$DOC_ATOMIZE_SPLIT_MD" ] && [ -f "$DOC_ATOMIZE_SPLIT_MD" ]; then
+    SPLIT_MD="$DOC_ATOMIZE_SPLIT_MD"
+else
+    SPLIT_MD="$(find "$HOME/.claude/plugins" -path "*doc-atomize*/skills/doc-atomize/assets/split_md.py" -print -quit 2>/dev/null)"
+fi
+if [ -n "$SPLIT_MD" ]; then
+    echo "  ✓ doc-atomize split_md.py: $SPLIT_MD (큰 다이제스트 분할 가능)"
+else
+    echo "  ○ doc-atomize 미설치 — 선택 사항. 설치하면 700줄 넘는 다이제스트를 무손실 분할해 조회 비용을 줄일 수 있다"
+fi
 ```
 
 ### 6. 상태 리포트
@@ -253,6 +275,7 @@ fi
 MCP:    <등록됨/이미있음/생략>
 디렉토리: <생성됨/이미있음>
 CLAUDE.md: <주입됨/이미있음>
+doc-atomize: <있음(분할 가능)/없음(선택 사항)>
 
 다음 단계:
   ① (MCP 신규 등록한 경우) Claude Code 재시작
@@ -263,6 +286,7 @@ CLAUDE.md: <주입됨/이미있음>
   - MCP 미연결: claude mcp list로 상태 확인, 재등록 시 /manual-digest-setup --mcp-only
   - CLAUDE.md 마커 손상: /manual-digest-setup --repair
   - 권한 에러: 디렉토리 권한 확인 또는 --scope 변경
+  - 다이제스트가 너무 커서 매번 무거움: /plugin 에서 doc-atomize 설치 후 /manual-digest --atomize <id>
 ```
 
 ## Non-goals

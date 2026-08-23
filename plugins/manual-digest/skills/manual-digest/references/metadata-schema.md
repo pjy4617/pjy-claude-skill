@@ -29,6 +29,41 @@ digest.md 프론트매터와 같은 값을 기록한다 (두 곳의 값이 달�
 | `extractor_package` | string | 추출에 사용한 패키지/도구와 버전 |
 | `subsection_count` | int | 요약된 하위 섹션 수 |
 | `sampling_strategy` | string | 전수/샘플링 전략 서술 (대형 문서에서 일부만 정독한 경우) |
+| `atomized` | object\|null | 다이제스트 무손실 분할 상태 (아래 참조). 분할하지 않았으면 생략하거나 `null` |
+
+## `atomized` 필드
+
+`digest.md`(또는 `index.md`)가 커서 `doc-atomize`의 `split_md.py`로 분할한 경우에만 기록한다.
+절차는 `digest-atomize.md` 참조.
+
+```json
+"atomized": {
+  "digest": {
+    "dir": "digest.atomized",
+    "doc_id": "wmx37-user-manual-kr-digest",
+    "index": "digest.atomized/wmx37-user-manual-kr-digest.index.md",
+    "parts": 14,
+    "source_lines": 1340,
+    "split_at": "2026-08-22T10:12:00+09:00",
+    "verified": true
+  },
+  "index": null
+}
+```
+
+| 하위 키 | 타입 | 설명 |
+|---------|------|------|
+| `digest` | object\|null | `digest.md` 분할 상태. 미분할이면 `null` |
+| `index` | object\|null | `index.md` 분할 상태. 미분할이면 `null` |
+| `.dir` | string | 매뉴얼 디렉토리 기준 상대 경로 (`digest.atomized` / `index.atomized`) |
+| `.doc_id` | string | split_md.py에 넘긴 `--doc-id`. 인덱스 파일명 접두와 동일 |
+| `.index` | string | 조회 진입점 파일의 상대 경로 |
+| `.parts` | int | 조각 수 |
+| `.source_lines` | int | 분할 시점의 원본(digest.md) 줄 수 |
+| `.split_at` | string | 분할/최근 갱신 ISO 8601 타임스탬프 |
+| `.verified` | bool | 마지막 `split_md.py verify` 결과. `false`면 조회에 쓰지 않는다 |
+
+`verified: false`인 분할본은 **조회 경로에서 제외**하고 `digest.md`를 직접 읽는다.
 
 ## 코드베이스와의 차이
 

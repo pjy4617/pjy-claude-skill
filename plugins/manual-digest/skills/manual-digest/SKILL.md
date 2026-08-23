@@ -1,6 +1,6 @@
 ---
 name: manual-digest
-description: "대용량 외부 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD)뿐 아니라 소스코드 디렉토리(codebase)까지 한 번만 추출·요약하여 마크다운 다이제스트로 저장하고, 이후 작업에서 매뉴얼/코드맵이 필요할 때마다 원본을 다시 읽지 않고 다이제스트(원본의 ~0.3% 크기)를 1차 참조하는 워크플로. 디테일이 필요할 때만 원본의 특정 페이지/섹션(문서) 또는 파일/심볼(코드)만 핀포인트로 추출. 사용자가 '이 PDF 매뉴얼 등록해줘', 'STM32 RM 다이제스트 만들어줘', '이 레포/소스 코드베이스 다이제스트 만들어줘', '`src/` 디렉토리 인덱싱해줘', '/manual-digest <path 또는 dir>', '매뉴얼 다이제스트', '대용량 PDF 인덱싱', 'manual digest', '매뉴얼 갱신', '등록된 매뉴얼 목록', '매뉴얼 제거' 등을 요청하거나, 큰 PDF/HTML/CHM 매뉴얼 파일 또는 소스코드 디렉토리를 가리키며 등록·요약·인덱싱·갱신·삭제·목록을 명시할 때 자동 적용. 첫 사용 전에는 manual-digest-setup으로 환경을 1회 초기화한다(코드베이스 전용 인제스트는 PDF MCP 없이도 동작)."
+description: "대용량 외부 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD)뿐 아니라 소스코드 디렉토리(codebase)까지 한 번만 추출·요약하여 마크다운 다이제스트로 저장하고, 이후 작업에서 매뉴얼/코드맵이 필요할 때마다 원본을 다시 읽지 않고 다이제스트(원본의 ~0.3% 크기)를 1차 참조하는 워크플로. 디테일이 필요할 때만 원본의 특정 페이지/섹션(문서) 또는 파일/심볼(코드)만 핀포인트로 추출. 사용자가 '이 PDF 매뉴얼 등록해줘', 'STM32 RM 다이제스트 만들어줘', '이 레포/소스 코드베이스 다이제스트 만들어줘', '`src/` 디렉토리 인덱싱해줘', '/manual-digest <path 또는 dir>', '매뉴얼 다이제스트', '대용량 PDF 인덱싱', 'manual digest', '매뉴얼 갱신', '등록된 매뉴얼 목록', '매뉴얼 제거' 등을 요청하거나, 큰 PDF/HTML/CHM 매뉴얼 파일 또는 소스코드 디렉토리를 가리키며 등록·요약·인덱싱·갱신·삭제·목록을 명시할 때 자동 적용. 다이제스트가 커지면(700줄/50 KB 초과) doc-atomize의 split_md.py로 무손실 분할해 인덱스 1개 + 조각 1~3개만 읽도록 전환한다('다이제스트 분할', '--atomize', '--deatomize'). 첫 사용 전에는 manual-digest-setup으로 환경을 1회 초기화한다(코드베이스 전용 인제스트는 PDF MCP 없이도 동작)."
 user-invocable: true
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__pdf-reader__read_pdf
 ---
@@ -43,7 +43,10 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__pdf-reader__read_pdf
 ├── <manual-id>/
 │   ├── digest.md                         ← 전체 개요 + 섹션 요약
 │   ├── index.md                          ← 섹션 → 페이지 매핑
-│   └── metadata.json                     ← id/source/sha256/scope/...
+│   ├── metadata.json                     ← id/source/sha256/scope/...
+│   └── digest.atomized/                  ← (다이제스트가 클 때만) 무손실 분할본
+│       ├── <id>-digest.index.md          ← 분할 시 조회 진입점
+│       └── parts/001-….md …
 └── ...
 ```
 
@@ -58,8 +61,12 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__pdf-reader__read_pdf
 | `/manual-digest --update <id>` | 문서: sha256 비교 / 코드베이스: git ref 비교 후 변경분만 재요약 |
 | `/manual-digest --list [--scope project\|global\|all]` | 등록 매뉴얼 나열 |
 | `/manual-digest --remove <id>` | 다이제스트 + INDEX.md 항목 + CLAUDE.md 카탈로그 갱신 |
+| `/manual-digest --atomize <id> [--max-lines N]` | 이미 등록된 매뉴얼의 `digest.md`(필요시 `index.md`)를 무손실 분할 |
+| `/manual-digest --deatomize <id>` | 분할본 제거, `digest.md` 단독 조회로 복귀 |
 
-## 인제스트 워크플로 (8단계)
+인제스트 시 `--no-atomize`를 주면 크기와 무관하게 분할 판정을 건너뛴다.
+
+## 인제스트 워크플로 (9단계)
 
 ### 1. 입력 검증 + 종류 판별
 - 절대/상대 경로 정규화 (`[System.IO.Path]::GetFullPath`)
@@ -168,14 +175,41 @@ extractor: <mcp-pdf-reader|claude-read|expand-archive|hh-decompile>
 `references/metadata-schema.md` 스키마 준수. 필수 + 선택 필드(`extractor_package`, `subsection_count`, `sampling_strategy` 등). 코드베이스는 `sha256/pages` 대신 `loc/src_files/test_files/stack/version(git ref)/sampling_strategy/<purpose>_targets` 사용 (`references/codebase-extract.md`).
 
 ### 8. 마스터 카탈로그 갱신
-- `<scope>/.claude/manuals/INDEX.md`에 1줄 항목 추가
+- `<scope>/.claude/manuals/INDEX.md`에 1줄 항목 추가 (분할했으면 "분할" 칸 표기)
 - 같은 scope의 `CLAUDE.md` 마커 블록(형식: manual-digest-setup SKILL.md의 MARKER_BLOCK) 카탈로그 요약 갱신 (`<!-- manual-digest:start -->`...`<!-- manual-digest:end -->`)
+
+### 9. 다이제스트 분할 판정 (크면 쪼갠다)
+
+다이제스트가 커지면 그 자체가 컨텍스트 부담이 된다 — 매뉴얼 질문 한 번마다 통째로 읽히기 때문이다.
+`digest.md`(및 `index.md`)의 크기를 재고 임계를 넘으면 `doc-atomize`의 `split_md.py`로 **무손실 분할**한다.
+요약을 한 번 더 하지 않는다(정보 손실 누적) — 분할이므로 조각을 합치면 원본과 sha256이 일치한다.
+
+```bash
+wc -l "<scope_root>/.claude/manuals/<id>/digest.md"
+wc -c "<scope_root>/.claude/manuals/<id>/digest.md"
+```
+
+| 크기 | 동작 |
+|------|------|
+| 300줄 미만 | 분할하지 않는다 (인덱스 유지비 > 이득) |
+| 300~699줄 | 분할하지 않는다. 사용자가 `--atomize`를 명시하면 진행 |
+| **700줄 이상 또는 50 KB 이상** | 사용자에게 분할을 **제안**하고 동의 시 실행 |
+| 1200줄 이상 또는 90 KB 이상 | 강하게 권고 |
+
+절차·명령·검증 게이트·큐레이션·되돌리기는 **`references/digest-atomize.md`**를 따른다. 요점만:
+
+- `python3 <split_md.py> split "<...>/digest.md" --out "<...>/digest.atomized" --doc-id "<id>-digest"`
+- `verify`가 `PASS`가 아니면 분할본을 지우고 원상 복구 — 무손실이 깨진 분할은 쓸모가 없다
+- `digest.md`는 **지우지 않는다** (`--mode in-place` 금지). verify·update가 원본을 필요로 한다
+- 분할본은 `.claude/atomized/`가 아니라 **매뉴얼 디렉토리 안**에 둔다 (카탈로그 이원화·훅 충돌 방지)
+- `doc-atomize` 플러그인이 없어 `split_md.py`를 못 찾으면 **인제스트를 실패시키지 않는다** — 분할만 건너뛰고 안내
 
 ## 결정성 (NFR-6)
 
 LLM 요약은 비결정적이지만 다음 보장:
 - 동일 sha256(문서) / 동일 git ref(코드베이스) 재인제스트 → "이미 등록됨" 안내, 요약 재실행 안 함
 - `--update`는 변경분만 재요약(문서=변경 섹션, 코드베이스=`git diff --stat`로 식별한 변경 디렉토리), 비변경분 보존
+- 분할본이 있는 매뉴얼은 `--update` 마지막에 `split_md.py update <...>/digest.atomized`를 **반드시** 이어서 실행한다 — 건너뛰면 다이제스트와 조각이 어긋난 채 조회된다
 - 산출물 형식 (스키마, JSON 키, 헤딩 구조)은 결정적
 
 ## 활용 (Claude의 동작 규칙)
@@ -186,7 +220,11 @@ LLM 요약은 비결정적이지만 다음 보장:
    - `<project>/.claude/manuals/INDEX.md`
    - `~/.claude/manuals/INDEX.md`
 2. 관련 매뉴얼이 있으면 `digest.md`를 먼저 읽는다
-3. digest로 답할 수 있으면 출처(§/p./scope)를 명시
+   - **단, INDEX.md의 "분할" 칸이 채워져 있으면 `digest.md`를 통째로 읽지 않는다.**
+     `digest.atomized/<id>-digest.index.md`(라우팅 힌트 → 목차 → 키워드 역색인)를 먼저 읽고
+     후보 조각 1~3개만 `parts/`에서 Read한다
+3. digest로 답할 수 있으면 출처(§/p./scope)를 명시. 조각을 인용해도 출처는 **원본 기준**(§/p.)으로 쓴다 —
+   조각 번호는 다이제스트 내부 위치일 뿐 원본 페이지가 아니다
 4. 디테일이 부족하면 `index.md`에서 위치 포인터 → 원본의 해당 부분만 추출
    - PDF: `mcp__pdf-reader__read_pdf` `pages: "82-83,100-102"` (혼합 범위 지원)
    - HTML/EPUB/DOCX/CHM: 추출된 마크다운 또는 원본의 해당 섹션
@@ -210,6 +248,10 @@ LLM 요약은 비결정적이지만 다음 보장:
 | 코드베이스 추출 목적 불명 | 인제스트 시작 시 목적 1줄 확인 (재사용/온보딩/리팩토링/디버깅) |
 | git 레포 아닌 디렉토리 | `version`을 디렉토리 mtime/파일목록 기반으로, `--update`는 파일목록 diff 폴백 |
 | 거대 모노레포 | 사용자에게 하위 패키지 경로로 좁히도록 제안 (전체 1회 대신 패키지별 다이제스트) |
+| 다이제스트가 700줄/50 KB 초과 | 9단계 분할 판정 — 사용자 동의 후 `digest.atomized/` 생성 (`references/digest-atomize.md`) |
+| `split_md.py` 못 찾음 (doc-atomize 미설치) | 분할만 건너뛰고 인제스트는 성공 처리, `/plugin` 설치 후 `--atomize <id>` 안내 |
+| 분할 verify FAIL | `digest.atomized/` 삭제 후 원상 복구, 원인 보고 (`digest.md`는 무손상) |
+| 분할본 있는 매뉴얼 `--update` | 재요약 후 `split_md.py update` 이어서 실행 + `⚠️` 붙은 조각 요약 재작성 |
 
 ## 흔한 함정
 
@@ -219,12 +261,15 @@ LLM 요약은 비결정적이지만 다음 보장:
 | `pages` 인자 단일 범위만 사용 | `"7-12,28-30,82-83"` 혼합 범위로 한 호출에 묶기 |
 | 다이제스트만으로 모호하게 답변 | 출처 명시 + 모호하면 원본 핀포인트 추출 |
 | 메타데이터 무시 | `include_metadata: true`로 Author/Title/Subject 자동 확보 |
+| 큰 다이제스트를 매번 통째로 Read | 700줄 넘으면 분할 — 조회는 인덱스 1 + 조각 1~3개 |
+| 다이제스트가 크다고 한 번 더 요약 | 금지. 손실이 누적된다. 분할(무손실)로 해결한다 |
 
 ## 마무리 보고
 
 인제스트 완료 시 사용자에게:
-1. 산출물 경로 (digest.md / index.md / metadata.json)
+1. 산출물 경로 (digest.md / index.md / metadata.json, 분할 시 `digest.atomized/`)
 2. 압축비 (원본 vs 다이제스트, 목표 ≤3%)
-3. 등록된 scope, 다음 단계 안내 (이후 매뉴얼 질문 시 자동 참조됨)
+3. 분할 여부 — 분할했으면 조각 수·무손실 검증 결과·조회 진입점 경로. 분할하지 않았으면 이유(임계 미만 / doc-atomize 미설치)
+4. 등록된 scope, 다음 단계 안내 (이후 매뉴얼 질문 시 자동 참조됨)
 
 $ARGUMENTS

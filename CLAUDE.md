@@ -105,8 +105,8 @@ plugins/
 ├── manual-digest/                 ← 대용량 매뉴얼 다이제스트 플러그인 (2 스킬, 에이전트 없음)
 │   ├── plugin.json
 │   ├── skills/
-│   │   ├── manual-digest/         ← 인제스트/갱신/목록/삭제 (8단계 워크플로, 문서+codebase)
-│   │   │   └── references/        ← 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase)
+│   │   ├── manual-digest/         ← 인제스트/갱신/분할/목록/삭제 (9단계 워크플로, 문서+codebase)
+│   │   │   └── references/        ← 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase) + digest-atomize(다이제스트가 700줄/50 KB 넘으면 doc-atomize split_md.py로 무손실 분할, 미설치 시 분할만 생략)
 │   │   └── manual-digest-setup/   ← MCP 등록 + 디렉토리 + CLAUDE.md 마커 1회 초기화
 │   └── docs/USAGE_GUIDE.md
 ├── pcb-design-digest/             ← PCB 설계/제조 데이터 다이제스트 플러그인 (2 스킬 + 1 에이전트, 메타 도구) — 거버 팹출력 + PADS(.pcb/.asc) + KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)
@@ -220,7 +220,7 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 플러그인 종류:
 - **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md/wmx3app/rlcontrol): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
 - **워크플로 플러그인**(parallel-delegation/prd-plan): 도메인 무관 절차. `parallel-delegation`은 `claude-md/` 없이 `*-setup`이 누락 역할만 보충하고, `prd-plan`은 산출물 규약(문서 경로·REQ/TASK/CHK ID·절대 규칙)이 있어 예외적으로 `claude-md/` 템플릿을 둔다
-- **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest/doc-atomize/orca-worktree): Claude Code 자체 환경, 컨텍스트 관리, 또는 개발 환경(Orca 워크트리) 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요), `doc-atomize`는 대용량 .md를 무손실 분할(요약 아님)하고 `<doc-id>.index.md`로 조회하며 에이전트 0개 + 디렉토리/마커 초기화 setup만(MCP 불필요, Python 표준 라이브러리), `orca-worktree`는 Orca 워크트리 생성 시 실행될 `orca.yaml` `scripts.setup`을 레포 프로파일링으로 작성하고 임시 git worktree 실드라이런으로 검증하며 에이전트 0개 + setup 스킬 없음(설치할 것이 없다 — 설치 즉시 사용).
+- **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest/doc-atomize/orca-worktree): Claude Code 자체 환경, 컨텍스트 관리, 또는 개발 환경(Orca 워크트리) 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만 두고 큰 다이제스트는 `doc-atomize`(선택 의존성)로 무손실 분할해 조회하며, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요), `doc-atomize`는 대용량 .md를 무손실 분할(요약 아님)하고 `<doc-id>.index.md`로 조회하며 에이전트 0개 + 디렉토리/마커 초기화 setup만(MCP 불필요, Python 표준 라이브러리), `orca-worktree`는 Orca 워크트리 생성 시 실행될 `orca.yaml` `scripts.setup`을 레포 프로파일링으로 작성하고 임시 git worktree 실드라이런으로 검증하며 에이전트 0개 + setup 스킬 없음(설치할 것이 없다 — 설치 즉시 사용).
 
 1. `plugins/<이름>/plugin.json` 생성 (`name`, `version`, `description`, `skills` 필드)
 2. `plugins/<이름>/skills/<스킬명>/SKILL.md` 생성
@@ -250,8 +250,9 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 
 1. `.claude/manuals/INDEX.md` (project) + `~/.claude/manuals/INDEX.md` (global) 양쪽 확인
 2. 관련 매뉴얼의 `digest.md` 우선 참조 → 부족하면 `index.md` 페이지 포인터로 원본 핀포인트
-3. 답변에 출처(§/p./scope) 명시
-4. 인덱싱되지 않은 매뉴얼이면 `/manual-digest <path>` 등록 제안
+3. **분할된 다이제스트**: INDEX.md "분할" 칸이 채워진 매뉴얼은 `digest.md`를 통째로 읽지 않는다 — `<id>/digest.atomized/<id>-digest.index.md`를 먼저 읽고 후보 조각 1~3개만 `parts/`에서 Read
+4. 답변에 출처(§/p./scope) 명시 — 조각 인용 시에도 출처는 원본 기준
+5. 인덱싱되지 않은 매뉴얼이면 `/manual-digest <path>` 등록 제안
 
 PDF 핀포인트 추출: `mcp__pdf-reader__read_pdf` `pages: "<범위 또는 혼합 범위>"`
 <!-- manual-digest:end -->
