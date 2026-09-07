@@ -2,8 +2,8 @@
 
 ## 개요
 
-KiCad 플러그인은 KiCad 회로/PCB의 **설계 · 리뷰 · 분석**과 **KiCad 사용법 안내**를 통합 지원하는 풀스택 도구입니다.
-PRD(설계사양서)로부터 회로도를 생성하고, 생성된 회로도를 8단계로 검증하며, BOM(파트리스트)을 마크다운으로 출력하고, 넷리스트/PCB를 정밀 분석(ERC/DRC·넷 추적·트랙/라우팅·SI/PI)합니다.
+KiCad 플러그인은 KiCad 회로/PCB의 **설계 · 리뷰 · 분석 · 제조 출력**과 **KiCad 사용법 안내**를 통합 지원하는 풀스택 도구입니다.
+PRD(설계사양서)로부터 회로도를 생성하고, 생성된 회로도를 8단계로 검증하며, BOM(파트리스트)을 마크다운으로 출력하고, 넷리스트/PCB를 정밀 분석(ERC/DRC·넷 추적·배치·트랙/라우팅·SI/PI)한 뒤, 팹에 넘길 제조 데이터(거버·드릴·위치 파일·IPC-D-356·발주 BOM)까지 뽑습니다.
 또한 **KiCad 10.0 공식 매뉴얼**(프로젝트 매니저·pcbnew·gerbview·kicad-cli)을 한국어 다이제스트로 번들해, "KiCad에서 X 어떻게 해?" 같은 프로그램 사용법 질문에도 `/kicad-usage`로 답합니다.
 
 ### 지원 도메인
@@ -22,7 +22,7 @@ PRD(설계사양서)로부터 회로도를 생성하고, 생성된 회로도를 
 ### 사전 요구사항
 
 - Claude Code CLI
-- KiCad 9.x 이상 (`kicad-cli` 명령어 사용 가능하면 최적, 없어도 동작)
+- KiCad 9.x 이상 (`kicad-cli` 명령어 사용 가능하면 최적, 없어도 동작 — 단 `/kicad-fabricate` 제조 출력은 `kicad-cli` 필수)
   - `/kicad-usage` 사용법 다이제스트는 **KiCad 10.0** 공식 문서 기준입니다(9.x도 대부분 호환, 일부 UI/기능 차이 가능)
 
 ### 플러그인 설치
@@ -44,7 +44,7 @@ KiCad 프로젝트가 있는 디렉토리에서:
 ```
 
 질문에 따라 프로젝트 경로를 입력하면 에이전트 4개와 CLAUDE.md가 자동 설치됩니다.
-PCB 신호/전원 무결성(SI/PI)까지 정밀 분석하려면 `/kicad-setup --with-mcp`로 Seeed kicad-mcp-server 등록을 안내받을 수 있습니다(KiCad 9.0+ 로컬 설치 전제).
+PCB 트랙·존 기하 기반 정밀 분석(SI/PI 판정 포함)까지 하려면 `/kicad-setup --with-mcp`로 KiCAD-MCP-Server 등록을 안내받을 수 있습니다(KiCad 9.0+ 로컬 설치 + Node.js 18+ 전제).
 
 설치되는 파일:
 ```
@@ -64,9 +64,10 @@ CLAUDE.md                          (KiCad 설정 추가)
 |------|--------|------|
 | 회로도 설계 | `/kicad-design` | PRD/설계사양서 → KiCad 회로도 생성 |
 | 회로도 리뷰 | `/kicad-review` | 8단계 설계 리뷰 + BOM 생성 |
-| 회로/PCB 분석 | `/kicad-analyze` | 넷리스트/PCB 정밀 분석: ERC/DRC, 넷 추적, 트랙/라우팅, 신호·전원 무결성(SI/PI) |
+| 회로/PCB 분석 | `/kicad-analyze` | 넷리스트/PCB 정밀 분석: ERC/DRC, 회로도-보드 동기화 확인, 배치 검토, 넷 추적, 트랙/라우팅, 신호·전원 무결성(SI/PI) |
+| 제조 출력 | `/kicad-fabricate` | DRC 게이트 → 거버·드릴·위치 파일·IPC-D-356·발주 BOM 생성 + 산출물 검증 |
 | KiCad 사용법 | `/kicad-usage` | **KiCad 10.0 프로그램 자체의 사용법** 안내 (공식 매뉴얼 다이제스트: 프로젝트 매니저·pcbnew·gerbview·kicad-cli) |
-| 프로젝트 설정 | `/kicad-setup` | 에이전트를 타겟 프로젝트에 설치 (`--with-mcp`로 Seeed MCP 등록 안내) |
+| 프로젝트 설정 | `/kicad-setup` | 에이전트를 타겟 프로젝트에 설치 (`--with-mcp`로 KiCAD-MCP-Server 등록 안내) |
 
 ---
 
@@ -99,14 +100,39 @@ PRD, 설계사양서, 블록다이어그램 등을 입력하면 KiCad 회로도(
     핀 배치, 권장 회로, 전기적 특성을 확보합니다.
 
 [4] 회로도 생성
-    KiCad 9.x 형식의 .kicad_sch 파일을 작성합니다.
+    KiCad 9.x 또는 10.x(대상 버전에 맞춤) 형식의 .kicad_sch 파일을 작성합니다.
     기능 블록별 서브시트로 분리합니다.
 
 [5] 리뷰 및 보정
     생성된 회로도를 kicad-review 스킬로 검증합니다.
+    호출 주체는 메인 세션입니다 — 서브에이전트가 스킬을 부르지 않으므로,
+    designer 에이전트의 산출물을 받은 뒤 메인 세션이 kicad-review 를 실행합니다.
     ERROR 발견 시 수정 사항을 제시하고, 사용자 확인 후 수정합니다.
     .kicad_pro 프로젝트 파일도 함께 생성됩니다.
+
+[6] 보드 생성 (선택)
+    회로도의 풋프린트·넷을 .kicad_pcb 에 올립니다. 보드 외곽(테두리)과 배치는 사용자가 GUI 에서 합니다.
+    KiCad GUI 의 Update PCB from Schematic(F8)에 해당하며, kicad-cli 에는 없는 기능이라
+    KiCAD-MCP-Server 가 유일한 무 GUI 경로입니다.
 ```
+
+#### 단계 6 (선택) 보드 생성의 전제
+
+사용자가 요청했을 때만 수행하며, 아래를 하나라도 못 채우면 건너뜁니다.
+
+| 전제 | 이유 |
+|------|------|
+| ERC 0 errors | 오류가 있는 회로도를 보드로 넘기면 보드에서 두 번 고쳐야 합니다 |
+| 모든 `Footprint` 필드가 `fp-lib-table` 에서 풀림 | 풀리지 않는 풋프린트는 보드에 추가되지 않고 `skipped` 로 빠집니다 (kicad-review 2.5 통과 필요) |
+| KiCAD-MCP-Server 등록 + pcbnew 가용 | 이 경로의 유일한 실행 수단입니다 |
+| KiCad 10 사용자 | KiCad 9 는 건너뜁니다 — MCP 편집 도구가 파일을 10 포맷으로 다시 쓰면 9 에서 열 수 없게 됩니다 |
+| KiCad GUI 에서 프로젝트가 닫혀 있음 | 보드 파일을 덮어쓰기 때문입니다 |
+
+- 보드가 없으면 `create_board_from_schematic`, **이미 있으면 `sync_schematic_to_board`** 를 씁니다.
+  기존 보드에 `create_board_from_schematic --overwrite` 를 쓰면 배치·배선이 전부 사라집니다.
+- 산출물은 **풋프린트와 넷만 올라간 보드**입니다. 배치 도구는 호출하지 않습니다 — 보드 외곽은 기구 치수로,
+  배치는 설계 판단으로 정해지는 것이라 사용자가 KiCad GUI 에서 합니다.
+- 외곽 → 배치 → 배선을 마치고 `/kicad-analyze`(배치·배선 검토) → `/kicad-fabricate`(제조 출력)로 넘어갑니다.
 
 ### 라이브러리 사용 우선순위
 
@@ -127,7 +153,7 @@ PRD, 설계사양서, 블록다이어그램 등을 입력하면 KiCad 회로도(
 
 ### 출력
 
-- `.kicad_sch` 파일 (KiCad 9.x에서 바로 열 수 있음)
+- `.kicad_sch` 파일 (KiCad 9.x 또는 10.x — 생성 시 맞춘 대상 버전에서 바로 열 수 있음)
 - 계층 구조인 경우 루트 + 서브시트 여러 파일
 - `.kicad_pro` 프로젝트 파일 (필요 시)
 
@@ -142,7 +168,11 @@ KiCad에서 열고 다음을 보정하세요:
 2. **와이어 끝점 스냅** → 핀에 정확히 연결되도록 드래그
 3. **레이아웃 정리** → 부품 간격, 텍스트 겹침 조정
 
-보정 시간: 보통 **5~15분**. 스킬이 네트 레이블 기반으로 연결하므로 IC 간 논리적 연결은 유지됩니다.
+보정 시간은 **핀 수에 비례**합니다. 끝점 스냅은 핀 하나당 한 번이라 30핀 IC 하나면 끝점이 30개입니다.
+이 텍스트 생성 경로는 **부품 20개(핀 100개) 이하 초안에서만 실용적**이며, 그 이상은 회로를 시트로 쪼개
+시트당 부품 수를 20개 아래로 유지하거나, MCP 저작 경로(`batch_add_and_connect` + `lint_offgrid`)를 기다립니다
+(MCP 저작 경로는 아직 스킬에 들어 있지 않은 후속 범위입니다).
+스킬이 네트 레이블 기반으로 연결하므로 IC 간 논리적 연결은 어느 규모에서든 유지됩니다.
 
 ---
 
@@ -305,19 +335,108 @@ KiCad **프로그램 자체**를 어떻게 쓰는지 묻는 How-to 질문에 답
 
 ---
 
-## 설계 → 리뷰 연계
+## 사용법 4: 제조 출력 (`/kicad-fabricate`)
 
-두 스킬을 조합하면 설계부터 검증까지 원스톱으로 진행할 수 있습니다:
+배선이 끝난 보드에서 **팹(PCB 제조사)과 조립사에 넘길 파일**을 만듭니다.
+비유하면 원고 교정이 끝난 책을 인쇄소에 넘기기 전 최종 파일 묶음을 싸는 작업입니다.
+
+### 다른 스킬과의 차이
+
+- `/kicad-analyze` → DRC/ERC를 **판정**하고 배치·배선·SI/PI를 분석합니다(보고서)
+- `/kicad-fabricate` → 그 판정을 **게이트로 삼아** 팹에 넘길 **파일을 만듭니다**(산출물)
+
+DRC error가 하나라도 있으면 아무것도 뽑지 않고 중단합니다.
+
+### 사용 예시
+
+```
+"이 보드 거버 뽑아줘"
+"JLCPCB 에 보낼 제조 파일 만들어줘"
+"드릴 파일이랑 위치 파일 생성해줘"
+"제조 출력 전에 DRC 랑 동기화 확인부터 해줘"
+"IPC-D-356 전기 테스트 넷리스트 뽑아줘"
+"발주용 BOM CSV 만들어줘"
+```
+
+### 워크플로우
+
+```
+[0] 전제 확인
+    kicad-cli 필수. KiCad GUI에서 저장(Ctrl+S)했는지 확인합니다 —
+    모든 export가 "디스크에 마지막으로 저장된 .kicad_pcb"를 읽기 때문입니다.
+    산출물 디렉토리는 사용자가 지정합니다.
+
+[1] DRC 게이트
+    kicad-cli pcb drc --format json --severity-all --schematic-parity
+    violations(error) / unconnected_items / schematic_parity 세 배열을 모두 봅니다.
+    error가 있거나 미배선 넷이 남아 있으면 중단합니다.
+
+[2] 존 채움
+    미채움 존은 거버에 구리가 빠진 채로 나갑니다.
+    사용자 동의를 받아 --refill-zones --save-board로 채워 저장합니다
+    (GUI에서 그 보드가 닫힌 상태에서만).
+
+[3] 회로도-보드 동기화 확인
+    IPC-D-356(보드 정본)과 회로도 넷리스트를 diff 합니다.
+    "회로도엔 있는데 보드에 없는 핀/넷" = Update PCB 미실행 → 중단.
+
+[4] 거버      레이어 세트를 항상 명시합니다(생략하면 Courtyard·Fab까지 전부 나옵니다)
+[5] 드릴      PTH/NPTH 분리 + 드릴 맵, 단위 mm
+[6] 위치 파일 SMD only, DNP 제외, 드릴 원점 기준 CSV
+[7] BOM       MPN/LCSC 열 포함 발주용 CSV
+[8] 산출물 목록 · 검증 리포트 (파일 수·레이어·홀 수·DNP 제외 수·SHA256)
+```
+
+### 산출물
+
+| 파일 | 내용 | 받는 곳 |
+|------|------|--------|
+| `*.gtl/.gbl/.gts/…` + `*.gbrjob` | 거버 (RS-274X/X2) | 팹 |
+| `*-PTH.drl` / `*-NPTH.drl` + 드릴 맵 | Excellon 드릴 | 팹 |
+| `*-pos.csv` | 위치 파일 (pick and place) | 조립사 |
+| `*.ipc` | IPC-D-356 전기 테스트 넷리스트 | 팹 (플라잉 프로브) |
+| `*-bom.csv` | 발주용 BOM | 구매/조립사 |
+| `SHA256SUMS` | 산출물 체크섬 | 보관 |
+
+팹별 프로파일(레이어 세트·X2 여부·드릴 포맷·위치 파일 헤더)과 검증 체크리스트 14항목은
+`skills/kicad-fabricate/references/fabrication-outputs.md`에 있습니다.
+
+### 주의
+
+- **원점을 셋 다 맞춥니다.** 거버 `--use-drill-file-origin`, 드릴 `--drill-origin plot`,
+  위치 파일 `--use-drill-file-origin`. 하나만 달라도 조립 좌표가 통째로 어긋납니다.
+- **`--smd-only` 결과가 0행이면 THT 전용 보드입니다.** 0행 위치 파일은 보내지 않습니다.
+- **회로도에 `MPN` 필드가 없으면 BOM의 MPN 열이 빕니다.** 이때 리포트에 "MPN 부재 — 발주용 아님"이 적힙니다.
+- **회전 기준은 보정하지 않습니다.** KiCad 풋프린트의 0도 방향과 조립사 기준이 다를 수 있어, 확인 항목으로 남깁니다.
+
+---
+
+## 설계 → 리뷰 → 보드 → 분석 → 제조 연계
+
+스킬을 순서대로 쓰면 PRD에서 제조 데이터까지 한 흐름으로 이어집니다:
 
 ```
 1. PRD 작성
-2. /kicad-design → 회로도 생성
-3. /kicad-review → 자동 리뷰 + BOM
-4. ERROR 수정 후 재리뷰
-5. ERROR=0 확인 → PCB 레이아웃 진행
+2. /kicad-design      → 회로도 생성
+3. /kicad-review      → 리뷰 + BOM (메인 세션이 호출)
+4. ERROR 수정 후 재리뷰 → ERROR=0 확인
+5. /kicad-design 단계 6 (선택) → .kicad_pcb 에 풋프린트·넷 올리기
+6. KiCad GUI 에서 보드 외곽(테두리) → 배치 → 배선 (사용자)
+7. /kicad-analyze     → 동기화 확인 · 배치 검토 · DRC · SI/PI
+8. /kicad-fabricate   → DRC 게이트 통과 후 제조 출력
 ```
 
-`/kicad-design` 스킬은 생성 완료 후 자동으로 `/kicad-review`를 트리거하므로, 별도 실행 없이 리뷰까지 한 번에 수행됩니다.
+`/kicad-design` 생성이 끝나면 **메인 세션이** `/kicad-review`를 호출합니다
+(서브에이전트는 스킬을 부르지 않습니다).
+
+7단계 `/kicad-analyze`에서 배선 전에 특히 도움이 되는 두 가지:
+
+- **회로도-보드 동기화 확인(3.5)** — IPC-D-356과 회로도 넷리스트를 대조해
+  "회로도는 고쳤는데 F8(Update PCB)을 안 돌린 보드"를 걸러냅니다.
+  이걸 놓치면 이후 PCB 분석이 낡은 보드를 검사해 놓고 "정상"이라고 보고합니다.
+- **배치 검토(4.1)** — 넷별 에어와이어 길이 합, 디커플링 캡 ↔ 전원 핀 거리,
+  크리스탈 ↔ MCU 거리, 차동쌍 두 넷의 길이 차, 코트야드 겹침·클리어런스를 숫자로 봅니다.
+  배치 단계에서 잡으면 배선 후 재작업이 없습니다. `suggest_placement`는 읽기(제안)로만 씁니다.
 
 ---
 
@@ -331,6 +450,7 @@ KiCad **프로그램 자체**를 어떻게 쓰는지 묻는 How-to 질문에 답
 | BOM 추출 | CSV 자동 추출 | 직접 파싱 |
 | PDF 시각적 검토 | PDF 내보내기 → 멀티모달 분석 | 건너뜀 |
 | 생성 파일 검증 | kicad-cli로 열기 테스트 | 괄호 균형 검사만 |
+| 제조 출력(`/kicad-fabricate`) | 거버·드릴·위치·IPC-D-356·BOM 생성 | **불가** — 이 스킬은 kicad-cli가 없으면 시작하지 않습니다 |
 
 ### kicad-cli 설치 확인
 
@@ -364,7 +484,7 @@ kicad-cli --version
 ### kicad-pcb-analyzer
 
 - **역할**: 엔진 감지 → 회로(넷리스트)/PCB 정밀 분석 (넷 추적, ERC/DRC, 핀 충돌, 트랙/라우팅, SI/PI) → 분석 보고서
-- **엔진**: Seeed kicad-mcp-server(`mcp__<서버>__*`) → kicad-cli → 직접 파싱 폴백. `tools:` 미명시로 등록된 모든 도구 상속(MCP 포함)
+- **엔진**: KiCAD-MCP-Server(`mcp__<서버>__*`) → kicad-cli → 직접 파싱 폴백. `tools:` 미명시로 등록된 모든 도구 상속(MCP 포함)
 - **트리거**: `/kicad-analyze` 스킬에서 위임
 - **모델**: opus
 
@@ -382,6 +502,7 @@ kicad-cli --version
 | S-expression 포맷 | `skills/kicad-design/references/kicad-schematic-format.md` | .kicad_sch 생성 포맷 가이드 |
 | KiCad 사용법 인덱스 | `skills/kicad-usage/references/INDEX.md` | 토픽 → 다이제스트 파일·anchor 마스터 맵 (544 섹션) |
 | KiCad 매뉴얼 다이제스트 | `skills/kicad-usage/references/*.md` | KiCad 10.0 공식 매뉴얼(kicad/pcbnew×6/gerbview/cli) 한국어 다이제스트 9종 |
+| 제조 출력 프로파일 | `skills/kicad-fabricate/references/fabrication-outputs.md` | 팹별 프로파일(레이어 세트·X2·드릴·위치 파일) + 산출물 검증 체크리스트 14항목 |
 
 ---
 
@@ -417,7 +538,7 @@ kicad-cli 없이도 동작합니다. 다만 PDF 시각적 검토, 넷리스트 �
 
 ### Q: 생성된 회로도를 KiCad에서 바로 열 수 있나요?
 
-네, KiCad 9.x 형식으로 생성되므로 그대로 열 수 있습니다. 다만 커스텀 심볼은 파일 내부에 임베딩되므로 별도 라이브러리 설치가 필요 없습니다.
+네, KiCad 9.x 또는 10.x(생성 시 맞춘 대상 버전) 형식으로 생성되므로 그대로 열 수 있습니다. 다만 **심볼은 파일에 임베드되지만 풋프린트는 임베드되지 않습니다.** `Footprint` 속성이 가리키는 라이브러리가 KiCad의 `fp-lib-table`에 등록돼 있어야 PCB로 넘어갑니다(등록돼 있지 않으면 Update PCB에서 "footprint not found"로 실패).
 
 ### Q: 기존 회로도를 수정할 수 있나요?
 
@@ -426,6 +547,28 @@ kicad-cli 없이도 동작합니다. 다만 PDF 시각적 검토, 넷리스트 �
 ### Q: 리뷰 결과에서 ERROR가 나오면?
 
 보고서에 구체적 수정 방법이 포함됩니다. "C5를 100nF에서 1μF로 변경", "PB6/PB7에 4.7kΩ 풀업 저항 추가" 같은 조치를 따르면 됩니다.
+
+### Q: 거버를 뽑았는데 파일이 너무 많이 나옵니다
+
+`--layers`를 지정하지 않으면 사용 가능한 레이어를 **전부** 플롯합니다 — Courtyard·Fab·Adhesive·Margin·User_* 까지 나옵니다.
+`/kicad-fabricate`는 레이어 세트를 항상 명시하므로 이 문제가 생기지 않습니다.
+직접 `kicad-cli`를 쓸 때는 `--layers "F.Cu,B.Cu,F.Mask,B.Mask,F.Silkscreen,B.Silkscreen,F.Paste,B.Paste,Edge.Cuts"` 처럼 세트를 적으세요.
+
+### Q: Edge.Cuts 거버가 안 나옵니다
+
+`--common-layers`(`--cl`)에만 넣었을 가능성이 큽니다. 이 옵션은 **별도 파일을 만들지 않고** 지정한 레이어를 다른 플롯 안에 겹쳐 그립니다.
+외곽선을 독립 파일로 받으려면 `--layers` 쪽에 넣어야 합니다.
+
+### Q: 거버 파일 이름이 F_Cu가 아니라 다른 이름입니다
+
+보드에서 레이어 이름을 바꾸면 **출력 파일명도 그 이름을 따릅니다**(예: `F.Cu`를 `Top`으로 바꾼 보드 → `*-Top.gtl`).
+`--layers`에 넘기는 이름은 반대로 항상 표준 이름(`F.Cu`, `In1.Cu`, `Edge.Cuts`)입니다.
+그래서 산출물 검증은 파일명 문자열이 아니라 **파일 수와 실제 목록**으로 합니다.
+
+### Q: 제조 출력에서 DRC error가 나서 중단됐습니다
+
+의도된 동작입니다. DRC를 통과하지 못한 보드의 제조 파일은 만들지 않습니다.
+`/kicad-analyze`로 위반 항목을 확인하고 KiCad에서 수정한 뒤, 저장하고 다시 `/kicad-fabricate`를 실행하세요.
 
 ### Q: 어떤 형식의 PRD를 넣어야 하나요?
 

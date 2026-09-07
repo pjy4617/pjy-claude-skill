@@ -33,7 +33,7 @@ RTL 설계 → 시뮬레이션 → 합성 → Bitstream<br>
 <td align="center" width="25%">
 <img src="assets/mascot-kicad.png" width="220" alt="KiCad Mascot"><br>
 <b>KiCad Schematic</b><br>
-PRD → 회로도 생성 + 8단계 리뷰 + BOM + 회로/PCB 분석(SI/PI) + KiCad 10.0 사용법 안내<br>
+PRD → 회로도 생성(선택: 보드 생성) + 11단계 리뷰(ERC·린트 기계 판정 우선) + BOM(MPN/LCSC) + 회로/PCB 분석(SI/PI) + 제조 출력(거버/드릴/위치/IPC-D-356) + KiCad 10.0 사용법 안내<br>
 5 스킬 + 4 에이전트
 </td>
 <td align="center" width="25%">
@@ -208,7 +208,7 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 - KiCad 9.0+ (`kicad-cli` 명령어 사용 가능하면 최적, 없어도 동작)
 - Linux 환경 (Ubuntu 20.04+, WSL2 포함)
 - 인터넷 연결 (데이터시트 웹 검색용)
-- (선택) [Seeed kicad-mcp-server](https://github.com/Seeed-Studio/kicad-mcp-server) — `kicad-analyze`의 PCB 신호/전원 무결성(SI/PI)·정밀 트랙 분석용. KiCad 9.0+ 로컬 설치 전제. 미등록 시 `kicad-cli`/직접 파싱으로 폴백
+- (선택) [KiCAD-MCP-Server](https://github.com/mixelpixx/KiCAD-MCP-Server) — `kicad-analyze`의 정밀 트랙·존 기하 분석용(SI/PI 판정의 입력). KiCad 9.0+ 로컬 설치 + Node.js 18+ 전제. 미등록 시 `kicad-cli`/직접 파싱으로 폴백
 
 </details>
 
@@ -405,14 +405,14 @@ Claude Code 터미널에서 다음을 입력합니다. **한 번만 하면 됩�
 /plugin install kicad@pjy-skills
 ```
 
-5개 스킬이 한 번에 활성화됩니다(설계·리뷰·분석·설정 + KiCad 사용법 안내 `/kicad-usage`). 이후 에이전트를 설치합니다:
+6개 스킬이 한 번에 활성화됩니다(설계·리뷰·분석·제조 출력 `/kicad-fabricate`·설정 + KiCad 사용법 안내 `/kicad-usage`). 이후 에이전트를 설치합니다:
 
 ```
 /kicad-setup
 ```
 
 셋업 시 프로젝트 경로를 질문합니다. 지정한 경로에 4개 에이전트와 CLAUDE.md가 생성됩니다.
-PCB 신호/전원 무결성(SI/PI)까지 정밀 분석하려면 `/kicad-setup --with-mcp`로 Seeed kicad-mcp-server 등록을 안내받을 수 있습니다(KiCad 9.0+ 로컬 설치 전제).
+PCB 트랙·존 기하 기반 정밀 분석(SI/PI 판정 포함)까지 하려면 `/kicad-setup --with-mcp`로 KiCAD-MCP-Server 등록을 안내받을 수 있습니다(KiCad 9.0+ 로컬 설치 + Node.js 18+ 전제).
 
 #### Parallel Delegation (병렬 위임 워크플로) 설치
 
@@ -764,32 +764,36 @@ WMX3.7 라이브러리를 **사용하는 애플리케이션**(장비 제어 SW)�
 | 회로도 생성 | "이 PRD로 회로도 만들어줘" | kicad-design 스킬 + designer 에이전트 |
 | 회로도 리뷰 | "회로도 리뷰해줘" | kicad-review 스킬 + reviewer 에이전트 |
 | BOM 생성 | "BOM 만들어줘" | kicad-review 스킬 + bom-generator 에이전트 |
-| 데이터시트 비교 | "IC 데이터시트 확인해줘" | kicad-review 스킬 (단계 6) |
+| 데이터시트 비교 | "IC 데이터시트 확인해줘" | kicad-review 스킬 (단계 9) |
 | PCB 분석 | "PCB 분석해줘 / DRC 돌려줘" | kicad-analyze 스킬 + pcb-analyzer 에이전트 |
 | 넷 추적 | "+3V3 넷에 뭐 연결됐는지 추적해줘" | kicad-analyze 스킬 (단계 3) |
-| 신호/전원 무결성 | "차동 페어 임피던스·길이 매칭 확인해줘" | kicad-analyze 스킬 (단계 5, Seeed MCP 권장) |
+| 신호/전원 무결성 | "차동 페어 임피던스·길이 매칭 확인해줘" | kicad-analyze 스킬 (단계 5, KiCAD-MCP-Server 권장) |
+| **제조 출력** | "거버 뽑아줘 / JLCPCB에 보낼 제조 파일 만들어줘" | **kicad-fabricate 스킬** (DRC 게이트 → 존 채움 → 동기화 확인 → 거버/드릴/위치/IPC-D-356/BOM) |
 | 부품 변경 | "RJ45로 바꿔줘" | kicad-design 에이전트 (수정 모드) |
 | **KiCad 사용법** | "차동쌍 어떻게 배선해? / 거버 어떻게 내보내? / 커스텀 DRC 룰 문법? / 단축키 알려줘" | **kicad-usage 스킬** (KiCad 10.0 매뉴얼 다이제스트) |
-| 에이전트 설치 | "KiCad 설정해줘" | kicad-setup 스킬 (`--with-mcp`로 Seeed MCP 등록) |
+| 에이전트 설치 | "KiCad 설정해줘" | kicad-setup 스킬 (`--with-mcp`로 KiCAD-MCP-Server 등록) |
 
 #### KiCad 전체 워크플로우
 
 ```
 "이 PRD로 회로도 만들어줘"       ← kicad-design (5단계)
     ↓  요구사항 분석 → IC 선정 → 데이터시트 수집 → .kicad_sch 생성 → 리뷰
-"회로도 리뷰해줘"                ← kicad-review (8단계)
-    ↓  PDF 시각 검토 → 라이브러리 비교 → 체크리스트 → 데이터시트 대조
+"회로도 리뷰해줘"                ← kicad-review (11단계)
+    ↓  ERC → 풋프린트 해석 → 구조 린트(기계 판정) → PDF 시각 검토 → 라이브러리 핀 대조 → 체크리스트 → 데이터시트 대조
 "BOM 만들어줘"                   ← BOM 마크다운 생성
     ↓
-KiCad GUI에서 와이어 보정 (5~15분)
+KiCad GUI에서 와이어 보정 (핀 수에 비례 — 부품 20개 이하 초안에서만 실용적)
     ↓
 "ERROR 수정해줘"                 ← ERROR 항목 수정 후 재리뷰
     ↓ (ERROR=0 확인)
 PCB 레이아웃 진행
     ↓
 "PCB 분석해줘 / DRC 돌려줘"      ← kicad-analyze (6단계)
-    ↓  넷 추적 → ERC/DRC → 트랙/라우팅 → 신호·전원 무결성(SI/PI)
-       (Seeed MCP 등록 시 SI/PI 정밀, 없으면 kicad-cli/직접 파싱 폴백)
+    ↓  넷 추적 → ERC/DRC → 회로도-보드 동기화 확인 → 배치 검토 → 트랙/라우팅 → 신호·전원 무결성(SI/PI)
+       (KiCAD-MCP-Server 등록 시 트랙·존 기하 정밀, 없으면 kicad-cli/직접 파싱 폴백)
+    ↓ (DRC ERROR=0)
+"거버 뽑아줘"                    ← kicad-fabricate (9단계)
+    ↓  DRC 게이트 → 존 채움 → 동기화 확인 → 거버 → 드릴 → 위치 파일 → BOM → 검증 리포트
 ```
 
 ---
@@ -1275,10 +1279,12 @@ pjy-claude-skill/
 │   │   ├── skills/ (5개)          ← 회로도 설계, 리뷰+BOM, 회로/PCB 분석, KiCad 사용법, 환경 설정
 │   │   │   ├── kicad-design/      ← PRD → 회로도 생성
 │   │   │   │   └── references/    ← S-expression 포맷 + .kicad_pro 가이드
-│   │   │   ├── kicad-review/      ← 8단계 리뷰 + BOM 생성
+│   │   │   ├── kicad-review/      ← 11단계 리뷰(ERC·풋프린트 해석·구조 린트 우선) + BOM 생성(MPN/LCSC)
 │   │   │   │   └── references/    ← 체크리스트, 파싱, 데이터시트, Ethernet 프런트엔드
-│   │   │   ├── kicad-analyze/     ← 회로/PCB 정밀 분석 (ERC/DRC, 넷 추적, SI/PI)
-│   │   │   │   └── references/    ← Seeed MCP 도구 매핑, PCB 분석·SI/PI 가이드
+│   │   │   ├── kicad-analyze/     ← 회로/PCB 정밀 분석 (ERC/DRC, 넷 추적, 동기화 확인, 배치 검토, SI/PI)
+│   │   │   │   └── references/    ← KiCAD-MCP-Server 도구 매핑, PCB 분석·SI/PI 가이드
+│   │   │   ├── kicad-fabricate/   ← 제조 출력 (DRC 게이트 → 거버/드릴/위치/IPC-D-356/BOM)
+│   │   │   │   └── references/    ← 팹별 프로파일 + 산출물 검증 체크리스트
 │   │   │   ├── kicad-usage/       ← KiCad 10.0 사용법 안내 (공식 매뉴얼 다이제스트)
 │   │   │   │   └── references/    ← kicad-project / pcbnew(6) / gerbview / kicad-cli 다이제스트 + INDEX
 │   │   │   └── kicad-setup/

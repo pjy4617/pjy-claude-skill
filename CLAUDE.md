@@ -66,18 +66,20 @@ plugins/
 │   ├── agents/                    ← wmx3app-architect/implementer/test-engineer/usage-reviewer/eni-builder
 │   ├── claude-md/CLAUDE.md
 │   └── docs/
-├── kicad/                         ← KiCad 회로도 플러그인 (5 스킬 + 4 에이전트)
+├── kicad/                         ← KiCad 회로도 플러그인 (6 스킬 + 4 에이전트)
 │   ├── plugin.json
 │   ├── skills/
 │   │   ├── kicad-design/          ← PRD/설계사양서 → 회로도 생성
 │   │   │   └── references/        ← S-expression 포맷 가이드
-│   │   ├── kicad-review/          ← 8단계 회로도 설계 리뷰 + BOM 생성
-│   │   │   └── references/        ← 체크리스트, 파싱 가이드, 데이터시트 검색
-│   │   ├── kicad-analyze/         ← 회로(넷리스트)/PCB 정밀 분석 (ERC/DRC, 넷 추적, 트랙, SI/PI)
-│   │   │   └── references/        ← Seeed MCP 도구 매핑·폴백, PCB 분석·SI/PI 가이드
+│   │   ├── kicad-review/          ← 11단계 회로도 설계 리뷰(ERC·풋프린트 해석·구조 린트 기계 판정 우선) + BOM 생성(MPN/LCSC 열, --sourcing)
+│   │   │   └── references/        ← 체크리스트(S 구조 린트·P 풋프린트 해석 포함), 파싱 가이드(fp-lib-table 파싱), 데이터시트 검색
+│   │   ├── kicad-analyze/         ← 회로(넷리스트)/PCB 정밀 분석 (ERC/DRC, 넷 추적, 회로도-보드 동기화 확인, 배치 검토, 트랙, SI/PI)
+│   │   │   └── references/        ← KiCAD-MCP-Server 도구 매핑·폴백·실전 함정, PCB 분석·SI/PI 가이드(스택업 파싱)
+│   │   ├── kicad-fabricate/       ← 제조 출력 (DRC 게이트 → 존 채움 → 회로도-보드 동기화 → 거버/드릴/위치 파일/IPC-D-356/BOM, kicad-cli 우선·MCP 병기)
+│   │   │   └── references/        ← fabrication-outputs (팹별 프로파일 JLCPCB/PCBWay/일반 + 산출물 검증 체크리스트)
 │   │   ├── kicad-usage/           ← KiCad 10.0 *사용법* 안내 (공식 매뉴얼 다이제스트, How-to Q&A)
 │   │   │   └── references/        ← INDEX + kicad-project / pcbnew-1~6 / gerbview / kicad-cli 다이제스트 (docs.kicad.org 10.0 HTML→한국어 요약)
-│   │   └── kicad-setup/           ← 에이전트 설치 (--with-mcp로 Seeed MCP 등록 안내)
+│   │   └── kicad-setup/           ← 에이전트 설치 (--with-mcp로 KiCAD-MCP-Server 등록 안내)
 │   ├── agents/                    ← schematic-designer/reviewer/bom-generator/pcb-analyzer
 │   ├── claude-md/CLAUDE.md
 │   └── docs/

@@ -1,7 +1,12 @@
-# KiCad 9.x 회로도 S-expression 생성 가이드
+# KiCad 회로도 S-expression 생성 가이드
 
 > `.kicad_sch` 파일을 직접 생성할 때 참조하는 S-expression 포맷 가이드.
-> KiCad 9.0 (version 20250114) 기준.
+> 아래 예시는 KiCad 9.0 (version 20250114) 기준으로 적혀 있다.
+>
+> **대상 버전에 맞춘다** — KiCad 9: `(version 20250114)` / `(generator_version "9.0")`,
+> KiCad 10: `(version 20260101)` / `(generator_version "10.0")`.
+> 생성 전에 `kicad-cli version`으로 사용자의 메이저 버전을 확인한다. KiCad 10은 9 파일을
+> 열지만 9는 10 파일을 열지 못한다.
 
 ## 목차
 
@@ -19,9 +24,9 @@
 
 ```lisp
 (kicad_sch
-  (version 20250114)
+  (version 20250114)          ;; KiCad 9: 20250114 / KiCad 10: 20260101 — 대상 버전에 맞춘다
   (generator "eeschema")
-  (generator_version "9.0")
+  (generator_version "9.0")   ;; KiCad 10이면 "10.0"
   (uuid "고유-UUID-문자열")
   (paper "A3")         ;; A4, A3, A2 등
   (title_block
@@ -149,8 +154,13 @@ IC는 데이터시트 핀 배치를 기반으로 정의한다:
 | `power_in` | 전원 입력 (VCC, GND) |
 | `power_out` | 전원 출력 (레귤레이터 출력) |
 | `tri_state` | 트라이스테이트 출력 |
-| `unconnected` | 미연결 핀 (NC) |
+| `open_collector` | 오픈 컬렉터 출력 (I2C SDA/SCL 드라이버, INT# 출력) |
+| `open_emitter` | 오픈 이미터 출력 |
+| `no_connect` | 미연결 핀 (NC) |
 | `free` | 자유 핀 |
+| `unspecified` | 전기 타입 미지정 |
+
+주의: KiCad가 인식하는 전기 타입은 `input output bidirectional tri_state passive free unspecified power_in power_out open_collector open_emitter no_connect` 12종이 전부다. `unconnected` 같은 이름을 쓰면 KiCad가 파싱 오류를 낸다.
 
 ---
 
@@ -168,7 +178,7 @@ IC는 데이터시트 핀 배치를 기반으로 정의한다:
   (on_board yes)
   (dnp no)                    ;; Do Not Place 여부
   (uuid "고유-UUID")
-  (property "Reference" "U_FLASH"
+  (property "Reference" "U3"
     (at 127.0 68.58 0)
     (effects (font (size 1.524 1.524)))
   )
@@ -188,8 +198,19 @@ IC는 데이터시트 핀 배치를 기반으로 정의한다:
   (pin "1" (uuid "핀1-UUID"))
   (pin "2" (uuid "핀2-UUID"))
   ;; ...
+  ;; 참조 지정자의 정본 — 시트 경로별로 저장된다
+  (instances
+    (project "{프로젝트명}"
+      (path "/{루트UUID}"
+        (reference "U3")
+        (unit 1)
+      )
+    )
+  )
 )
 ```
+
+KiCad 8 이후 참조 지정자(Reference)의 정본은 `(property "Reference" ...)`가 아니라 이 `(instances ...)` 블록이다. `(project ...)`에는 확장자를 뺀 실제 프로젝트명을, `(path ...)`에는 루트 시트의 `(uuid ...)` 값을 `/` 뒤에 넣는다. 이 블록이 없으면 KiCad가 `Reference` 속성을 폴백으로 읽어 열리기는 하지만, 같은 서브시트 파일을 여러 번 인스턴스하는 설계(채널 복제)에서 참조가 충돌하고 첫 저장 때 KiCad가 블록을 새로 만든다.
 
 ---
 
@@ -322,20 +343,20 @@ IC는 데이터시트 핀 배치를 기반으로 정의한다:
     (at 38.1 69.16 0)
     (effects (font (size 1.27 1.27)) (justify left top))
   )
-  ;; 시트 핀 (계층 연결)
-  (pin "+3V3" input
+  ;; 시트 핀 (계층 연결) — 신호만 통과시킨다
+  (pin "SPI_CLK" output
     (at 38.1 45.72 180)
     (effects (font (size 1.27 1.27)) (justify left))
     (uuid "시트핀-UUID")
   )
-  (pin "GND" input
+  (pin "nRESET" input
     (at 38.1 50.8 180)
     (effects (font (size 1.27 1.27)) (justify left))
     (uuid "시트핀-UUID")
   )
   (instances
-    (project ""
-      (path "/루트-UUID"
+    (project "{프로젝트명}"
+      (path "/{루트UUID}"
         (page "2")
       )
     )
@@ -343,12 +364,14 @@ IC는 데이터시트 핀 배치를 기반으로 정의한다:
 )
 ```
 
+주의: 전원 레일(`+3V3`, `GND` 등)은 시트 핀을 만들지 않는다 — `power:` 심볼이 그 자체로 전역 넷이라, 서브시트에서 같은 전원 심볼을 배치하면 계층 핀 없이도 같은 넷이 된다. 전원을 시트 핀으로 넘기면 서브시트마다 계층 레이블을 또 그려야 하고, `GND` 시트 핀에 `input`을 붙이는 것은 의미가 없다.
+
 ### 서브시트 내부
 
 서브시트에서는 `(hierarchical_label ...)` 로 상위 시트와 연결한다:
 
 ```lisp
-(hierarchical_label "+3V3"
+(hierarchical_label "nRESET"
   (shape input)
   (at 25.4 38.1 180)
   (effects (font (size 1.27 1.27)) (justify right))
@@ -436,15 +459,21 @@ JSON 형식이며, 최소한 아래 구조를 갖추면 된다.
         "diff_pair_width": 0.1,
         "diff_pair_gap": 0.15
       }
+    ],
+    "netclass_patterns": [
+      { "netclass": "Power", "pattern": "+*" },
+      { "netclass": "Diff_100R", "pattern": "MDI_*" }
     ]
   }
 }
 ```
 
+주의: **클래스 정의(`classes`)와 패턴 배정(`netclass_patterns`)은 한 쌍이다.** `classes`에 클래스를 만들기만 하고 넷을 배정하지 않으면 아무 효과가 없다 — `Diff_100R`을 정의해 놓고도 DRC는 그 넷을 `Default` 폭으로 검사한다. 배정은 `netclass_patterns`(넷 이름 와일드카드 매칭) 또는 회로도의 넷클래스 디렉티브 라벨로 한다.
+
 ### 생성 규칙
 
 - 파일명은 루트 `.kicad_sch`와 동일한 이름 (확장자만 `.kicad_pro`)
-- `meta.version`은 `2` (KiCad 9.x)
+- `meta.version`은 KiCad 9.x면 `2`, KiCad 10.x면 `3` (실측: `/usr/share/kicad/demos/*/*.kicad_pro`)
 - 넷클래스는 설계에 맞게 추가 (전원, 차동 페어 등)
 - `text_variables`에 프로젝트 정보를 넣으면 타이틀 블록에서 `${COMPANY}` 등으로 참조 가능
 
@@ -454,7 +483,7 @@ JSON 형식이며, 최소한 아래 구조를 갖추면 된다.
 
 - 모든 요소에 고유 UUID를 부여해야 한다 (`uuid.uuid4()` 사용)
 - 핀 연결은 와이어의 좌표가 핀의 절대 좌표와 정확히 일치해야 한다
-- `lib_symbols`에 정의되지 않은 `lib_id`를 참조하면 KiCad에서 열리지 않는다
+- `lib_symbols`에 정의되지 않은 `lib_id`를 참조해도 KiCad는 열린다. 다만 해당 심볼이 빈 자리표시(물음표 상자)로 그려지고 핀이 없어 넷 연결이 사라진다
 - 전원 심볼(`power:`)은 `(power)` 플래그가 필수
 - 수동 소자의 Reference 접두사: C(캡), R(저항), L(인덕터), D(다이오드)
 - `(in_bom no)` 설정 시 BOM에서 제외됨

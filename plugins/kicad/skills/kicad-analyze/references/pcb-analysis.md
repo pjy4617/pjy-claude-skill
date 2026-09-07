@@ -1,6 +1,6 @@
 # PCB 물리 분석 + SI/PI 도메인 가이드
 
-`.kicad_pcb` 분석과 신호/전원 무결성 검토의 판정 기준. Seeed MCP가 없을 때의 **직접 파싱** 방법도 포함.
+`.kicad_pcb` 분석과 신호/전원 무결성 검토의 판정 기준. MCP가 없을 때의 **직접 파싱** 방법도 포함.
 
 ---
 
@@ -50,7 +50,104 @@ fp_cnt  = len(re.findall(r'\(footprint\b', txt))
 ```
 
 > 직접 파싱은 트랙 **길이/폭/넷/레이어**, 비아·풋프린트 카운트까지는 신뢰할 만하다.
-> 그러나 임피던스(스택업 유전율 필요), reference plane 연속성, IR drop은 **계산 불가** → Seeed MCP 필요.
+> 존 채움(fill) 결과와 실제 클리어런스는 pcbnew 없이 재현되지 않으므로 **MCP(`query_zones`/`check_clearance`)가 필요**하다.
+>
+> 임피던스와 IR drop 절대값은 **스택업이 파일에 있으면 근사 계산한다**(아래 "스택업 파싱과 임피던스 근사" 절).
+> 스택업이 비어 있으면 "미수행 — Board Setup > Physical Stackup 미설정"으로 표시한다.
+
+---
+
+## 스택업 파싱과 임피던스 근사
+
+KiCad는 Board Setup > Physical Stackup을 채우면 그 값을 `.kicad_pcb`에 저장한다.
+**서버에 스택업 읽기 도구는 없으므로 이 블록은 직접 파싱한다** — MCP 등록 여부와 무관하게 폴백 모드에서도 같은 계산이 된다.
+
+```
+(setup
+  (stackup
+    (layer "F.Cu" (type "copper") (thickness 0.035))
+    (layer "dielectric 1" (type "prepreg") (thickness 0.0994) (material "2116 RC58%")
+      (epsilon_r 4.45) (loss_tangent 0.02))
+    (layer "In1.Cu" (type "copper") (thickness 0.0152))
+    ...))
+```
+
+S-expression은 중첩되므로 **정규식만으로 블록을 자르면 안 된다**(비탐욕 매칭이 첫 `)`에서 끊긴다).
+괄호 depth를 세어 블록을 잘라낸 뒤, 그 안에서만 필드를 정규식으로 뽑는다.
+
+```python
+import re
+
+def block(src, key, start=0):
+    """(key ...) 블록을 괄호 depth 로 잘라낸다 — 중첩은 정규식으로 못 센다."""
+    m = re.compile(r'\(' + key + r'[\s(]').search(src, start)
+    if not m:
+        return ''
+    i, d = m.start(), 0
+    for j in range(i, len(src)):
+        if src[j] == '(':
+            d += 1
+        elif src[j] == ')':
+            d -= 1
+            if d == 0:
+                return src[i:j + 1]
+    return ''
+
+txt = open(pcb_path, encoding='utf-8').read()
+stackup = block(txt, 'stackup')
+
+# 층 순서대로 (이름, type, thickness, epsilon_r) 추출 — 없는 필드는 None
+layers = []
+for lm in re.finditer(r'\(layer\s+"([^"]+)"', stackup):
+    body = block(stackup, 'layer', lm.start())
+    def f(key):
+        km = re.search(r'\(%s\s+([^\s)"]+)\)' % key, body)
+        return float(km.group(1)) if km else None
+    tm = re.search(r'\(type\s+"([^"]+)"\)', body)
+    layers.append({
+        'name': lm.group(1),
+        'type': tm.group(1) if tm else None,   # "copper" / "core" / "prepreg" / 마스크·실크
+        'thickness': f('thickness'),           # mm
+        'epsilon_r': f('epsilon_r'),
+    })
+
+# 스택업이 없거나 dielectric 에 epsilon_r 이 없으면 임피던스 판정은 "미수행"
+has_stackup = any(l['epsilon_r'] is not None for l in layers)
+```
+
+실측(KiCad 10 데모 보드): 4층 `CM5_MINIMA_3.kicad_pcb`는 층 17개에 `dielectric 1` = prepreg/0.0994 mm/Er 4.45,
+2층 `ecc83-pp.kicad_pcb`는 층 9개에 `dielectric 1` = core/1.51 mm/Er 4.5가 나온다.
+`layers`는 **파일에 적힌 물리 순서**이므로, 신호 층의 인덱스 앞뒤를 훑어 인접 dielectric과 기준 평면을 찾는다.
+
+판정에 쓰는 값: 신호 층 바로 위/아래 dielectric 층의 `epsilon_r`(Er)과 `thickness`(H),
+신호 층 자신의 copper `thickness`(T), 그리고 `query_traces`에서 받은 트랙 폭(W). 단위는 전부 mm.
+
+**외층 마이크로스트립(IPC-2141 근사)** — 신호 층이 F.Cu/B.Cu 이고 한쪽만 기준 평면일 때:
+
+```
+Z0 = (87 / sqrt(Er + 1.41)) * ln(5.98 * H / (0.8 * W + T))      [Ω]
+```
+
+**내층 스트립라인(IPC-2141 근사)** — 신호 층이 두 기준 평면 사이에 있을 때(H는 평면 간 총 두께):
+
+```
+Z0 = (60 / sqrt(Er)) * ln(4 * H / (0.67 * pi * (0.8 * W + T)))   [Ω]
+```
+
+두 식 모두 근사다. 계산값은 목표값(아래 SI 표의 50/90/100 Ω) 대비 **±10% 이내면 OK,
+±10~20%면 WARN, 그 밖이면 ERROR**로 판정하고, 보고서에는 반드시 "IPC-2141 근사식, 스택업 값 기준"임을 밝힌다.
+차동 임피던스는 이 단일선 값에 페어 간격 의존 보정이 필요하므로, 정밀값이 필요하면
+KiCad의 Board Setup > Physical Stackup > Impedance(또는 Tuning profiles) 계산 결과를 쓰도록 안내한다.
+
+**IR drop 근사**: copper 층의 `thickness`(T, mm)가 있으면 트랙 저항을 구할 수 있다.
+
+```
+R = rho * L / (W * T)      rho(구리) = 1.68e-5 Ω·mm,  L·W·T 는 mm
+V_drop = R * I
+```
+
+L은 `query_traces` 세그먼트 좌표 합, W는 그 넷의 최소 트랙 폭을 쓴다(최악값 기준).
+스택업이 없어 T를 모르면 1oz = 0.035 mm 를 **가정값으로 명시**하거나 "미수행"으로 둔다.
 
 ---
 
@@ -83,7 +180,10 @@ fp_cnt  = len(re.findall(r'\(footprint\b', txt))
 
 ## 신호 무결성(SI) 도메인 가이드
 
-> 정밀 임피던스/길이매칭은 `analyze_pcb_signal_integrity`(Seeed MCP) 결과를 1차로 신뢰. 아래는 검토 항목과 목표값.
+> **SI 전용 분석 도구는 없다.** MCP `query_traces`(넷별 세그먼트 좌표·폭·레이어)로 기하를 받아
+> 길이·폭을 직접 계산하고(레이어 전환(비아) 수는 MCP로 오지 않으므로 `(via ...)` 직접 파싱), 아래 목표값과 대조해 판정한다.
+> 절대 임피던스는 `(setup (stackup ...))`의 `epsilon_r`·`thickness`로 근사 계산한다("스택업 파싱과 임피던스 근사" 절).
+> 스택업이 비어 있을 때만 폭/레이어 구성이 목표 범위에 드는지로 대체 판정한다.
 
 | 인터페이스 | 임피던스 목표 | 길이 매칭 | 비고 |
 |-----------|--------------|-----------|------|
@@ -98,11 +198,16 @@ fp_cnt  = len(re.findall(r'\(footprint\b', txt))
 1. 고속 넷 식별(넷 이름 패턴: `USB_D`, `ETH_`, `*_DQ*`, `LVDS_`, `*_P`/`*_N`).
 2. 페어(`_P`/`_N`, `+`/`−`) 매칭 → 페어 내 길이 편차 계산.
 3. 레이어 전환(비아) 수 → reference plane 불연속 위험.
-4. 트랙 폭 → 스택업 대비 목표 임피던스 충족 여부(MCP 결과 우선).
+4. 트랙 폭 + 스택업(`epsilon_r`·`thickness`) → 마이크로스트립/스트립라인 근사식으로 Z0 계산 후 목표값 대비 판정.
+   스택업이 없으면 폭·레이어 구성만으로 대체 판정하고 "미수행 — Board Setup > Physical Stackup 미설정"을 함께 적는다.
 
 ---
 
 ## 전원 무결성(PI) 도메인 가이드
+
+> **PI 전용 분석 도구도 없다.** MCP `query_zones`(레이어별 카퍼 존 = 평면 커버리지),
+> `query_traces`(전원 넷 폭), `get_net_pads` + `get_component_list`(디커플링 캡 ↔ 전원 핀 거리)로
+> 입력을 모아 아래 기준으로 판정한다.
 
 | 항목 | 확인 | 판정 |
 |------|------|------|
@@ -110,7 +215,7 @@ fp_cnt  = len(re.findall(r'\(footprint\b', txt))
 | 평면 분할 | split plane이 고속 넷 reference를 끊는가 | ERROR — return path 단절 |
 | 디커플링 근접 | IC 전원핀 ↔ 디커플링 캡 거리 | > 몇 mm면 WARN |
 | 비아 stitching | 평면 간 연결 비아 충분 | 부족 시 WARN |
-| IR drop | 전원 경로 저항 × 전류 | MCP `analyze_pcb_power_integrity` 결과 기준 |
+| IR drop | 전원 경로 저항 × 전류 | 스택업의 copper `thickness`가 있으면 `R = rho*L/(W*T)`로 근사 계산. 없으면 1oz(0.035 mm) 가정값을 명시하거나 트랙 폭·평면 커버리지로 대체 판정 |
 
 ---
 

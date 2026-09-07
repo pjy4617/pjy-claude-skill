@@ -116,7 +116,7 @@
 - `#version_control_preferences` — Version control preferences
 - `#data_collection_preferences` — Data collection preferences
 - `#packages_and_updates_preferences` — Packages and updates preferences
-- `#plugins_preferences` — Plugins preferences
+- `#plugins_preferences` — Plugins preferences (외부 도구(MCP 등)의 IPC 연동은 여기서 Enable KiCad API 로 켠다)
 - `#maintenance_preferences` — Maintenance preferences
 - `#actions_reference` — Actions reference
 - `#kicad_project_manager` — KiCad Project Manager
