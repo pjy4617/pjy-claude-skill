@@ -83,7 +83,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__pdf-reader__read_pdf
 ### 3. 텍스트화 추출 (포맷별)
 | 포맷 | 도구 | 참조 |
 |------|------|------|
-| PDF | `mcp__pdf-reader__read_pdf` | `references/pdf-extract.md` |
+| PDF | `mcp__pdf-reader__read_pdf` → 실패 시 `pdftotext -layout` → 둘 다 실패 시에만 이미지 판독 | `references/pdf-extract.md` |
 | HTML | Read 직접 | `references/html-extract.md` |
 | TXT/MD | Read 직접 | `references/txt-md-extract.md` |
 | EPUB | `Expand-Archive` → 내부 XHTML Read | `references/epub-extract.md` |
@@ -141,7 +141,7 @@ publication_date: <ISO 날짜>
 language: <BCP47>
 sha256: <hex>
 indexed_at: <ISO 타임스탬프>
-extractor: <mcp-pdf-reader|claude-read|expand-archive|hh-decompile>
+extractor: <mcp-pdf-reader|pdftotext-layout|page-render|claude-read|expand-archive|hh-decompile>
 ---
 
 # <제목> — 다이제스트
@@ -162,7 +162,7 @@ extractor: <mcp-pdf-reader|claude-read|expand-archive|hh-decompile>
 | ... | §x.y, p.NN |
 
 ## 사용 가이드
-원본 핀포인트 추출 시: `mcp__pdf-reader__read_pdf` (PDF) / Read (그 외).
+원본 핀포인트 추출 시: `mcp__pdf-reader__read_pdf` (PDF, 실패 시 `pdftotext -layout -f <시작> -l <끝>`) / Read (그 외).
 ```
 
 **코드베이스(`format: codebase`)는 본문 섹션 구성이 다르다** — 페이지 기반 §요약 대신 `개요 → 디렉토리 맵 → 데이터 모델 → 핵심 서브시스템 → 아키텍처 규칙 → 함정 → 빌드/게이트 → 테스트 자산 → 사용 가이드(핀포인트 파일:line)`. 프론트매터는 `pages/publication_date` 대신 `loc/files/version(git ref)/extractor: claude-read`. 전체 형식·예시는 `references/codebase-extract.md`.
@@ -230,6 +230,7 @@ LLM 요약은 비결정적이지만 다음 보장:
    조각 번호는 다이제스트 내부 위치일 뿐 원본 페이지가 아니다
 4. 디테일이 부족하면 `index.md`에서 위치 포인터 → 원본의 해당 부분만 추출
    - PDF: `mcp__pdf-reader__read_pdf` `pages: "82-83,100-102"` (혼합 범위 지원)
+     — 에러/빈 텍스트면 `pdftotext -layout -enc UTF-8 -f 82 -l 83 "<abs>" -`로 재시도 (MCP 버그 회피)
    - HTML/EPUB/DOCX/CHM: 추출된 마크다운 또는 원본의 해당 섹션
    - **codebase: `index.md`의 심볼→파일로 `Read`, 위치 모르면 `Grep`(정의/사용처)/`Glob`(파일 패턴) — PDF MCP 불필요**
 5. 인덱싱되지 않은 매뉴얼/코드베이스면 사용자에게 `/manual-digest <path 또는 dir>` 등록 제안
@@ -246,7 +247,10 @@ LLM 요약은 비결정적이지만 다음 보장:
 | ID 충돌 (project + global) | project가 override; `--scope global` 명시 시 경고 |
 | 메타데이터 Title 없음 | 파일명 기반 자동 생성, 사용자 확인 |
 | 1000p+ 대형 PDF | 페이지 범위 청크 분할 호출 (예: 1-100, 101-200…) |
-| 텍스트 레이어 없는 스캔 PDF | "OCR 필요, V2 이후 지원" 명시 후 종료 |
+| `read_pdf`가 `invalid horizontal advance` 등 에러 반환 | **PDF 손상이 아니라 MCP 버그다.** `pdftotext -layout`으로 재시도 — 이미지 렌더링으로 넘어가지 않는다 |
+| `read_pdf`가 빈 텍스트 반환 | 스캔본으로 단정하지 않는다 — `pdftotext -layout`으로 3페이지 이상 표본 검증 후 판정 |
+| 텍스트 레이어 없는 스캔 PDF (L1·L2 모두 실패 확인) | "OCR 필요, V2 이후 지원" 명시 후 종료 |
+| `pdftotext` 미설치 (주로 Windows) | "판정 불가"로 처리 — poppler 설치 안내, 스캔본으로 기록하지 않는다 |
 | 디렉토리 입력 (codebase) | `format: codebase`로 분기, PDF MCP 없이 진행 (`references/codebase-extract.md`) |
 | 코드베이스 추출 목적 불명 | 인제스트 시작 시 목적 1줄 확인 (재사용/온보딩/리팩토링/디버깅) |
 | git 레포 아닌 디렉토리 | `version`을 디렉토리 mtime/파일목록 기반으로, `--update`는 파일목록 diff 폴백 |

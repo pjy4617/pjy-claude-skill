@@ -175,7 +175,8 @@ inject_marker() {
 4. 답변에 출처(§/p./scope) 명시 — 조각 인용 시에도 출처는 원본 기준(§/p.)
 5. 인덱싱되지 않은 매뉴얼이면 `/manual-digest <path>` 등록 제안
 
-PDF 핀포인트 추출: `mcp__pdf-reader__read_pdf` `pages: "<범위 또는 혼합 범위>"`
+PDF 핀포인트 추출: `mcp__pdf-reader__read_pdf` `pages: "<범위 또는 혼합 범위>"` — 에러(`invalid horizontal
+advance` 등)나 빈 텍스트면 `pdftotext -layout`으로 재시도한다. MCP 실패를 스캔본으로 단정하지 않는다.
 <!-- manual-digest:end -->
 EOF
     )"
