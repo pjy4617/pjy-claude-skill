@@ -233,9 +233,9 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 <details>
 <summary><b>Manual Digest 플러그인</b></summary>
 
-- Claude Code + Node.js (npx 사용)
-- PDF 추출용 MCP: `@sylphx/pdf-reader-mcp` — `manual-digest-setup` 스킬이 자동 등록
-- Windows: `cmd /c npx -y @sylphx/pdf-reader-mcp` 래퍼 사용 (PowerShell 환경 안정성)
+- Claude Code + Python 3.8+
+- PDF 추출: 동봉 스크립트 `assets/pdf_extract.py` + PyMuPDF (`pip install pymupdf`) — MCP 서버 불필요
+- PyMuPDF 미설치 시 `pdftotext -layout`(poppler) 폴백으로 동작 (Windows는 poppler가 기본 미포함이라 PyMuPDF 설치를 권장)
 - 텍스트 레이어 없는 스캔 PDF는 미지원 (OCR은 V2 이후)
 - 디스크 쓰기 권한: `<project>/.claude/manuals/` (project scope) 또는 `~/.claude/manuals/` (global scope)
 
@@ -448,7 +448,7 @@ PCB 트랙·존 기하 기반 정밀 분석(SI/PI 판정 포함)까지 하려면
 /manual-digest-setup
 ```
 
-PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`)를 자동 등록하고 `.claude/manuals/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP 신규 등록 시 Claude Code 세션 재시작이 필요합니다.** idempotent — 여러 번 실행해도 안전하며 누락분만 보충합니다 (`--scope project|global|both`, `--mcp-only`, `--skip-mcp`, `--repair`, `--dry-run` 옵션).
+PDF 추출 환경(PyMuPDF 가용성 + `pdftotext` 폴백 여부)을 검사하고 `.claude/manuals/` 디렉토리 + INDEX.md + CLAUDE.md 마커 블록을 생성합니다. **MCP를 등록하지 않으므로 세션 재시작이 필요 없습니다.** PyMuPDF가 없으면 `pip install pymupdf`를 안내하며, 설치는 사용자 동의 후에만 실행합니다. idempotent — 여러 번 실행해도 안전하며 누락분만 보충합니다 (`--scope project|global|both`, `--skip-pdf-check`, `--repair`, `--dry-run` 옵션).
 
 > **선택 의존성 — doc-atomize**: 함께 설치하면 700줄/50 KB를 넘는 큰 다이제스트를 무손실 분할해, 매뉴얼 질문마다 `digest.md`를 통째로 읽는 대신 조각 인덱스 + 조각 1~3개만 읽습니다. 분할 후에는 조각 요약·라우팅 힌트 큐레이션이 게이트이며 `audit --strict`가 통과해야 등록이 끝납니다 — 조회 비용은 조각 크기가 아니라 **조회당 여는 조각 수**가 정하기 때문입니다. 설치하지 않아도 인제스트는 정상 동작하고 분할만 생략됩니다.
 
@@ -880,19 +880,19 @@ PCB 레이아웃 진행
 
 | 포맷 | 추출 도구 |
 |------|-----------|
-| PDF | `@sylphx/pdf-reader-mcp` MCP (`mcp__pdf-reader__read_pdf`) |
+| PDF | 동봉 `assets/pdf_extract.py` (PyMuPDF) — `info`/`toc`/`text`/`tables`/`find`/`render`, 실패 시 `pdftotext -layout` |
 | HTML | Claude Read 직접 |
 | TXT/MD | Claude Read 직접 |
 | EPUB | PowerShell `Expand-Archive` → 내부 XHTML |
 | DOCX | PowerShell `Expand-Archive` → `word/document.xml` |
 | CHM | `hh.exe -decompile` (Windows 전용) |
-| **codebase (디렉토리)** | **Claude Read/Grep/Glob + `find`/`git` (PDF MCP 불필요)** |
+| **codebase (디렉토리)** | **Claude Read/Grep/Glob + `find`/`git` (PDF 도구 불필요)** |
 
 #### Manual Digest 전체 워크플로우
 
 ```
-"manual-digest 셋업"             ← manual-digest-setup (MCP 등록 + 디렉토리 + CLAUDE.md 마커)
-    ↓ (Claude Code 재시작)
+"manual-digest 셋업"             ← manual-digest-setup (PDF 환경 검사 + 디렉토리 + CLAUDE.md 마커)
+    ↓ (재시작 불필요)
 "이 매뉴얼 등록해줘"              ← /manual-digest <path>
     ↓  ① 입력 검증 → ② ID 결정 → ③ 텍스트 추출 → ④ TOC 파싱
     ↓  ⑤ 섹션 청킹(~20% 샘플링) → ⑥ 계층 요약 → ⑦ 산출물 작성 → ⑧ 카탈로그 갱신
@@ -912,7 +912,7 @@ PCB 레이아웃 진행
 | ARM Cortex-M TRM, C99 표준 등 표준 매뉴얼 | `global` |
 | 여러 프로젝트 공유 라이브러리 매뉴얼 | `global` |
 
-> **MCP 재시작 주의**: `manual-digest-setup`이 PDF MCP를 신규 등록하면 Claude Code 세션을 종료 후 다시 시작해야 `mcp__pdf-reader__read_pdf` 도구가 활성화됩니다.
+> **PDF 추출 경로**: L1 `pdf_extract.py`(PyMuPDF) → L2 `pdftotext -layout` → L3 페이지 이미지 육안 판독 순으로 폴백합니다. L1이 exit 2를 내면 PyMuPDF 미설치 신호이지 PDF 문제가 아닙니다 — 그 자리에서는 L2로 진행하고 `pip install pymupdf`를 안내합니다.
 >
 > **CLAUDE.md 마커 블록**: 셋업이 `<!-- manual-digest:start --> ... <!-- manual-digest:end -->` 마커 사이에 사용 규칙을 주입합니다 — 마커 외부 콘텐츠는 절대 건드리지 않습니다. 손상 시 `/manual-digest-setup --repair`.
 

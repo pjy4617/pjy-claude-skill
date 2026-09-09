@@ -1,6 +1,6 @@
 ---
 name: manual-digest-setup
-description: "manual-digest 플러그인 사용 전 환경을 1회 초기화하는 셋업 스킬. ① PDF 추출용 @sylphx/pdf-reader-mcp MCP를 claude mcp add로 등록 ② .claude/manuals/ 디렉토리(project 또는 global) 생성 ③ INDEX.md 헤더 작성 ④ CLAUDE.md에 매뉴얼 다이제스트 사용 규칙 마커 블록 주입 ⑤ MCP 연결성·디렉토리 권한 검증 ⑥ 상태 리포트. idempotent — 여러 번 실행해도 안전하며 누락분만 보충, 기존 콘텐츠는 보존. 사용자가 'manual-digest 셋업', '매뉴얼 다이제스트 설정', 'PDF MCP 등록', '/manual-digest-setup', '매뉴얼 다이제스트 환경 초기화', 'pdf-reader 설치' 등을 요청하거나, manual-digest 첫 사용 직전에 자동 적용."
+description: "manual-digest 플러그인 사용 전 환경을 1회 초기화하는 셋업 스킬. ① PDF 추출 환경 검사(PyMuPDF 가용성 + poppler pdftotext 폴백, 미설치 시 pip install pymupdf 안내) ② .claude/manuals/ 디렉토리(project 또는 global) 생성 ③ INDEX.md 헤더 작성 ④ CLAUDE.md에 매뉴얼 다이제스트 사용 규칙 마커 블록 주입 ⑤ 디렉토리 권한·마커 검증 ⑥ 상태 리포트. MCP 서버를 쓰지 않는다 — PDF 추출은 manual-digest 스킬에 동봉된 assets/pdf_extract.py가 담당한다. idempotent — 여러 번 실행해도 안전하며 누락분만 보충, 기존 콘텐츠는 보존. 사용자가 'manual-digest 셋업', '매뉴얼 다이제스트 설정', '/manual-digest-setup', '매뉴얼 다이제스트 환경 초기화', 'PyMuPDF 설치' 등을 요청하거나, manual-digest 첫 사용 직전에 자동 적용."
 user-invocable: true
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 ---
@@ -22,8 +22,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 | 옵션 | 동작 |
 |------|------|
 | `--scope project\|global\|both` | 초기화 스코프 (기본: `project`) |
-| `--mcp-only` | MCP 등록만 (디렉토리/CLAUDE.md 건드리지 않음) |
-| `--skip-mcp` | MCP 등록 단계 건너뜀 (이미 다른 PDF MCP 사용 중) |
+| `--skip-pdf-check` | PDF 추출 환경 검사 건너뜀 (코드베이스 다이제스트만 쓸 때) |
 | `--repair` | 누락된 항목만 보충 (CLAUDE.md 마커 손상 등 복구) |
 | `--dry-run` | 실제 변경 없이 무엇을 할지만 출력 |
 
@@ -31,8 +30,8 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 
 - **첫 사용**: 매뉴얼을 처음 등록하기 전
 - **새 프로젝트**: project scope를 새 프로젝트에서 초기화
-- **MCP 손상/제거**: `claude mcp list`에서 pdf-reader 사라졌을 때 → `--mcp-only`
 - **CLAUDE.md 정리 후**: 사용자가 마커 블록을 지웠을 때 → `--repair`
+- **PDF 추출이 안 될 때**: `pdf_extract.py`가 exit 2를 낼 때 → 다시 실행해 PyMuPDF 설치 여부 확인
 
 ## 절차
 
@@ -52,33 +51,44 @@ echo "  Global scope:  $HOME/.claude/manuals/"
 echo "  스코프: ${SCOPE:-project}"
 ```
 
-### 2. PDF MCP 등록 검사 + 등록
+### 2. PDF 추출 환경 검사
+
+PDF 추출은 `manual-digest` 스킬에 동봉된 `assets/pdf_extract.py`가 담당한다. **설치할 서버도
+등록할 MCP도 없다.** 필요한 것은 파이썬 패키지 하나(PyMuPDF)뿐이고, 그마저 없어도
+`pdftotext` 폴백으로 인제스트가 돌아간다. 여기서는 **있는지 확인하고 없으면 안내만** 한다.
 
 ```bash
-if [ "$SKIP_MCP" != "true" ]; then
-    # 등록 여부 확인
-    if claude mcp list 2>/dev/null | grep -q "pdf-reader"; then
-        STATE=$(claude mcp list 2>/dev/null | grep "pdf-reader" | grep -o "Connected\|Failed\|Disconnected" || echo "Unknown")
-        echo "[1/5] pdf-reader MCP: 이미 등록됨 (state: $STATE)"
+if [ "$SKIP_PDF_CHECK" != "true" ]; then
+    echo "[1/5] PDF 추출 환경 검사"
+
+    # L1: PyMuPDF — pdf_extract.py의 기본 경로
+    if python3 -c "import fitz" 2>/dev/null; then
+        PYMUPDF_VER="$(python3 -c "import fitz; print(fitz.VersionBind)" 2>/dev/null)"
+        echo "  ✓ PyMuPDF: 설치됨 (${PYMUPDF_VER:-버전 확인 불가})"
+        PYMUPDF_OK=true
     else
-        echo "[1/5] pdf-reader MCP: 미등록 → 등록 진행"
-        # Windows(Git Bash/MSYS)에서만 cmd /c 래퍼 사용 — Linux/macOS에는 cmd가 없다
-        case "$(uname -s 2>/dev/null)" in
-            MINGW*|MSYS*|CYGWIN*) MCP_CMD_PREFIX="cmd /c " ;;
-            *)                    MCP_CMD_PREFIX="" ;;
-        esac
-        if [ "$DRY_RUN" = "true" ]; then
-            echo "  (dry-run) claude mcp add pdf-reader --scope user -- ${MCP_CMD_PREFIX}npx -y @sylphx/pdf-reader-mcp"
-        else
-            claude mcp add pdf-reader --scope user -- ${MCP_CMD_PREFIX}npx -y "@sylphx/pdf-reader-mcp"
-            echo ""
-            echo "  주의: 세션 재시작 필요 — Claude Code를 종료 후 다시 시작해야 read_pdf 도구가 활성화됩니다."
-        fi
+        echo "  ○ PyMuPDF: 미설치 — pdf_extract.py가 exit 2를 반환한다"
+        echo "    설치 명령: pip install pymupdf"
+        echo "    (설치는 사용자 동의 후에만 실행한다. 설치하지 않아도 L2 폴백으로 인제스트는 가능하다)"
+        PYMUPDF_OK=false
+    fi
+
+    # L2: poppler pdftotext — 폴백 경로
+    if command -v pdftotext >/dev/null 2>&1; then
+        echo "  ✓ pdftotext(poppler): 사용 가능 — L2 폴백 확보"
+    else
+        echo "  ○ pdftotext(poppler): 없음 — L2 폴백 없음 (Windows 기본값)"
+    fi
+
+    if [ "$PYMUPDF_OK" != "true" ] && ! command -v pdftotext >/dev/null 2>&1; then
+        echo "  ⚠️  PDF 추출 경로가 하나도 없다 — pip install pymupdf 를 먼저 하십시오."
+        echo "     (코드베이스 다이제스트는 이것들 없이도 정상 동작한다)"
     fi
 fi
 ```
 
-> **Windows 환경**: `cmd /c npx -y @sylphx/pdf-reader-mcp`로 등록한다 (cmd 래퍼가 stdio 안정성 확보 — 위 스크립트가 `uname`으로 자동 분기). Linux/macOS는 래퍼 없이 `npx` 직접 등록.
+> **Windows**: poppler(pdftotext)가 기본 포함되지 않는다. PyMuPDF는 `pip install pymupdf`
+> 휠 하나로 설치되므로, Windows에서는 PyMuPDF 설치가 사실상 유일한 준비물이다.
 
 ### 3. manuals 디렉토리 초기화
 
@@ -184,8 +194,9 @@ inject_marker() {
 4. 답변에 출처(§/p./scope) 명시 — 조각 인용 시에도 출처는 원본 기준(§/p.)
 5. 인덱싱되지 않은 매뉴얼이면 `/manual-digest <path>` 등록 제안
 
-PDF 핀포인트 추출: `mcp__pdf-reader__read_pdf` `pages: "<범위 또는 혼합 범위>"` — 에러(`invalid horizontal
-advance` 등)나 빈 텍스트면 `pdftotext -layout`으로 재시도한다. MCP 실패를 스캔본으로 단정하지 않는다.
+PDF 핀포인트 추출: manual-digest 스킬의 `assets/pdf_extract.py` — 위치를 모르면
+`find <원본> "<검색어>"`로 페이지 열지도를 먼저 받고, 그다음 `text <원본> --pages "<범위 또는 혼합 범위>"`.
+exit 2(PyMuPDF 미설치)나 빈 텍스트면 `pdftotext -layout`으로 재시도하고, 추출 실패를 스캔본으로 단정하지 않는다.
 <!-- manual-digest:end -->
 EOF
     )"
@@ -237,14 +248,12 @@ PY
 }
 
 echo "[3/5] CLAUDE.md 마커 블록 주입"
-if [ "$MCP_ONLY" != "true" ]; then
-    case "${SCOPE:-project}" in
-        project) inject_marker "$TARGET_PROJECT/CLAUDE.md" "project" ;;
-        global)  inject_marker "$HOME/.claude/CLAUDE.md" "global" ;;
-        both)    inject_marker "$TARGET_PROJECT/CLAUDE.md" "project"
-                 inject_marker "$HOME/.claude/CLAUDE.md" "global" ;;
-    esac
-fi
+case "${SCOPE:-project}" in
+    project) inject_marker "$TARGET_PROJECT/CLAUDE.md" "project" ;;
+    global)  inject_marker "$HOME/.claude/CLAUDE.md" "global" ;;
+    both)    inject_marker "$TARGET_PROJECT/CLAUDE.md" "project"
+             inject_marker "$HOME/.claude/CLAUDE.md" "global" ;;
+esac
 ```
 
 ### 5. 검증
@@ -252,12 +261,15 @@ fi
 ```bash
 echo "[4/5] 검증"
 
-# MCP 연결 확인
-if [ "$SKIP_MCP" != "true" ] && [ "$DRY_RUN" != "true" ]; then
-    if claude mcp list 2>/dev/null | grep "pdf-reader" | grep -q "Connected"; then
-        echo "  ✓ pdf-reader MCP: Connected"
+# PDF 추출기 동작 확인 (스크립트 자체가 도는지)
+if [ "$SKIP_PDF_CHECK" != "true" ] && [ "$DRY_RUN" != "true" ]; then
+    PDF_TOOL="$(find "$HOME/.claude/plugins" -path "*manual-digest*/skills/manual-digest/assets/pdf_extract.py" -print -quit 2>/dev/null)"
+    [ -z "$PDF_TOOL" ] && [ -f "./plugins/manual-digest/skills/manual-digest/assets/pdf_extract.py" ] \
+        && PDF_TOOL="./plugins/manual-digest/skills/manual-digest/assets/pdf_extract.py"
+    if [ -n "$PDF_TOOL" ] && python3 "$PDF_TOOL" --help >/dev/null 2>&1; then
+        echo "  ✓ pdf_extract.py: $PDF_TOOL"
     else
-        echo "  ⚠️  pdf-reader MCP: 미연결 — 세션 재시작 후 자동 활성화"
+        echo "  ○ pdf_extract.py: 위치 확인 실패 — 스킬 호출 시 \${CLAUDE_SKILL_DIR}/assets/pdf_extract.py 로 접근된다"
     fi
 fi
 
@@ -270,14 +282,12 @@ case "${SCOPE:-project}" in
 esac
 
 # CLAUDE.md 마커 확인
-if [ "$MCP_ONLY" != "true" ]; then
-    case "${SCOPE:-project}" in
-        project) grep -q "manual-digest:start" "$TARGET_PROJECT/CLAUDE.md" 2>/dev/null && echo "  ✓ project CLAUDE.md 마커 주입됨" ;;
-        global)  grep -q "manual-digest:start" "$HOME/.claude/CLAUDE.md" 2>/dev/null && echo "  ✓ global CLAUDE.md 마커 주입됨" ;;
-        both)    grep -q "manual-digest:start" "$TARGET_PROJECT/CLAUDE.md" 2>/dev/null && echo "  ✓ project CLAUDE.md 마커 주입됨"
-                 grep -q "manual-digest:start" "$HOME/.claude/CLAUDE.md" 2>/dev/null && echo "  ✓ global CLAUDE.md 마커 주입됨" ;;
-    esac
-fi
+case "${SCOPE:-project}" in
+    project) grep -q "manual-digest:start" "$TARGET_PROJECT/CLAUDE.md" 2>/dev/null && echo "  ✓ project CLAUDE.md 마커 주입됨" ;;
+    global)  grep -q "manual-digest:start" "$HOME/.claude/CLAUDE.md" 2>/dev/null && echo "  ✓ global CLAUDE.md 마커 주입됨" ;;
+    both)    grep -q "manual-digest:start" "$TARGET_PROJECT/CLAUDE.md" 2>/dev/null && echo "  ✓ project CLAUDE.md 마커 주입됨"
+             grep -q "manual-digest:start" "$HOME/.claude/CLAUDE.md" 2>/dev/null && echo "  ✓ global CLAUDE.md 마커 주입됨" ;;
+esac
 
 # 선택 의존성: doc-atomize (큰 다이제스트 무손실 분할용) — 없어도 인제스트는 정상 동작
 SPLIT_MD=""
@@ -299,18 +309,19 @@ fi
 [5/5] 셋업 완료
 
 스코프: <project|global|both>
-MCP:    <등록됨/이미있음/생략>
+PDF 추출: PyMuPDF <있음 버전/없음> / pdftotext <있음/없음>
 디렉토리: <생성됨/이미있음>
 CLAUDE.md: <주입됨/이미있음>
 doc-atomize: <있음(분할 가능)/없음(선택 사항)>
 
 다음 단계:
-  ① (MCP 신규 등록한 경우) Claude Code 재시작
+  ① (PyMuPDF 미설치인 경우) pip install pymupdf — 사용자 동의 후
   ② /manual-digest <path>로 첫 매뉴얼 등록
   ③ /manual-digest --list로 등록된 매뉴얼 확인
 
 문제 해결:
-  - MCP 미연결: claude mcp list로 상태 확인, 재등록 시 /manual-digest-setup --mcp-only
+  - PDF 추출이 exit 2: PyMuPDF 미설치 신호다(PDF 문제 아님) — pip install pymupdf
+  - PyMuPDF도 pdftotext도 없음: PDF 인제스트 불가. 코드베이스 다이제스트는 그대로 가능
   - CLAUDE.md 마커 손상: /manual-digest-setup --repair
   - 권한 에러: 디렉토리 권한 확인 또는 --scope 변경
   - 다이제스트가 너무 커서 매번 무거움: /plugin 에서 doc-atomize 설치 후 /manual-digest --atomize <id>
@@ -318,9 +329,9 @@ doc-atomize: <있음(분할 가능)/없음(선택 사항)>
 
 ## Non-goals
 
-- ❌ 매뉴얼 인제스트 — 메인 스킬(`/manual-digest <path>`) 책임
-- ❌ MCP 자동 제거 — 사용자가 직접 `claude mcp remove pdf-reader`
-- ❌ Claude Code 자동 재시작 — 안내만, 사용자 동의 필요
-- ❌ 마커 블록 외부 CLAUDE.md 내용 수정
+- 하지 않음: 매뉴얼 인제스트 — 메인 스킬(`/manual-digest <path>`) 책임
+- 하지 않음: 패키지 자동 설치 — `pip install pymupdf`는 사용자 동의 후에만 실행한다
+- 하지 않음: 기존 MCP 등록 제거 — 이 플러그인은 더 이상 PDF MCP를 쓰지 않지만 등록을 지우지 않는다. 다른 용도로 쓰고 있을 수 있으므로, 필요 없으면 사용자가 직접 `claude mcp remove pdf-reader`
+- 하지 않음: 마커 블록 외부 CLAUDE.md 내용 수정
 
 $ARGUMENTS

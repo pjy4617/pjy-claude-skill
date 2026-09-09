@@ -1,8 +1,8 @@
 ---
 name: manual-digest
-description: "대용량 외부 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD)뿐 아니라 소스코드 디렉토리(codebase)까지 한 번만 추출·요약하여 마크다운 다이제스트로 저장하고, 이후 작업에서 매뉴얼/코드맵이 필요할 때마다 원본을 다시 읽지 않고 다이제스트(원본의 ~0.3% 크기)를 1차 참조하는 워크플로. 디테일이 필요할 때만 원본의 특정 페이지/섹션(문서) 또는 파일/심볼(코드)만 핀포인트로 추출. 사용자가 '이 PDF 매뉴얼 등록해줘', 'STM32 RM 다이제스트 만들어줘', '이 레포/소스 코드베이스 다이제스트 만들어줘', '`src/` 디렉토리 인덱싱해줘', '/manual-digest <path 또는 dir>', '매뉴얼 다이제스트', '대용량 PDF 인덱싱', 'manual digest', '매뉴얼 갱신', '등록된 매뉴얼 목록', '매뉴얼 제거' 등을 요청하거나, 큰 PDF/HTML/CHM 매뉴얼 파일 또는 소스코드 디렉토리를 가리키며 등록·요약·인덱싱·갱신·삭제·목록을 명시할 때 자동 적용. 다이제스트가 커지면(700줄/50 KB 초과) doc-atomize의 split_md.py로 무손실 분할해 인덱스 1개 + 조각 1~3개만 읽도록 전환한다('다이제스트 분할', '--atomize', '--deatomize'). 첫 사용 전에는 manual-digest-setup으로 환경을 1회 초기화한다(코드베이스 전용 인제스트는 PDF MCP 없이도 동작)."
+description: "대용량 외부 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD)뿐 아니라 소스코드 디렉토리(codebase)까지 한 번만 추출·요약하여 마크다운 다이제스트로 저장하고, 이후 작업에서 매뉴얼/코드맵이 필요할 때마다 원본을 다시 읽지 않고 다이제스트(원본의 ~0.3% 크기)를 1차 참조하는 워크플로. 디테일이 필요할 때만 원본의 특정 페이지/섹션(문서) 또는 파일/심볼(코드)만 핀포인트로 추출. 사용자가 '이 PDF 매뉴얼 등록해줘', 'STM32 RM 다이제스트 만들어줘', '이 레포/소스 코드베이스 다이제스트 만들어줘', '`src/` 디렉토리 인덱싱해줘', '/manual-digest <path 또는 dir>', '매뉴얼 다이제스트', '대용량 PDF 인덱싱', 'manual digest', '매뉴얼 갱신', '등록된 매뉴얼 목록', '매뉴얼 제거' 등을 요청하거나, 큰 PDF/HTML/CHM 매뉴얼 파일 또는 소스코드 디렉토리를 가리키며 등록·요약·인덱싱·갱신·삭제·목록을 명시할 때 자동 적용. 다이제스트가 커지면(700줄/50 KB 초과) doc-atomize의 split_md.py로 무손실 분할해 인덱스 1개 + 조각 1~3개만 읽도록 전환한다('다이제스트 분할', '--atomize', '--deatomize'). 첫 사용 전에는 manual-digest-setup으로 환경을 1회 초기화한다(PDF 추출은 동봉 스크립트 assets/pdf_extract.py + PyMuPDF, 코드베이스 인제스트는 그마저도 불필요)."
 user-invocable: true
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, mcp__pdf-reader__read_pdf
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent
 ---
 
 # 매뉴얼 다이제스트 (Manual Digest)
@@ -11,7 +11,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, mcp__pdf-reader__read
 
 ## 입력 종류 — 문서 vs 코드베이스
 
-`<path>`가 **파일**이면 문서 다이제스트(PDF/HTML/EPUB/DOCX/CHM/MD), **디렉토리**이면 코드베이스 다이제스트(`format: codebase`)로 자동 분기한다. 코드베이스는 "페이지"가 없으므로 단위가 디렉토리·파일·심볼이고, 핀포인트가 `mcp__pdf-reader__read_pdf`가 아닌 `Read`/`Grep`/`Glob`이다. 코드베이스 인제스트 전용 절차·산출물 형식은 `references/codebase-extract.md`를 따른다.
+`<path>`가 **파일**이면 문서 다이제스트(PDF/HTML/EPUB/DOCX/CHM/MD), **디렉토리**이면 코드베이스 다이제스트(`format: codebase`)로 자동 분기한다. 코드베이스는 "페이지"가 없으므로 단위가 디렉토리·파일·심볼이고, 핀포인트가 `assets/pdf_extract.py`가 아닌 `Read`/`Grep`/`Glob`이다. 코드베이스 인제스트 전용 절차·산출물 형식은 `references/codebase-extract.md`를 따른다.
 
 ## 왜 이 스킬이 중요한가
 
@@ -32,7 +32,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, mcp__pdf-reader__read
 ## 사전 조건
 
 `/manual-digest-setup`으로 환경 초기화가 끝나 있어야 한다. 미초기화면 인제스트 시도 시 다음 중 하나가 발생:
-- PDF MCP 미등록 → **문서(PDF) 인제스트만** 에러 + setup 실행 안내. **코드베이스 인제스트는 PDF MCP 불필요** — `Read`/`Grep`/`Glob`만 쓰므로 그대로 진행
+- PyMuPDF 미설치 → PDF 인제스트가 `pdf_extract.py` exit 2를 받는다. **인제스트를 중단하지 않는다** — `pip install pymupdf` 안내와 함께 L2(`pdftotext -layout`)로 진행한다. **코드베이스 인제스트는 둘 다 불필요** — `Read`/`Grep`/`Glob`만 쓴다
 - `.claude/manuals/` 부재 → 자동 생성 후 진행 (CLAUDE.md 마커는 별도 안내)
 
 ## 산출물 위치
@@ -97,8 +97,9 @@ Agent(
 3. `--scope`(project/global)와 산출물 디렉토리 절대 경로
 4. `--depth`, `--no-atomize` 등 사용자가 준 옵션
 5. 산출물 계약: `digest.md` / `index.md` / `metadata.json` 생성 + `INDEX.md` 항목 추가
-6. **PDF 폴백 사다리를 반드시 지킬 것** (L1 MCP → L2 `pdftotext -layout` → L3 이미지 판독).
-   `invalid horizontal advance` 에러를 스캔본으로 오판하지 말 것 — `references/pdf-extract.md` 참조
+6. **PDF 폴백 사다리를 반드시 지킬 것** (L1 `assets/pdf_extract.py` → L2 `pdftotext -layout`
+   → L3 `pdf_extract.py render` 후 육안 판독). L1의 exit 2는 PyMuPDF 미설치 신호이지 PDF 문제가
+   아니다 — 스캔본으로 오판하지 말 것. `references/pdf-extract.md` 참조
 7. 반환 형식: 생성한 파일 경로 목록 + 압축비 + 실제 사용한 `extractor` + 미해결 사항
 
 ### 메인의 책임
@@ -134,7 +135,7 @@ Agent(
 ### 3. 텍스트화 추출 (포맷별)
 | 포맷 | 도구 | 참조 |
 |------|------|------|
-| PDF | `mcp__pdf-reader__read_pdf` → 실패 시 `pdftotext -layout` → 둘 다 실패 시에만 이미지 판독 | `references/pdf-extract.md` |
+| PDF | `assets/pdf_extract.py` (PyMuPDF) → 실패 시 `pdftotext -layout` → 둘 다 실패 시에만 이미지 판독 | `references/pdf-extract.md` |
 | HTML | Read 직접 | `references/html-extract.md` |
 | TXT/MD | Read 직접 | `references/txt-md-extract.md` |
 | EPUB | `Expand-Archive` → 내부 XHTML Read | `references/epub-extract.md` |
@@ -142,10 +143,25 @@ Agent(
 | CHM | `hh.exe -decompile` → HTML Read | `references/chm-extract.md` |
 | **codebase** | **Read / Grep / Glob (+ `find`/`git`로 규모·스택)** | **`references/codebase-extract.md`** |
 
+**PDF 추출기는 이 스킬에 동봉되어 있다.** 외부 MCP 서버를 쓰지 않는다.
+
+```bash
+S="${CLAUDE_SKILL_DIR}/assets/pdf_extract.py"   # 호출 시 실제 절대 경로로 치환된다
+python3 "$S" info   "<abs>"                      # 메타데이터·페이지 수·목차 유무·텍스트 레이어 판정
+python3 "$S" toc    "<abs>"                      # 목차 (outline 없으면 글꼴 휴리스틱 자동)
+python3 "$S" text   "<abs>" --pages "9,14,16-18" # 필요한 페이지 본문만 (혼합 범위)
+python3 "$S" tables "<abs>" --pages "6"          # 표만 마크다운으로
+python3 "$S" find   "<abs>" "<검색어>"           # 페이지 열지도 (본문 미포함)
+python3 "$S" render "<abs>" --pages "5" --out D  # PNG (L3 육안 판독 전용)
+```
+
+종료 코드 2는 **PyMuPDF 미설치** 신호다 (PDF 문제가 아니다) — `pip install pymupdf`를 안내하고
+그 자리에서는 L2 `pdftotext -layout`으로 계속한다. 상세는 `references/pdf-extract.md`.
+
 코드베이스는 인제스트 시작 시 **추출 목적**(재사용 탐색 / 온보딩 / 리팩토링 / 디버깅)을 1줄로 확정한다 — 이것이 샘플링과 디렉토리 맵 주석 컬럼을 결정한다.
 
 ### 4. 구조 파싱 (TOC)
-- PDF: 첫 5-10페이지 읽어 Table of Contents 페이지 식별 → 섹션·페이지 매핑 추출
+- PDF: `pdf_extract.py toc`로 목차를 받는다 (내장 outline 우선, 없으면 글꼴 크기 휴리스틱으로 자동 복원). **첫 5-10페이지를 본문으로 읽어 목차 페이지를 찾지 않는다** — 같은 정보를 6배 이상 싸게 받는다
 - HTML/EPUB: `h1~h6` + `id` 속성
 - DOCX: `<w:pStyle w:val="Heading*"/>`
 - CHM: `*.hhc` (목차) / `*.hhk` (인덱스)
@@ -192,7 +208,7 @@ publication_date: <ISO 날짜>
 language: <BCP47>
 sha256: <hex>
 indexed_at: <ISO 타임스탬프>
-extractor: <mcp-pdf-reader|pdftotext-layout|page-render|claude-read|expand-archive|hh-decompile>
+extractor: <pymupdf|pdftotext-layout|page-render|claude-read|expand-archive|hh-decompile>
 ---
 
 # <제목> — 다이제스트
@@ -213,7 +229,7 @@ extractor: <mcp-pdf-reader|pdftotext-layout|page-render|claude-read|expand-archi
 | ... | §x.y, p.NN |
 
 ## 사용 가이드
-원본 핀포인트 추출 시: `mcp__pdf-reader__read_pdf` (PDF, 실패 시 `pdftotext -layout -f <시작> -l <끝>`) / Read (그 외).
+원본 핀포인트 추출 시: `python3 <assets/pdf_extract.py> text <원본> --pages "<범위>"` (PDF, 실패 시 `pdftotext -layout -f <시작> -l <끝>`) / Read (그 외).
 ```
 
 **코드베이스(`format: codebase`)는 본문 섹션 구성이 다르다** — 페이지 기반 §요약 대신 `개요 → 디렉토리 맵 → 데이터 모델 → 핵심 서브시스템 → 아키텍처 규칙 → 함정 → 빌드/게이트 → 테스트 자산 → 사용 가이드(핀포인트 파일:line)`. 프론트매터는 `pages/publication_date` 대신 `loc/files/version(git ref)/extractor: claude-read`. 전체 형식·예시는 `references/codebase-extract.md`.
@@ -282,10 +298,12 @@ LLM 요약은 비결정적이지만 다음 보장:
 3. digest로 답할 수 있으면 출처(§/p./scope)를 명시. 조각을 인용해도 출처는 **원본 기준**(§/p.)으로 쓴다 —
    조각 번호는 다이제스트 내부 위치일 뿐 원본 페이지가 아니다
 4. 디테일이 부족하면 `index.md`에서 위치 포인터 → 원본의 해당 부분만 추출
-   - PDF: `mcp__pdf-reader__read_pdf` `pages: "82-83,100-102"` (혼합 범위 지원)
-     — 에러/빈 텍스트면 `pdftotext -layout -enc UTF-8 -f 82 -l 83 "<abs>" -`로 재시도 (MCP 버그 회피)
+   - PDF: 위치를 모르면 `pdf_extract.py find "<abs>" "<검색어>"`로 **페이지 열지도부터** 받고,
+     그다음 `pdf_extract.py text "<abs>" --pages "82-83,100-102"` (혼합 범위 지원).
+     표가 핵심이면 `tables --pages`. exit 2(PyMuPDF 미설치)나 빈 텍스트면
+     `pdftotext -layout -enc UTF-8 -f 82 -l 83 "<abs>" -`로 재시도
    - HTML/EPUB/DOCX/CHM: 추출된 마크다운 또는 원본의 해당 섹션
-   - **codebase: `index.md`의 심볼→파일로 `Read`, 위치 모르면 `Grep`(정의/사용처)/`Glob`(파일 패턴) — PDF MCP 불필요**
+   - **codebase: `index.md`의 심볼→파일로 `Read`, 위치 모르면 `Grep`(정의/사용처)/`Glob`(파일 패턴) — PDF 도구 불필요**
 5. 인덱싱되지 않은 매뉴얼/코드베이스면 사용자에게 `/manual-digest <path 또는 dir>` 등록 제안
 
 ## 에지케이스
@@ -295,16 +313,17 @@ LLM 요약은 비결정적이지만 다음 보장:
 | 같은 ID 재등록 (동일 sha256) | "이미 등록됨, --update로 갱신" 안내 후 종료 |
 | 같은 ID 재등록 (다른 sha256) | 사용자 확인 후 덮어쓰기 |
 | 비ASCII 경로 | quote + UTF-8 정규화 |
-| PDF MCP 미등록 | 즉시 종료, setup 실행 안내 |
+| PyMuPDF 미설치 (`pdf_extract.py` exit 2) | 중단하지 않는다 — `pip install pymupdf` 안내 + L2(`pdftotext -layout`)로 인제스트 계속, `extractor: pdftotext-layout` 기록 |
 | `.claude/manuals/` 쓰기 권한 부재 | 명시적 에러 + scope 변경 제안 |
 | ID 충돌 (project + global) | project가 override; `--scope global` 명시 시 경고 |
 | 메타데이터 Title 없음 | 파일명 기반 자동 생성, 사용자 확인 |
-| 1000p+ 대형 PDF | 페이지 범위 청크 분할 호출 (예: 1-100, 101-200…) |
-| `read_pdf`가 `invalid horizontal advance` 등 에러 반환 | **PDF 손상이 아니라 MCP 버그다.** `pdftotext -layout`으로 재시도 — 이미지 렌더링으로 넘어가지 않는다 |
-| `read_pdf`가 빈 텍스트 반환 | 스캔본으로 단정하지 않는다 — `pdftotext -layout`으로 3페이지 이상 표본 검증 후 판정 |
+| 1000p+ 대형 PDF | `toc`/`find`는 그대로 1회 호출(출력이 작다), `text`만 필요한 구간으로 나눠 호출 |
+| 추출 도구가 `invalid horizontal advance` 등 에러 반환 (구버전 PDF MCP 잔존 시) | **PDF 손상이 아니라 그 도구의 버그다.** `pdf_extract.py` 또는 `pdftotext -layout`으로 재시도 — 이미지 렌더링으로 넘어가지 않는다 |
+| `pdf_extract.py text`가 빈 텍스트 반환 | 스캔본으로 단정하지 않는다 — `info`의 표본 판정 + `pdftotext -layout` 3페이지 이상 표본 검증 후 판정 |
+| PDF에 내장 목차(outline)가 없음 | `toc`가 자동으로 글꼴 크기 휴리스틱으로 복원 (본문+2pt & 번호 절 패턴). 결과가 부실하면 `--min-size`로 임계 조정 |
 | 텍스트 레이어 없는 스캔 PDF (L1·L2 모두 실패 확인) | "OCR 필요, V2 이후 지원" 명시 후 종료 |
 | `pdftotext` 미설치 (주로 Windows) | "판정 불가"로 처리 — poppler 설치 안내, 스캔본으로 기록하지 않는다 |
-| 디렉토리 입력 (codebase) | `format: codebase`로 분기, PDF MCP 없이 진행 (`references/codebase-extract.md`) |
+| 디렉토리 입력 (codebase) | `format: codebase`로 분기, PDF 도구 없이 진행 (`references/codebase-extract.md`) |
 | 코드베이스 추출 목적 불명 | 인제스트 시작 시 목적 1줄 확인 (재사용/온보딩/리팩토링/디버깅) |
 | git 레포 아닌 디렉토리 | `version`을 디렉토리 mtime/파일목록 기반으로, `--update`는 파일목록 diff 폴백 |
 | 거대 모노레포 | 사용자에게 하위 패키지 경로로 좁히도록 제안 (전체 1회 대신 패키지별 다이제스트) |
@@ -320,9 +339,10 @@ LLM 요약은 비결정적이지만 다음 보장:
 | 함정 | 해결 |
 |------|------|
 | 모든 페이지를 추출하려 함 | 핵심 섹션만 샘플링, 절차 페이지는 TOC 제목으로 요약 |
-| `pages` 인자 단일 범위만 사용 | `"7-12,28-30,82-83"` 혼합 범위로 한 호출에 묶기 |
+| `--pages` 단일 범위만 사용 | `"7-12,28-30,82-83"` 혼합 범위로 한 호출에 묶기 |
+| 목차 찾겠다고 앞 페이지를 본문으로 읽음 | `toc` 한 번으로 대체 (WOS 실측: 19,442자 → 약 3 KB) |
 | 다이제스트만으로 모호하게 답변 | 출처 명시 + 모호하면 원본 핀포인트 추출 |
-| 메타데이터 무시 | `include_metadata: true`로 Author/Title/Subject 자동 확보 |
+| 메타데이터 무시 | `pdf_extract.py info` 1회로 Title/Author/Producer/페이지 수/목차 유무 자동 확보 |
 | 큰 다이제스트를 매번 통째로 Read | 700줄 넘으면 분할 — 조회는 인덱스 1 + 조각 1~3개 |
 | 다이제스트가 크다고 한 번 더 요약 | 금지. 손실이 누적된다. 분할(무손실)로 해결한다 |
 

@@ -11,12 +11,14 @@
 ```
 
 수행 항목:
-- PDF 추출용 MCP(`@sylphx/pdf-reader-mcp`) 등록
+- PDF 추출 환경 검사 — PyMuPDF(`import fitz`) 가용성 + `pdftotext` 폴백 여부
 - `.claude/manuals/` 디렉토리 생성
 - `INDEX.md` 헤더 작성
 - `CLAUDE.md`에 마커 블록 주입
 
-**MCP 신규 등록한 경우 Claude Code 재시작 필요**.
+**PyMuPDF가 없으면 `pip install pymupdf`를 안내한다** (설치는 사용자 동의 후). 설치하지 않아도
+`pdftotext -layout` 폴백으로 PDF 인제스트는 가능하고, 코드베이스 다이제스트는 둘 다 없이 동작한다.
+MCP 서버를 등록하지 않으므로 **세션 재시작이 필요 없다**.
 
 ### 2. 첫 매뉴얼 등록
 
@@ -109,13 +111,13 @@ INDEX.md를 보라는 고정 포인터라 등록·삭제 때마다 고칠 것이
 
 | 포맷 | V1 검증 | 추출 도구 |
 |------|--------|-----------|
-| PDF | ✓ 검증 (TwinCAT 168p, 0.29% 압축) | `@sylphx/pdf-reader-mcp` MCP → 실패 시 `pdftotext -layout` |
+| PDF | ✓ 검증 (TwinCAT 168p, 0.29% 압축) | 동봉 `assets/pdf_extract.py` (PyMuPDF) → 실패 시 `pdftotext -layout` → 이미지 판독 |
 | HTML | 미검증 | Claude Read |
 | TXT/MD | 부분 검증 | Claude Read |
 | EPUB | 미검증 | PowerShell `Expand-Archive` |
 | DOCX | 미검증 | PowerShell `Expand-Archive` |
 | CHM | 미검증 (Windows 전용) | `hh.exe -decompile` |
-| **codebase (디렉토리)** | ✓ 검증 (HMI Frontend 18,079 LOC → ~14 KB) | Claude `Read`/`Grep`/`Glob` + `find`/`git` (**PDF MCP 불필요**) |
+| **codebase (디렉토리)** | ✓ 검증 (HMI Frontend 18,079 LOC → ~14 KB) | Claude `Read`/`Grep`/`Glob` + `find`/`git` (**PDF 도구 불필요**) |
 
 ### 코드베이스 다이제스트
 
@@ -196,14 +198,15 @@ INDEX.md를 보라는 고정 포인터라 등록·삭제 때마다 고칠 것이
 
 | 문제 | 해결 |
 |------|------|
-| `pdf-reader MCP 미등록` | `/manual-digest-setup --mcp-only` |
-| `MCP 등록했는데 read_pdf 도구 없음` | Claude Code 세션 재시작 |
+| `pdf_extract.py가 exit 2` | PyMuPDF 미설치 신호다(PDF 문제 아님) — `pip install pymupdf`. 설치 전에는 `pdftotext -layout`으로 계속 진행된다 |
+| `PyMuPDF도 pdftotext도 없음` | PDF 인제스트 불가 — `pip install pymupdf` 먼저. 코드베이스 다이제스트는 그대로 가능 |
 | `CLAUDE.md 마커 손상` | `/manual-digest-setup --repair` |
 | `같은 ID 중복 인제스트` | sha256 같으면 자동 스킵, 다르면 확인 후 덮어쓰기 |
-| `대형 PDF (1000p+) 시간 초과` | 자동으로 페이지 청크 분할 — 진행률 표시 확인 |
-| `read_pdf` 에러(`invalid horizontal advance` 등) | MCP 버그다 — `pdftotext -layout`으로 자동 재시도. PDF 자체는 대개 멀쩡하다 |
+| `대형 PDF (1000p+) 시간 초과` | `toc`/`find`는 1회로 끝내고 `text`만 구간을 나눠 호출 — 진행률 표시 확인 |
+| `invalid horizontal advance` 등 추출 에러 (구버전 PDF MCP 잔존 시) | 그 도구의 버그다 — `pdf_extract.py` 또는 `pdftotext -layout`으로 재시도. PDF 자체는 대개 멀쩡하다 |
+| `Word로 만든 PDF의 표가 잘게 쪼개짐` | `tables`의 알려진 한계 — 같은 페이지를 `text`로도 열어 대조한다 |
 | `스캔 PDF (텍스트 레이어 없음)` | `pdftotext`로 3페이지 표본 검증 후 확정된 경우만 "OCR 필요, V2 이후" — 현재 미지원 |
-| `pdftotext 없음 (Windows)` | poppler 설치 필요 (`scoop install poppler`) — 없으면 MCP 실패 시 대안이 사라진다 |
+| `pdftotext 없음 (Windows)` | 기본 경로(PyMuPDF)가 살아 있으면 문제없다. 둘 다 필요하면 `scoop install poppler` |
 | `다이제스트가 커서 매번 무거움` | `/manual-digest --atomize <id>` (doc-atomize 필요) |
 | `분할했는데 split_md.py를 못 찾음` | `/plugin`에서 doc-atomize 설치, 또는 `DOC_ATOMIZE_SPLIT_MD` 환경변수로 경로 지정 |
 | `분할 verify FAIL` | 분할본 자동 삭제 후 원상 복구 — `digest.md`는 무손상, 조회는 종전대로 |
