@@ -2,7 +2,7 @@
 name: manual-digest
 description: "대용량 외부 매뉴얼(PDF/HTML/EPUB/DOCX/CHM/MD)뿐 아니라 소스코드 디렉토리(codebase)까지 한 번만 추출·요약하여 마크다운 다이제스트로 저장하고, 이후 작업에서 매뉴얼/코드맵이 필요할 때마다 원본을 다시 읽지 않고 다이제스트(원본의 ~0.3% 크기)를 1차 참조하는 워크플로. 디테일이 필요할 때만 원본의 특정 페이지/섹션(문서) 또는 파일/심볼(코드)만 핀포인트로 추출. 사용자가 '이 PDF 매뉴얼 등록해줘', 'STM32 RM 다이제스트 만들어줘', '이 레포/소스 코드베이스 다이제스트 만들어줘', '`src/` 디렉토리 인덱싱해줘', '/manual-digest <path 또는 dir>', '매뉴얼 다이제스트', '대용량 PDF 인덱싱', 'manual digest', '매뉴얼 갱신', '등록된 매뉴얼 목록', '매뉴얼 제거' 등을 요청하거나, 큰 PDF/HTML/CHM 매뉴얼 파일 또는 소스코드 디렉토리를 가리키며 등록·요약·인덱싱·갱신·삭제·목록을 명시할 때 자동 적용. 다이제스트가 커지면(700줄/50 KB 초과) doc-atomize의 split_md.py로 무손실 분할해 인덱스 1개 + 조각 1~3개만 읽도록 전환한다('다이제스트 분할', '--atomize', '--deatomize'). 첫 사용 전에는 manual-digest-setup으로 환경을 1회 초기화한다(코드베이스 전용 인제스트는 PDF MCP 없이도 동작)."
 user-invocable: true
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__pdf-reader__read_pdf
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, mcp__pdf-reader__read_pdf
 ---
 
 # 매뉴얼 다이제스트 (Manual Digest)
@@ -65,6 +65,57 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__pdf-reader__read_pdf
 | `/manual-digest --deatomize <id>` | 분할본 제거, `digest.md` 단독 조회로 복귀 |
 
 인제스트 시 `--no-atomize`를 주면 크기와 무관하게 분할 판정을 건너뛴다.
+
+## 인제스트 실행 주체 — 워커에게 위임한다
+
+**신규 인제스트(`/manual-digest <path 또는 dir>`)와 `--update`는 메인이 직접 하지 않는다.
+`Agent` 도구로 워커 서브에이전트를 하나 띄워 그 안에서 9단계를 전부 수행한다.**
+
+```
+Agent(
+  subagent_type: "general-purpose",
+  model:         "sonnet",              # Claude Sonnet 5 — 추출·요약 작업에 충분하다
+  name:          "manual-digest-<id>",
+  description:   "<id> 매뉴얼 다이제스트 생성",
+  prompt:        <아래 필수 항목을 담은 self-contained 프롬프트>
+)
+```
+
+**왜 위임하는가.** 인제스트는 원본 수백 페이지를 읽는 작업이다. 메인이 직접 하면 그 원문이
+메인 컨텍스트에 그대로 쌓이고, 이후 **모든 턴에서 다시 전송된다** — 다이제스트로 토큰을 아끼려던
+목적과 정반대가 된다. 워커에 격리하면 원문은 워커 안에서만 소비되고 메인에는 산출물 경로와
+요약만 돌아온다. 비유하자면, 창고에서 짐을 다 꺼내 거실에 늘어놓는 대신 창고 안에서 정리하고
+목록만 들고 나오는 것이다.
+
+### 워커 프롬프트 필수 항목
+
+워커는 현재 대화 맥락을 **모른다**. 매 호출마다 다음을 전부 적는다.
+
+1. **이 SKILL.md의 절대 경로** — 메인은 스킬을 로드했으므로 경로를 안다. 워커에게
+   "먼저 이 파일과 거기 적힌 `references/` 문서를 읽고 그 절차를 따르라"고 지시한다
+2. 원본 절대 경로, 감지된 포맷, 결정된 `<manual-id>`
+3. `--scope`(project/global)와 산출물 디렉토리 절대 경로
+4. `--depth`, `--no-atomize` 등 사용자가 준 옵션
+5. 산출물 계약: `digest.md` / `index.md` / `metadata.json` 생성 + `INDEX.md` 항목 추가
+6. **PDF 폴백 사다리를 반드시 지킬 것** (L1 MCP → L2 `pdftotext -layout` → L3 이미지 판독).
+   `invalid horizontal advance` 에러를 스캔본으로 오판하지 말 것 — `references/pdf-extract.md` 참조
+7. 반환 형식: 생성한 파일 경로 목록 + 압축비 + 실제 사용한 `extractor` + 미해결 사항
+
+### 메인의 책임
+
+- 워커 요약을 그대로 사용자에게 옮기지 않는다. **파일이 실제로 생겼는지 확인한다** —
+  `digest.md`/`index.md`/`metadata.json` 존재, `INDEX.md` 항목 추가 여부, 프론트매터 필수 필드
+- 9단계의 **사용자 확인이 필요한 지점**(ID 확인, 같은 ID 재등록 덮어쓰기, 분할 동의)은
+  메인이 처리한다. 워커는 질문할 수 없다 — 위임 전에 미리 확정하거나, 워커가 "확인 필요"로
+  보고하고 메인이 사용자에게 묻는다
+- 워커가 실패하면 재위임하지 말고 실패 원인을 사용자에게 그대로 보고한다
+
+### 위임하지 않는 것
+
+`--list` / `--remove` / `--atomize` / `--deatomize`는 메인이 직접 처리한다.
+원본을 읽지 않아 컨텍스트 부담이 없고, 위임 오버헤드가 이득보다 크다.
+
+**워커는 이 절을 다시 적용하지 않는다** — 워커 자신이 실행 주체다. 재위임 금지.
 
 ## 인제스트 워크플로 (9단계)
 
