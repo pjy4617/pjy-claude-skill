@@ -156,6 +156,15 @@ esac
 
 `<!-- manual-digest:start -->` ~ `<!-- manual-digest:end -->` 마커로 감싼 가이드 블록을 주입한다.
 
+**이 블록은 등록 매뉴얼 수도 목록도 담지 않는다 — INDEX.md를 보라는 고정 포인터다.**
+CLAUDE.md는 매 세션 무조건 로드되므로, 여기에 카탈로그를 넣으면 매뉴얼이 늘 때마다 상주 비용이
+같이 커지고 매뉴얼을 안 쓰는 세션도 그 비용을 낸다. 게다가 개수는 등록·삭제 때마다 갱신하지 않으면
+곧 틀린 값이 된다(실측: 블록은 "1개"라고 적혀 있는데 실제 global에는 8종이 등록돼 있었다).
+카탈로그는 필요할 때만 읽히는 `INDEX.md`가 유일한 정본이다.
+
+블록이 고정이므로 **인제스트·삭제는 CLAUDE.md를 건드리지 않는다.** 세션 중 CLAUDE.md 수정은
+프롬프트 캐시를 무효화하는데, 그 비용을 갱신할 것도 없는 블록 때문에 낼 이유가 없다.
+
 ```bash
 inject_marker() {
     local CLAUDE_MD="$1"
@@ -166,7 +175,7 @@ inject_marker() {
 <!-- manual-digest:start -->
 ## 매뉴얼 다이제스트 사용 규칙
 
-이 환경에는 외부 매뉴얼이 다이제스트로 등록될 수 있다 (현재 0개) — 도메인 매뉴얼이 필요한 질문을 받으면:
+외부 매뉴얼이 다이제스트로 등록되어 있을 수 있다 — 도메인 매뉴얼이 필요한 질문을 받으면:
 
 1. `.claude/manuals/INDEX.md` (project) + `~/.claude/manuals/INDEX.md` (global) 양쪽 확인
 2. 관련 매뉴얼의 `digest.md` 우선 참조 → 부족하면 `index.md` 페이지 포인터로 원본 핀포인트
@@ -197,8 +206,25 @@ EOF
     fi
 
     if grep -q "<!-- manual-digest:start -->" "$CLAUDE_MD"; then
-        # 이미 마커 있음 → 카탈로그 요약만 갱신 (REPAIR 모드 아니면 스킵)
-        echo "  $SCOPE_LABEL: CLAUDE.md 마커 이미 존재 — 보존"
+        # 블록은 고정 포인터라 평소엔 갱신할 것이 없다.
+        # --repair 일 때만 낡은 블록(예: "현재 N개" 문구가 남은 구버전)을 현재 형식으로 교체한다.
+        if [ "${REPAIR:-false}" = "true" ]; then
+            if [ "$DRY_RUN" = "true" ]; then
+                echo "  (dry-run) $SCOPE_LABEL CLAUDE.md 마커 블록을 현재 형식으로 교체"
+            else
+                MARKER_BLOCK="$MARKER_BLOCK" python3 - "$CLAUDE_MD" <<'PY'
+import os, re, sys, pathlib
+p = pathlib.Path(sys.argv[1])
+p.write_text(re.sub(
+    r"<!-- manual-digest:start -->.*?<!-- manual-digest:end -->",
+    lambda _: os.environ["MARKER_BLOCK"],
+    p.read_text(encoding="utf-8"), count=1, flags=re.S), encoding="utf-8")
+PY
+                echo "  $SCOPE_LABEL: CLAUDE.md 마커 블록 교체 (백업: $CLAUDE_MD.bak.*)"
+            fi
+        else
+            echo "  $SCOPE_LABEL: CLAUDE.md 마커 이미 존재 — 보존 (구버전 문구 정리는 --repair)"
+        fi
     else
         if [ "$DRY_RUN" = "true" ]; then
             echo "  (dry-run) $SCOPE_LABEL CLAUDE.md 끝에 마커 블록 추가"

@@ -93,7 +93,8 @@
 /manual-digest --remove <id>
 ```
 
-해당 매뉴얼 디렉토리 + INDEX.md 항목 + CLAUDE.md 카탈로그 갱신.
+해당 매뉴얼 디렉토리 + INDEX.md 항목을 제거한다. **CLAUDE.md는 건드리지 않는다** — 마커 블록은
+INDEX.md를 보라는 고정 포인터라 등록·삭제 때마다 고칠 것이 없다.
 
 ## 스코프 결정 가이드
 

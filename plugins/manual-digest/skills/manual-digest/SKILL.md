@@ -60,7 +60,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent, mcp__pdf-reader__read
 | `/manual-digest <path 또는 dir> [--scope project\|global] [--depth shallow\|standard\|deep]` | 신규 인제스트 (파일=문서, 디렉토리=코드베이스 자동 분기) |
 | `/manual-digest --update <id>` | 문서: sha256 비교 / 코드베이스: git ref 비교 후 변경분만 재요약 |
 | `/manual-digest --list [--scope project\|global\|all]` | 등록 매뉴얼 나열 |
-| `/manual-digest --remove <id>` | 다이제스트 + INDEX.md 항목 + CLAUDE.md 카탈로그 갱신 |
+| `/manual-digest --remove <id>` | 다이제스트 디렉토리 + INDEX.md 항목 제거 (CLAUDE.md는 건드리지 않음) |
 | `/manual-digest --atomize <id> [--max-lines N]` | 이미 등록된 매뉴얼의 `digest.md`(필요시 `index.md`)를 무손실 분할 |
 | `/manual-digest --deatomize <id>` | 분할본 제거, `digest.md` 단독 조회로 복귀 |
 
@@ -227,7 +227,9 @@ extractor: <mcp-pdf-reader|pdftotext-layout|page-render|claude-read|expand-archi
 
 ### 8. 마스터 카탈로그 갱신
 - `<scope>/.claude/manuals/INDEX.md`에 1줄 항목 추가 (분할했으면 "분할" 칸 표기)
-- 같은 scope의 `CLAUDE.md` 마커 블록(형식: manual-digest-setup SKILL.md의 MARKER_BLOCK) 카탈로그 요약 갱신 (`<!-- manual-digest:start -->`...`<!-- manual-digest:end -->`)
+- **`CLAUDE.md`는 건드리지 않는다.** 마커 블록은 INDEX.md를 보라는 고정 포인터이며 개수도 목록도 담지 않으므로
+  갱신할 것이 없다. 세션 중 CLAUDE.md 수정은 프롬프트 캐시를 무효화하므로 이유 없이 쓰지 않는다.
+  블록이 손상·구버전이면 `/manual-digest-setup --repair`가 담당한다
 
 ### 9. 다이제스트 분할 판정 (크면 쪼갠다)
 
