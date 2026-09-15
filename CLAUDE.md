@@ -193,7 +193,7 @@ plugins/
 - 각 스킬은 `skills/<스킬명>/SKILL.md`에 YAML 프론트매터 + 마크다운 본문으로 구성
 - 프론트매터 필수 필드: `name`, `description`, `user-invocable: true`, `allowed-tools`
 - 에이전트는 `agents/<에이전트명>.md`에 프론트매터(`name`, `description`, `tools`, `model`) + 본문
-- 모든 에이전트 모델은 `opus` 사용
+- 에이전트 모델은 작업 성격으로 정한다. 원본에 있는 것을 옮기는 추출·요약·집계는 `sonnet`, 없는 것을 판단해 만들어내는 설계·작성·검수는 `opus`. 애매하면 `opus`로 두고 eval(`claude plugin eval`)로 재서 내린다.
 - 보조 파일(JSON, TCL, Python 등)은 같은 스킬 디렉토리에 배치
 - 템플릿 파일의 플레이스홀더: `{{PLACEHOLDER}}` 형식 통일 (Mustache 스타일 금지)
 
