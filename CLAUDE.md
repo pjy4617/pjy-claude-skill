@@ -173,6 +173,7 @@ plugins/
 │   │   └── prd-setup/             ← 에이전트 2종 + CLAUDE.md + docs/{prd,plan,checklist,reviews} 설치
 │   ├── agents/ (4개)              ← prd-writer(작성) + 문서 종류별 전용 검수 3종: prd-reviewer(PRD·외부 문서, 7카테고리) / prd-plan-reviewer(PLAN, 커버리지 실질·의존 강제·순환 우회·분해 실질 6축) / prd-checklist-reviewer(체크리스트, 완결성·주체 분리·근거 칸·차단 표기·분리 구조 5축) — 검수자 전원 쓰기 권한 없음
 │   ├── claude-md/CLAUDE.md
+│   ├── evals/                     ← `claude plugin eval` 스위트 (prd-plan 흐름 전용, 8케이스 = 계획 5 + 발동금지 3). 실행: `cd plugins/prd-plan && claude plugin eval . --ablation with-without --allow-tools Write`
 │   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json
