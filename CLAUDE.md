@@ -162,7 +162,7 @@ plugins/
 │   ├── skills/
 │   │   ├── prd-write/             ← 인터뷰(메인 세션 — 서브에이전트는 질문 불가) → PRD 작성 → 검수 루프(최대 3R) → 사용자 승인
 │   │   │   └── references/        ← prd-template-core(프론트매터·12섹션·REQ/AC 규격·금지어), prd-profiles(software[frontend React / backend C++·C#·Python / full-stack]·hardware-firmware·research-PoC), interview-guide, quality-rubric(7카테고리·4등급·검수 경계), large-doc-handling(doc-atomize 타이밍 3구간)
-│   │   ├── prd-plan/              ← PRD → WBS·의존 그래프·마일스톤·리스크 등록부·커버리지 매트릭스
+│   │   ├── prd-plan/              ← PRD → WBS·의존 그래프·마일스톤·리스크 등록부·커버리지 매트릭스 (일정·완료 시점 요구도 이 스킬이 받아 날짜를 지어내지 않고 필요한 입력 3가지 고지 + 의존 사슬 기반 상대 일정으로 답하며, PRD 없이 요구사항만 주어진 경우 분기 포함)
 │   │   │   └── references/        ← wbs-guide, estimation-policy(절대 날짜·인일 금지, S/M/L/XL만)
 │   │   ├── prd-checklist/         ← 체크리스트 생성 + --status(진척) + --sync(변경 영향 ⚠️)
 │   │   │   ├── references/        ← checklist-format (CHK 한 줄 규격·상태 마크·주체·완료 근거)
