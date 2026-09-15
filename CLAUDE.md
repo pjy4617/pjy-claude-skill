@@ -110,6 +110,7 @@ plugins/
 │   │   ├── manual-digest/         ← 인제스트/갱신/분할/목록/삭제 (9단계 워크플로, 문서+codebase)
 │   │   │   └── references/        ← 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase) + digest-atomize(다이제스트가 700줄/50 KB 넘으면 doc-atomize split_md.py로 무손실 분할, 미설치 시 분할만 생략. 분할 후 요약·라우팅 힌트 큐레이션이 게이트 — audit --strict 통과 필요)
 │   │   └── manual-digest-setup/   ← MCP 등록 + 디렉토리 + CLAUDE.md 마커 1회 초기화
+│   ├── evals/                     ← `claude plugin eval` 스위트 (PDF 문서 인제스트 흐름 전용, 7케이스 = 발동 5 + 발동금지 2). 실행: `cd plugins/manual-digest && claude plugin eval . --ablation with-without --judge-model opus --allow-tools Bash` — `--allow-tools Bash` 필수(없으면 양쪽 arm 0점), `Write`/`Edit`는 샌드박스가 `.claude/` 경로에서 거부하므로 일부러 주지 않는다. 사전 요구: `socat`
 │   └── docs/USAGE_GUIDE.md
 ├── pcb-design-digest/             ← PCB 설계/제조 데이터 다이제스트 플러그인 (2 스킬 + 1 에이전트, 메타 도구) — 거버 팹출력 + PADS(.pcb/.asc) + KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)
 │   ├── plugin.json
