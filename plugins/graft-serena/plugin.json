@@ -1,0 +1,9 @@
+{
+  "name": "graft-serena",
+  "version": "1.0.0",
+  "description": "graft(사전 빌드 그래프) + serena(LSP) 병행 배선 점검·수리 메타 도구. 두 도구는 배선이 틀어져도 에러 대신 빈 결과를 돌려주므로 고장이 몇 주씩 안 보인다(실측: 심볼 도구 7일간 5회 호출 성공 0회) — 세 축을 기계 판정한다. ① graft: CLI·MCP 등록·그래프 실존(디렉토리가 아니라 graft/INDEX.md 로 판정 — .cache 만 남아 '있는 것처럼' 보이는 함정)·파일 카드층과 배선 그래프층을 분리 판정(한 층만 멀쩡한 경우가 흔하다)·graft check --json 신선도(stale 이어도 exit 0 이라 JSON 파싱 필수)·--deep 대기는 고장이 아니라 선택으로 INFO. ② serena: .serena/project.yml 존재·language_servers 가 비었는지(활성화가 0.0x초에 끝나면 성공이 아니라 고장)·추적 파일 확장자로 탐지한 언어와의 불일치·자체 설정이 없어 상위 디렉토리 설정이 잡히는 간섭. ③ rtk: 설치·`rtk gain` 으로 동명 패키지(Rust Type Kit) 충돌 판별·재작성 훅 등록. 기본은 읽기 전용이고 --fix 는 파일 한 개로 끝나는 것(project.yml 생성·language_servers 보충, .bak 백업)만 고치며 graft build·--deep·패키지 설치는 명령만 출력한다(시간·LLM 비용·전역 변경). 라우팅 규칙은 담지 않는다 — 전역 CLAUDE.md 가 정본이고 복사본을 만들지 않는다. 1개 스킬(graft-serena-doctor), 에이전트·MCP 불필요(Python 표준 라이브러리만).",
+  "author": {
+    "name": "pjy4617"
+  },
+  "skills": "./skills/"
+}

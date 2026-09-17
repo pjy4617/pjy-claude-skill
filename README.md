@@ -100,6 +100,11 @@ Orca 워크트리 생성 시 실행할 setup 훅(<code>orca.yaml</code>) 자동 
 <b>30년 경력 PM 작성 에이전트 + 문서 종류별 전용 검수 에이전트 3종(쓰기 권한 없음)</b>으로 자기검증 차단 · REQ→TASK→CHK 추적성 기계 검증<br>
 5 스킬 + 4 에이전트
 </td>
+<td align="center" width="25%">
+<b>graft + serena</b><br>
+코드 검색 두 도구의 <b>레포별 배선 점검·수리</b> — graft 그래프 실존(<code>INDEX.md</code>)·신선도, serena <code>language_servers</code>, rtk 설치·충돌. 배선이 틀어지면 에러 대신 <b>빈 결과</b>가 와서 고장이 안 보이는 것을 기계 판정으로 드러냅니다 (Claude Code 메타 도구)<br>
+1 스킬
+</td>
 </tr>
 </table>
 
@@ -310,6 +315,18 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 - `doc-atomize` 플러그인 — PRD/PLAN이 40KB를 넘을 때 무손실 분할용. 없으면 통독 폴백으로 동작합니다
 - 문서 쓰기 권한: `<project>/docs/{prd,plan,checklist,reviews}` (다른 문서 구조를 쓰고 있으면 셋업이 물어봅니다)
 - **에이전트 2종은 새 세션부터 인식**됩니다 — `/prd-setup` 직후 세션 재시작을 권합니다
+
+</details>
+
+<details>
+<summary><b>graft + serena 플러그인</b></summary>
+
+- `python3`(표준 라이브러리만) — PyYAML 불필요. MCP·에이전트 없음
+- 점검 대상 도구는 **없어도 동작**합니다. `graft` CLI가 없으면 그 사실을 판정으로 보고하고, serena가 미등록이면 그것도 판정으로 보고합니다
+- `graft` 그래프 신선도 판정에는 `graft` CLI가 필요합니다 (없으면 그 항목만 건너뜁니다)
+- **serena 수리 후 MCP 서버 재시작 필요** — `activate_project` 재호출로는 반영되지 않습니다
+- 대상이 git 저장소면 `git ls-files`로 언어를 판정하고, 아니면 디렉토리 순회로 폴백합니다
+- `--fix`는 `.serena/project.yml`만 고칩니다 (`.bak` 백업). `graft build`·`--deep`·패키지 설치는 **명령만 출력**합니다
 
 </details>
 
@@ -546,6 +563,23 @@ git 워크트리에는 **추적되는 파일만** 따라옵니다 — `node_modu
 /prd-review <외부 문서>          ← 받은 문서 검수만 (읽기 전용)
 ```
 
+#### graft + serena (코드 검색 배선 점검) 설치
+
+```
+/plugin install graft-serena@pjy-skills
+```
+
+1개 스킬이 활성화됩니다. **셋업 스킬이 없어 설치 후 바로 사용**합니다(에이전트·MCP 불필요, `python3`만 필요).
+
+```
+/graft-serena-doctor          ← 점검 (읽기 전용)
+/graft-serena-doctor --fix    ← serena project.yml 수리
+```
+
+graft와 serena는 **배선이 틀어져도 에러를 내지 않습니다** — 그래프가 없으면 빈 결과, 언어 서버가 안 뜨면 `No active project`, 그래프가 오래됐으면 옛 `file:line` 좌표를 돌려줍니다. 그래서 고장이 몇 주씩 안 보입니다(실측: 심볼 도구 7일간 5회 호출, 성공 0회). 이 플러그인은 그 침묵을 판정 코드로 바꿉니다 — `graft/`에 `.cache`만 남아 디렉토리가 멀쩡해 보이는 함정, `language_servers`가 비어 활성화가 0.0x초에 끝나는 고장(성공이 아니라 고장입니다), 자체 설정이 없어 상위 디렉토리 설정이 잡히는 간섭, `graft check`가 stale이어도 exit 0을 주는 문제까지 확인합니다.
+
+**라우팅 규칙(언제 graft를 쓰고 언제 serena를 쓰는가)은 담지 않습니다.** 그 규칙은 사용자의 `CLAUDE.md`가 정본이고, 같은 규칙의 복사본을 플러그인에 두면 서로 다른 말을 하는 문서가 남습니다. 이 플러그인은 **"그 규칙을 실행할 수 있는 상태인가"**만 판정합니다.
+
 #### 여러 플러그인 동시 설치
 
 ```
@@ -564,6 +598,7 @@ git 워크트리에는 **추적되는 파일만** 따라옵니다 — `node_modu
 /plugin install doc-atomize@pjy-skills
 /plugin install orca-worktree@pjy-skills
 /plugin install prd-plan@pjy-skills
+/plugin install graft-serena@pjy-skills
 ```
 
 각 플러그인은 독립적이므로 원하는 것만 설치할 수 있습니다.
@@ -1166,6 +1201,28 @@ Orca가 새 워크트리를 만들 때 실행할 **setup 명령**을 레포에 �
 
 전부 답하지 않아도 됩니다. 미답변 항목은 기본값을 사용하고, 기본값 사용 사실을 명시합니다.
 
+### graft + serena 플러그인 — 이렇게 말하면 됩니다
+
+| 하고 싶은 것 | 이렇게 말하세요 | 실행되는 것 |
+|---|---|---|
+| 배선 점검 | "graft serena 점검" / `/graft-serena-doctor` | 3축 점검, 읽기 전용 |
+| serena 수리 | `/graft-serena-doctor --fix` | `.serena/project.yml` 생성·보충 (`.bak` 백업) |
+| 다른 레포 점검 | `/graft-serena-doctor --repo ../other` | 대상 지정 |
+| CI 게이트 | `/graft-serena-doctor --strict` | CRITICAL/MAJOR 있으면 exit 1 |
+
+```
+"심볼 검색이 아무것도 안 나와"        ← /graft-serena-doctor (원인 판정)
+"No active project 떠"                ← language_servers 비었는지 확인
+"graft 빌드해야 하나?"                ← 그래프 실존·신선도 판정
+"이 레포 코드 검색 준비됐어?"          ← 새 레포에서 작업 시작 전 1회
+```
+
+판정을 읽는 법: CRITICAL/MAJOR는 **지금 어떤 도구가 빈 결과를 주는지**를 뜻합니다.
+`GRAFT_DEEP_PENDING` 같은 INFO는 고장이 아니라 선택 사항(LLM 키·비용)입니다.
+
+`--fix`는 파일 한 개로 끝나는 것만 고칩니다. `graft build`는 시간·CPU를,
+`--deep`은 LLM 비용을 쓰므로 **명령만 출력**하고 실행은 사람이 겁니다.
+
 ---
 
 ## 리뷰 결과 읽는 법
@@ -1372,6 +1429,12 @@ pjy-claude-skill/
 │   │   │   │   └── references/    ← review-checklist (형식 차이 처리·착수 가능성 5항 판정)
 │   │   │   └── prd-setup/         ← 에이전트 2종 + CLAUDE.md + docs/ 디렉토리 설치
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (OMC plan과의 차이, 흐름, 검증 코드표, FAQ)
+│   ├── graft-serena/              ← graft+serena 병행 배선 점검·수리 플러그인 (메타 도구, 에이전트 0)
+│   │   ├── plugin.json
+│   │   ├── skills/ (1개)
+│   │   │   └── graft-serena-doctor/
+│   │   │       └── assets/        ← check_wiring.py (3축 점검 + --fix/--json/--strict/--selftest, 표준 라이브러리만)
+│   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (판정 코드표, --fix 경계, CI 사용)
 │   └── react-vite/                ← React 19 + Vite 8 프론트엔드 플러그인
 │       ├── plugin.json
 │       ├── skills/ (2개)          ← 구현→검증 워크플로 + 에이전트 셋업
@@ -1447,6 +1510,7 @@ KiCad 9.x에서 바로 열 수 있습니다. 다만 S-expression 직접 생성�
 - **Doc Atomize**: [`plugins/doc-atomize/docs/USAGE_GUIDE.md`](plugins/doc-atomize/docs/USAGE_GUIDE.md)
 - **Orca Worktree**: [`plugins/orca-worktree/docs/USAGE_GUIDE.md`](plugins/orca-worktree/docs/USAGE_GUIDE.md)
 - **PRD Plan**: [`plugins/prd-plan/docs/USAGE_GUIDE.md`](plugins/prd-plan/docs/USAGE_GUIDE.md)
+- **graft + serena**: [`plugins/graft-serena/docs/USAGE_GUIDE.md`](plugins/graft-serena/docs/USAGE_GUIDE.md)
 
 ---
 

@@ -93,6 +93,12 @@
       "source": "./plugins/orca-worktree",
       "description": "Orca 워크트리 setup/archive 훅(orca.yaml) 자동 생성·검증 + 프로젝트 설정 적합성 점검 메타 도구. git 워크트리에는 추적 파일만 따라오므로 node_modules·.venv·.env·.claude/settings.local.json·대용량 참조 자산이 빠진 채 새 워크트리가 만들어진다 — 레포를 프로파일링(락파일·빌드시스템·모노레포 하위 경로)하고 git status --ignored로 비추적 자산을 스캔해 재설치/복사/링크로 분류한 뒤 120초 예산 안의 단계만 남긴 scripts.setup을 작성한다. 실측된 함정을 기본 회피 — Orca가 러너에 주입하는 set -e(해제 안 하면 첫 실패에서 나머지 통째 누락), YAML 파싱 실패 시 훅 전체 무시, .gitignore가 심볼릭 링크에 매칭되지 않는 문제(info/exclude로 해결), archive에서 -L 없는 rm이 메인 원본을 지우는 사고. 검증은 임시 git worktree에 ORCA_* 환경변수를 주입하고 set -e를 재현한 실드라이런으로 소요시간·실패 단계·멱등성까지 증거로 남긴다. 3개 스킬: orca-setup-build(분석→생성→드라이런) + orca-project-config(레포 등록·base ref·워크트리 경로 설정 방법 + 3축 적합성 점검) + orca-setup-review(4등급 진단, 읽기 전용). 에이전트·MCP 불필요(Python 표준 라이브러리 + bash).",
       "version": "1.0.1"
+    },
+    {
+      "name": "graft-serena",
+      "source": "./plugins/graft-serena",
+      "description": "graft(사전 빌드 그래프) + serena(LSP) 병행 배선 점검·수리 메타 도구. 두 도구는 배선이 틀어져도 에러 대신 빈 결과를 돌려주므로 고장이 몇 주씩 안 보인다(실측: 심볼 도구 7일간 5회 호출 성공 0회) — 세 축을 기계 판정한다. ① graft: CLI·MCP 등록·그래프 실존(디렉토리가 아니라 graft/INDEX.md 로 판정 — .cache 만 남아 '있는 것처럼' 보이는 함정)·파일 카드층과 배선 그래프층을 분리 판정(한 층만 멀쩡한 경우가 흔하다)·graft check --json 신선도(stale 이어도 exit 0 이라 JSON 파싱 필수)·--deep 대기는 고장이 아니라 선택으로 INFO. ② serena: .serena/project.yml 존재·language_servers 가 비었는지(활성화가 0.0x초에 끝나면 성공이 아니라 고장)·추적 파일 확장자로 탐지한 언어와의 불일치·자체 설정이 없어 상위 디렉토리 설정이 잡히는 간섭. ③ rtk: 설치·`rtk gain` 으로 동명 패키지(Rust Type Kit) 충돌 판별·재작성 훅 등록. 기본은 읽기 전용이고 --fix 는 파일 한 개로 끝나는 것(project.yml 생성·language_servers 보충, .bak 백업)만 고치며 graft build·--deep·패키지 설치는 명령만 출력한다(시간·LLM 비용·전역 변경). 라우팅 규칙은 담지 않는다 — 전역 CLAUDE.md 가 정본이고 복사본을 만들지 않는다. 1개 스킬(graft-serena-doctor), 에이전트·MCP 불필요(Python 표준 라이브러리만).",
+      "version": "1.0.0"
     }
   ]
 }
