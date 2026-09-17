@@ -71,3 +71,6 @@ skill-test/
 *.kicad_sch-bak
 fp-info-cache
 .note.md
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
