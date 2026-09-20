@@ -145,6 +145,7 @@ plugins/
 │   │   │   └── assets/            ← split_md.py (split·verify·reindex·update·audit, Python 표준 라이브러리만)
 │   │   └── doc-atomize-setup/     ← 디렉토리 + INDEX.md + CLAUDE.md 마커 1회 초기화 (MCP·에이전트 불필요)
 │   ├── hooks/                     ← hooks.json(PostToolUse) + sync_atomized.py — 등록된 원본을 Edit/Write 하면 변경 조각만 자동 재분할·무손실 재검증 (등록 전 문서 무반응, 항상 exit 0)
+│   ├── evals/                     ← `claude plugin eval` 스위트 (마크다운 분할 흐름 전용, 5케이스 = 발동 3 + 발동금지 2). 실행: `cd plugins/doc-atomize && claude plugin eval . --ablation with-without --judge-model opus --allow-tools Bash` — `--allow-tools Bash` 필수(없으면 양쪽 arm 0점), `Write`/`Edit`는 샌드박스가 `.claude/` 경로에서 거부하므로 일부러 주지 않는다. 픽스처(628줄 사양서)는 프롬프트 안 파이썬으로 바이트 단위 재현 생성 — 생성 스크립트를 고치면 그레이더에 박힌 원본 sha256 상수도 함께 갈아야 한다. 사전 요구: `socat`
 │   └── docs/USAGE_GUIDE.md
 ├── orca-worktree/                 ← Orca 워크트리 setup 훅 플러그인 (3 스킬, 에이전트 없음, 메타 도구) — Orca가 새 워크트리를 만들 때 실행할 orca.yaml scripts.setup을 레포에 맞게 작성하고 임시 워크트리 실드라이런으로 검증. harness가 Claude Code 하네스를 다룬다면 이쪽은 Orca 워크트리 준비를 다룬다
 │   ├── plugin.json
