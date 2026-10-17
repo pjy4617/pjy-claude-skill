@@ -184,6 +184,12 @@ plugins/
 │   ├── skills/graft-serena-doctor/
 │   │   └── assets/                ← check_wiring.py (3축 판정: graft 그래프 실존(INDEX.md 파일 기준)·카드층/배선층 분리 신선도·--deep 대기 / serena project.yml·language_servers·상위 설정 간섭 / rtk 설치·gain 충돌·훅. --fix는 project.yml만(.bak 백업), graft build·--deep·설치는 명령만 출력. --json/--strict/--selftest, 표준 라이브러리만)
 │   └── docs/USAGE_GUIDE.md
+├── t1-design/                     ← HTML에 T1 디자인 시스템(Kinetic Horizon) 적용 플러그인 (1 스킬, 에이전트 0, 메타 도구) — 어느 프로젝트든 HTML 작성 시 tokens.css를 그대로 붙여 색·글꼴·모서리·그림자를 고정. DESIGN.md는 ~/Repos/T1/esc-chip/docs/design/ 의 복사본(동기화 절차는 USAGE_GUIDE)
+│   ├── plugin.json
+│   ├── skills/t1-design/
+│   │   ├── DESIGN.md              ← 원본 복사본 (YAML 토큰 + 브랜드·컴포넌트 규칙)
+│   │   └── assets/                ← tokens.css(라이트 원본 + 톤 계열에서 유도한 다크, prefers-color-scheme·data-theme 둘 다) + t1_logo.jpg/t1_logo2.jpg
+│   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json
     ├── skills/
@@ -232,7 +238,7 @@ grep -r "wmx3-module-scaffold\|plugins/wmx3/" plugins/wmx3md/ && echo "FAIL: 잘
 플러그인 종류:
 - **도메인 플러그인**(vivado/stm32f4/kicad/manual/wmx3md/wmx3app/rlcontrol): 특정 기술 도메인 작업. `claude-md/` 템플릿 + `*-setup`이 모든 에이전트 복사
 - **워크플로 플러그인**(parallel-delegation/prd-plan): 도메인 무관 절차. `parallel-delegation`은 `claude-md/` 없이 `*-setup`이 누락 역할만 보충하고, `prd-plan`은 산출물 규약(문서 경로·REQ/TASK/CHK ID·절대 규칙)이 있어 예외적으로 `claude-md/` 템플릿을 둔다
-- **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest/doc-atomize/orca-worktree/graft-serena): Claude Code 자체 환경, 컨텍스트 관리, 또는 개발 환경(Orca 워크트리) 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만 두고 큰 다이제스트는 `doc-atomize`(선택 의존성)로 무손실 분할해 조회하며, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요), `doc-atomize`는 대용량 .md를 무손실 분할(요약 아님)하고 `<doc-id>.index.md`로 조회하며 에이전트 0개 + 디렉토리/마커 초기화 setup만(MCP 불필요, Python 표준 라이브러리), `orca-worktree`는 Orca 워크트리 생성 시 실행될 `orca.yaml` `scripts.setup`을 레포 프로파일링으로 작성하고 임시 git worktree 실드라이런으로 검증하며 에이전트 0개 + setup 스킬 없음(설치할 것이 없다 — 설치 즉시 사용), `graft-serena`는 코드 검색 두 도구의 레포별 배선(graft 그래프 실존·신선도 / serena `language_servers` / rtk)을 점검·수리하며 에이전트 0개 + setup 없음이고 **라우팅 규칙을 담지 않는다** — 그 규칙은 사용자 전역 `CLAUDE.md`가 정본이고, 플러그인에 복사본을 두면 서로 다른 말을 하는 문서가 남는다(이 플러그인은 "규칙을 실행할 수 있는 상태인가"만 판정한다).
+- **메타 도구 플러그인**(harness/manual-digest/pcb-design-digest/doc-atomize/orca-worktree/graft-serena/t1-design): Claude Code 자체 환경, 컨텍스트 관리, 또는 개발 환경(Orca 워크트리) 도구. `claude-md/` 없음, 에이전트도 0~필요 최소. `harness`는 setup 없음(현재 디렉토리 진단), `manual-digest`는 1회 환경 초기화용 setup만 두고 큰 다이제스트는 `doc-atomize`(선택 의존성)로 무손실 분할해 조회하며, `pcb-design-digest`는 거버 팹출력뿐 아니라 PADS(.pcb/.asc)·KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)까지 인제스트하며 에이전트 1개(pcb-design-analyst) + 그것을 `.claude/agents/`로 설치하는 setup(MCP 불필요), `doc-atomize`는 대용량 .md를 무손실 분할(요약 아님)하고 `<doc-id>.index.md`로 조회하며 에이전트 0개 + 디렉토리/마커 초기화 setup만(MCP 불필요, Python 표준 라이브러리), `orca-worktree`는 Orca 워크트리 생성 시 실행될 `orca.yaml` `scripts.setup`을 레포 프로파일링으로 작성하고 임시 git worktree 실드라이런으로 검증하며 에이전트 0개 + setup 스킬 없음(설치할 것이 없다 — 설치 즉시 사용), `graft-serena`는 코드 검색 두 도구의 레포별 배선(graft 그래프 실존·신선도 / serena `language_servers` / rtk)을 점검·수리하며 에이전트 0개 + setup 없음이고 **라우팅 규칙을 담지 않는다** — 그 규칙은 사용자 전역 `CLAUDE.md`가 정본이고, 플러그인에 복사본을 두면 서로 다른 말을 하는 문서가 남는다(이 플러그인은 "규칙을 실행할 수 있는 상태인가"만 판정한다).
 
 1. `plugins/<이름>/plugin.json` 생성 (`name`, `version`, `description`, `skills` 필드)
 2. `plugins/<이름>/skills/<스킬명>/SKILL.md` 생성

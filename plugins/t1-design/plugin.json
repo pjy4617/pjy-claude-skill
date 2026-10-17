@@ -1,0 +1,9 @@
+{
+  "name": "t1-design",
+  "version": "1.0.0",
+  "description": "어느 프로젝트에서든 HTML을 만들 때 T1 디자인 시스템(Kinetic Horizon — 주황 #F58220·호박색 그라데이션, Outfit/Plus Jakarta Sans)을 입히는 메타 도구. DESIGN.md 토큰을 미리 CSS 변수로 변환한 tokens.css(라이트 원본 + 원본 톤 계열에서 유도한 다크)를 그대로 붙여 넣어 모든 HTML이 같은 값을 쓰게 하고, 컴포넌트 모양은 DESIGN.md Components 절을 따른다. 색·글꼴·모서리·그림자는 Artifact 기본 디자인 지침보다 우선. 직접 적은 색 코드를 찾는 검증 한 줄 포함. 1개 스킬(t1-design), 에이전트·MCP·setup 불필요 — 설치 즉시 사용.",
+  "author": {
+    "name": "pjy4617"
+  },
+  "skills": "./skills/"
+}

@@ -1,0 +1,148 @@
+/* T1 디자인 토큰 (Kinetic Horizon) — DESIGN.md 프론트매터를 CSS 변수로 옮긴 것.
+   HTML <style> 맨 앞에 통째로 붙여 넣는다. 색은 var(--이름)으로만 쓴다.
+   글꼴: <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet"> */
+:root {
+  color-scheme: light dark;
+
+  /* 색 — 라이트 (DESIGN.md colors 원본 값) */
+  --surface: #fff8f5;
+  --surface-dim: #e0d8d5;
+  --surface-bright: #fff8f5;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #faf2ee;
+  --surface-container: #f4ece8;
+  --surface-container-high: #eee7e3;
+  --surface-container-highest: #e9e1dd;
+  --on-surface: #1e1b19;
+  --on-surface-variant: #564336;
+  --inverse-surface: #33302d;
+  --inverse-on-surface: #f7efeb;
+  --outline: #8a7264;
+  --outline-variant: #ddc1b0;
+  --surface-tint: #964900;
+  --primary: #964900;
+  --on-primary: #ffffff;
+  --primary-container: #f58220;
+  --on-primary-container: #5b2a00;
+  --inverse-primary: #ffb786;
+  --secondary: #815600;
+  --on-secondary: #ffffff;
+  --secondary-container: #ffae00;
+  --on-secondary-container: #6a4600;
+  --tertiary: #775a00;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #c99a00;
+  --on-tertiary-container: #483500;
+  --error: #ba1a1a;
+  --on-error: #ffffff;
+  --error-container: #ffdad6;
+  --on-error-container: #93000a;
+  --primary-fixed: #ffdcc6;
+  --primary-fixed-dim: #ffb786;
+  --on-primary-fixed: #311300;
+  --on-primary-fixed-variant: #723600;
+  --secondary-fixed: #ffddb1;
+  --secondary-fixed-dim: #ffba48;
+  --on-secondary-fixed: #291800;
+  --on-secondary-fixed-variant: #614000;
+  --tertiary-fixed: #ffdf99;
+  --tertiary-fixed-dim: #f6bf22;
+  --on-tertiary-fixed: #251a00;
+  --on-tertiary-fixed-variant: #5a4300;
+  --background: #fff8f5;
+  --on-background: #1e1b19;
+  --surface-variant: #e9e1dd;
+
+  /* 브랜드 원색 — DESIGN.md 본문(Colors·Elevation·Components) 값. 그라데이션·배지·강조선 전용 */
+  --brand-orange: #f58220;
+  --brand-amber: #ffae00;
+  --brand-yellow: #ffc72c;
+  --brand-ink: #1c1917;
+  --brand-border: #eae2da;
+  --brand-muted: #fbf8f5;
+  --gradient-brand: linear-gradient(135deg, #f58220 0%, #ffae00 100%);
+  --badge-bg: #fff3e8;
+  --badge-fg: #d0660d;
+  --focus-ring: 0 0 0 3px rgba(245, 130, 32, 0.20);
+
+  /* 그림자 — 라이트 */
+  --shadow-1: 0 4px 20px -2px rgba(245, 130, 32, 0.08), 0 2px 6px -1px rgba(28, 25, 23, 0.04);
+  --shadow-2: 0 12px 32px -4px rgba(245, 130, 32, 0.16), 0 4px 12px -2px rgba(28, 25, 23, 0.06);
+  --shadow-3: 0 20px 48px -6px rgba(28, 25, 23, 0.12);
+  --shadow-button: 0 4px 14px rgba(245, 130, 32, 0.35);
+
+  /* 모서리·간격 */
+  --radius-sm: 0.25rem;
+  --radius-default: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+  --gutter: 1.5rem;
+  --margin: 2rem;
+  --gutter-desktop: 2rem;
+  --margin-desktop: 5rem;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+
+  /* 글자 — font 단축 속성 + 자간 짝. 사용: font: var(--font-body-md); letter-spacing: var(--tracking-body-md); */
+  --font-display-hero: 700 56px/64px 'Outfit', sans-serif;  --tracking-display-hero: -0.03em;
+  --font-display-hero-mobile: 700 36px/44px 'Outfit', sans-serif;  --tracking-display-hero-mobile: -0.02em;
+  --font-headline-lg: 600 40px/48px 'Outfit', sans-serif;  --tracking-headline-lg: -0.02em;
+  --font-headline-lg-mobile: 600 28px/36px 'Outfit', sans-serif;  --tracking-headline-lg-mobile: -0.01em;
+  --font-headline-md: 600 28px/36px 'Outfit', sans-serif;  --tracking-headline-md: -0.01em;
+  --font-headline-sm: 600 22px/30px 'Outfit', sans-serif;  --tracking-headline-sm: 0em;
+  --font-title-md: 600 18px/26px 'Plus Jakarta Sans', sans-serif;  --tracking-title-md: 0em;
+  --font-body-lg: 400 18px/28px 'Plus Jakarta Sans', sans-serif;  --tracking-body-lg: 0em;
+  --font-body-md: 400 15px/24px 'Plus Jakarta Sans', sans-serif;  --tracking-body-md: 0em;
+  --font-body-sm: 400 13px/20px 'Plus Jakarta Sans', sans-serif;  --tracking-body-sm: 0.01em;
+  --font-label-md: 600 14px/20px 'Plus Jakarta Sans', sans-serif;  --tracking-label-md: 0.02em;
+  --font-label-sm: 700 11px/16px 'Plus Jakarta Sans', sans-serif;  --tracking-label-sm: 0.06em;
+}
+
+/* 다크 — DESIGN.md 에 없는 값이다. 원본의 톤 계열(primary-fixed-dim 등)에서 Material 3 다크 규칙으로 유도했다.
+   브랜드 공식 다크 팔레트가 나오면 이 블록만 교체한다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface: #161311; --surface-dim: #161311; --surface-bright: #3d3835;
+    --surface-container-lowest: #110d0b; --surface-container-low: #1e1b19;
+    --surface-container: #231f1d; --surface-container-high: #2d2927; --surface-container-highest: #383432;
+    --on-surface: #e9e1dd; --on-surface-variant: #ddc1b0;
+    --inverse-surface: #e9e1dd; --inverse-on-surface: #33302d;
+    --outline: #a48c7d; --outline-variant: #564336;
+    --surface-tint: #ffb786; --primary: #ffb786; --on-primary: #502400;
+    --primary-container: #723600; --on-primary-container: #ffdcc6; --inverse-primary: #964900;
+    --secondary: #ffba48; --on-secondary: #452b00; --secondary-container: #614000; --on-secondary-container: #ffddb1;
+    --tertiary: #f6bf22; --on-tertiary: #3f2e00; --tertiary-container: #5a4300; --on-tertiary-container: #ffdf99;
+    --error: #ffb4ab; --on-error: #690005; --error-container: #93000a; --on-error-container: #ffdad6;
+    --background: #161311; --on-background: #e9e1dd; --surface-variant: #564336;
+    --brand-ink: #e9e1dd; --brand-border: #564336; --brand-muted: #1e1b19;
+    --badge-bg: #3a2414; --badge-fg: #ffb786;
+    --shadow-1: 0 4px 20px -2px rgba(0, 0, 0, 0.40);
+    --shadow-2: 0 12px 32px -4px rgba(245, 130, 32, 0.18), 0 4px 12px -2px rgba(0, 0, 0, 0.40);
+    --shadow-3: 0 20px 48px -6px rgba(0, 0, 0, 0.55);
+  }
+}
+
+:root[data-theme="dark"] {
+  --surface: #161311; --surface-dim: #161311; --surface-bright: #3d3835;
+  --surface-container-lowest: #110d0b; --surface-container-low: #1e1b19;
+  --surface-container: #231f1d; --surface-container-high: #2d2927; --surface-container-highest: #383432;
+  --on-surface: #e9e1dd; --on-surface-variant: #ddc1b0;
+  --inverse-surface: #e9e1dd; --inverse-on-surface: #33302d;
+  --outline: #a48c7d; --outline-variant: #564336;
+  --surface-tint: #ffb786; --primary: #ffb786; --on-primary: #502400;
+  --primary-container: #723600; --on-primary-container: #ffdcc6; --inverse-primary: #964900;
+  --secondary: #ffba48; --on-secondary: #452b00; --secondary-container: #614000; --on-secondary-container: #ffddb1;
+  --tertiary: #f6bf22; --on-tertiary: #3f2e00; --tertiary-container: #5a4300; --on-tertiary-container: #ffdf99;
+  --error: #ffb4ab; --on-error: #690005; --error-container: #93000a; --on-error-container: #ffdad6;
+  --background: #161311; --on-background: #e9e1dd; --surface-variant: #564336;
+  --brand-ink: #e9e1dd; --brand-border: #564336; --brand-muted: #1e1b19;
+  --badge-bg: #3a2414; --badge-fg: #ffb786;
+  --shadow-1: 0 4px 20px -2px rgba(0, 0, 0, 0.40);
+  --shadow-2: 0 12px 32px -4px rgba(245, 130, 32, 0.18), 0 4px 12px -2px rgba(0, 0, 0, 0.40);
+  --shadow-3: 0 20px 48px -6px rgba(0, 0, 0, 0.55);
+}

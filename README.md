@@ -105,6 +105,11 @@ Orca 워크트리 생성 시 실행할 setup 훅(<code>orca.yaml</code>) 자동 
 코드 검색 두 도구의 <b>레포별 배선 점검·수리</b> — graft 그래프 실존(<code>INDEX.md</code>)·신선도, serena <code>language_servers</code>, rtk 설치·충돌. 배선이 틀어지면 에러 대신 <b>빈 결과</b>가 와서 고장이 안 보이는 것을 기계 판정으로 드러냅니다 (Claude Code 메타 도구)<br>
 1 스킬
 </td>
+<td align="center" width="25%">
+<b>T1 Design</b><br>
+어느 프로젝트든 <b>HTML을 만들 때 T1 디자인(Kinetic Horizon)</b>을 입힙니다 — 미리 변환한 <code>tokens.css</code>(라이트+다크 CSS 변수)를 그대로 붙여 모든 HTML이 같은 색·글꼴을 씁니다 (메타 도구)<br>
+1 스킬
+</td>
 </tr>
 </table>
 
@@ -327,6 +332,15 @@ Claude: (RTL 리뷰어 + TB 리뷰어 + 핀 리뷰어 3명이 병렬로 작업 �
 - **serena 수리 후 MCP 서버 재시작 필요** — `activate_project` 재호출로는 반영되지 않습니다
 - 대상이 git 저장소면 `git ls-files`로 언어를 판정하고, 아니면 디렉토리 순회로 폴백합니다
 - `--fix`는 `.serena/project.yml`만 고칩니다 (`.bak` 백업). `graft build`·`--deep`·패키지 설치는 **명령만 출력**합니다
+
+</details>
+
+<details>
+<summary><b>T1 Design 플러그인</b></summary>
+
+- 요구사항 없음. 에이전트·MCP·setup 불필요
+- 모든 프로젝트에서 쓰려면 **사용자 범위(user scope)로 설치**하고 세션을 다시 엽니다
+- 글꼴은 Google Fonts에서 받으므로 HTML을 볼 때 인터넷이 필요합니다 (없으면 sans-serif로 대체)
 
 </details>
 
@@ -580,6 +594,14 @@ graft와 serena는 **배선이 틀어져도 에러를 내지 않습니다** — 
 
 **라우팅 규칙(언제 graft를 쓰고 언제 serena를 쓰는가)은 담지 않습니다.** 그 규칙은 사용자의 `CLAUDE.md`가 정본이고, 같은 규칙의 복사본을 플러그인에 두면 서로 다른 말을 하는 문서가 남습니다. 이 플러그인은 **"그 규칙을 실행할 수 있는 상태인가"**만 판정합니다.
 
+#### T1 Design (HTML 디자인 토큰) 설치
+
+```
+/plugin install t1-design@pjy-skills
+```
+
+1개 스킬이 활성화됩니다. **셋업 스킬이 없어 설치 후 바로 사용**합니다. "HTML 보고서 만들어줘"처럼 HTML을 요청하면 자동으로 T1 디자인 토큰이 입혀집니다.
+
 #### 여러 플러그인 동시 설치
 
 ```
@@ -599,6 +621,7 @@ graft와 serena는 **배선이 틀어져도 에러를 내지 않습니다** — 
 /plugin install orca-worktree@pjy-skills
 /plugin install prd-plan@pjy-skills
 /plugin install graft-serena@pjy-skills
+/plugin install t1-design@pjy-skills
 ```
 
 각 플러그인은 독립적이므로 원하는 것만 설치할 수 있습니다.
@@ -1442,6 +1465,12 @@ pjy-claude-skill/
 │   │   │   └── graft-serena-doctor/
 │   │   │       └── assets/        ← check_wiring.py (3축 점검 + --fix/--json/--strict/--selftest, 표준 라이브러리만)
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (판정 코드표, --fix 경계, CI 사용)
+│   ├── t1-design/                 ← HTML에 T1 디자인 토큰 적용 플러그인 (메타 도구, 에이전트 0)
+│   │   ├── plugin.json
+│   │   ├── skills/ (1개)
+│   │   │   └── t1-design/         ← SKILL.md + DESIGN.md(원본 복사본)
+│   │   │       └── assets/        ← tokens.css(라이트+유도 다크) + 로고 2종
+│   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (확인 방법, 다크 모드, 원본 동기화)
 │   └── react-vite/                ← React 19 + Vite 8 프론트엔드 플러그인
 │       ├── plugin.json
 │       ├── skills/ (2개)          ← 구현→검증 워크플로 + 에이전트 셋업
@@ -1518,6 +1547,7 @@ KiCad 9.x에서 바로 열 수 있습니다. 다만 S-expression 직접 생성�
 - **Orca Worktree**: [`plugins/orca-worktree/docs/USAGE_GUIDE.md`](plugins/orca-worktree/docs/USAGE_GUIDE.md)
 - **PRD Plan**: [`plugins/prd-plan/docs/USAGE_GUIDE.md`](plugins/prd-plan/docs/USAGE_GUIDE.md)
 - **graft + serena**: [`plugins/graft-serena/docs/USAGE_GUIDE.md`](plugins/graft-serena/docs/USAGE_GUIDE.md)
+- **T1 Design**: [`plugins/t1-design/docs/USAGE_GUIDE.md`](plugins/t1-design/docs/USAGE_GUIDE.md)
 
 ---
 
