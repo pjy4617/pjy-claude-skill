@@ -65,6 +65,44 @@ digest.md 프론트매터와 같은 값을 기록한다 (두 곳의 값이 달�
 
 `verified: false`인 분할본은 **조회 경로에서 제외**하고 `digest.md`를 직접 읽는다.
 
+## 부품 모드 필드 (`kind: "component"`)
+
+`--component`로 등록한 항목에만 쓴다. 절차는 `component-mode.md` 참조.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `kind` | string | `"component"`. 일반 매뉴얼은 생략 |
+| `aliases` | string[] | 같은 데이터시트가 다루는 다른 품번(소문자). 중복 판정에 ID와 함께 쓴다 |
+| `origin` | string | 사용자가 준 원래 경로 (기록용). `source`는 복사본 `~/.claude/manuals/<id>/source.*` |
+| `revisions` | object[] | 갱신 때마다 **이전** Rev를 한 줄씩 쌓는다. 원본 파일은 남기지 않는다 |
+| `kicad` | object | KiCad 세 파일의 위치. 파일 자체는 복사하지 않는다 |
+| `source_missing` | bool | 원본 없이 다이제스트만 옮긴 경우 `true` (`source`는 `null`). 원본 페이지 조회 불가 |
+| `migrated_from` / `migrated_at` | string | `--migrate`로 옮겨 온 프로젝트 경로와 시각 |
+
+```json
+"revisions": [
+  {"version": "Rev E", "publication_date": "2022-11-01", "sha256": "…", "replaced_at": "2026-10-18T10:00:00+09:00"}
+],
+"kicad": {
+  "symbol": "Power_Management:TPS2051CDBV",
+  "footprint": "Package_TO_SOT_SMD:SOT-23-5",
+  "model": "${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step",
+  "model_kind": "vendor",
+  "checked_at": "2026-10-18T10:00:00+09:00",
+  "warnings": []
+}
+```
+
+| `kicad` 하위 키 | 타입 | 설명 |
+|---|---|---|
+| `symbol` / `footprint` | string\|null | KiCad 이름 `<라이브러리>:<이름>`. `null` = 없음 |
+| `model` | string\|null | 풋프린트에 적힌 그대로의 경로 (`${...}` 변수 유지 — 실제 경로는 `kicad_locate.py`가 매번 풀어 쓴다) |
+| `model_kind` | string | `vendor`(제조사 STEP) / `box`(상자 근사, 나중에 교체 대상) / `unknown` |
+| `checked_at` | string | 마지막 위치 확인 시각 |
+| `warnings` | string[] | 핀 대조·풋프린트 재확인 경고. 등록을 막지 않는다 |
+
+실제 파일 경로는 기록하지 않는다 — 라이브러리 표와 경로 변수로 매번 다시 풀어야 옮겨도 낡지 않는다.
+
 ## 코드베이스와의 차이
 
 `format: codebase`는 문서 전용 필드(`sha256`/`pages`/`publication_date`)를 생략하거나 `null`로 두고,

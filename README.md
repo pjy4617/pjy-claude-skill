@@ -905,6 +905,12 @@ PCB 레이아웃 진행
 | 코드베이스 등록 | "이 레포 코드 다이제스트 만들어줘" / `/manual-digest <dir>` | manual-digest 스킬 (`format: codebase`, MCP 불필요) |
 | Global scope 등록 | `/manual-digest <path> --scope global` | 모든 프로젝트 공유 |
 | 원본 변경 시 갱신 | `/manual-digest --update <id>` | 문서=sha256 / 코드=git ref 비교 → 변경분만 재요약 (+분할본 자동 갱신) |
+| 부품 데이터시트 전역 등록 | "이 데이터시트 전역 등록해줘" / `/manual-digest --component <pdf>` | 전역 고정 + 원본 복사 + 중복·개정판 판정 + KiCad 심볼·풋프린트·3D 위치 기록(복사 없음, 핀 대조 경고) |
+| 부품 중복 미리 확인 | `/manual-digest --component --check <pdf...>` | 등록 없이 이미 있음 / 개정판 있음 / 새 부품 판정 |
+| 부품 새 Rev 갱신 | `/manual-digest --component --update <id> <pdf>` | 개정 이력 확인 → 재요약 → 이전 Rev는 `revisions`에 한 줄 |
+| 부품 KiCad 파일 채우기 | "ch334r 심볼 만들어서 등록해줘" / `/manual-digest --component --kicad <id>` | 빠진 파일만 부품 생성 스킬에 위임 후 위치 기록 |
+| 기존 프로젝트 부품 다이제스트 이전 | `/manual-digest --component --migrate <프로젝트>` | 재요약 없이 전역으로 복사(원본 없으면 다이제스트만), 프로젝트 INDEX는 전역을 가리키게 변경, 분류는 사용자 확인 후 실행 |
+| 부품 목록·상태 | `/manual-digest --component --list` | 부품마다 Rev + 심볼/풋프린트/3D 있음·없음·위치 끊김 |
 | 큰 다이제스트 분할 | "다이제스트 쪼개줘" / `/manual-digest --atomize <id>` | doc-atomize `split_md.py`로 무손실 분할 (700줄/50 KB 초과 시 자동 제안) → 조각 요약·라우팅 힌트 큐레이션 후 `audit --strict` 게이트 |
 | 분할 해제 | `/manual-digest --deatomize <id>` | 조각 제거, `digest.md` 단독 조회로 복귀 |
 | 등록 매뉴얼 목록 | "등록된 매뉴얼 목록" / `/manual-digest --list` | INDEX.md 출력 |
@@ -1364,7 +1370,8 @@ pjy-claude-skill/
 │   │   ├── plugin.json
 │   │   ├── skills/ (2개)          ← 인제스트/갱신/분할/목록/삭제 + 환경 1회 초기화
 │   │   │   ├── manual-digest/
-│   │   │   │   └── references/    ← 7개 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase) + digest-atomize(큰 다이제스트 무손실 분할)
+│   │   │   │   └── references/    ← 7개 포맷별 추출 가이드 (PDF/HTML/EPUB/DOCX/CHM/TXT-MD/codebase) + digest-atomize(큰 다이제스트 무손실 분할) + component-mode(부품 모드)
+│   │   │   │   └── assets/        ← pdf_extract.py(PDF 추출) + kicad_locate.py(부품 KiCad 파일 위치 확인) + migrate_components.py(프로젝트 다이제스트 전역 이전)
 │   │   │   └── manual-digest-setup/
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (빠른 시작, 명령어, scope, 트러블슈팅)
 │   ├── pcb-design-digest/         ← PCB 설계 다이제스트 플러그인 (거버/PADS/KiCad, 메타 도구)

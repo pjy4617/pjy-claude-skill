@@ -98,6 +98,38 @@ MCP 서버를 등록하지 않으므로 **세션 재시작이 필요 없다**.
 해당 매뉴얼 디렉토리 + INDEX.md 항목을 제거한다. **CLAUDE.md는 건드리지 않는다** — 마커 블록은
 INDEX.md를 보라는 고정 포인터라 등록·삭제 때마다 고칠 것이 없다.
 
+### 부품 데이터시트 (전역 공용)
+
+```
+/manual-digest --component <datasheet.pdf>           # 등록
+/manual-digest --component --check <pdf...>          # 등록 없이 중복·개정판만 판정
+/manual-digest --component --update <id> <new.pdf>   # 새 Rev로 갱신
+/manual-digest --component --kicad <id>              # 빠진 심볼·풋프린트·3D 만들고 위치 기록
+/manual-digest --component --list                    # 부품마다 Rev와 KiCad 세 파일 상태
+/manual-digest --component --migrate <프로젝트>       # 프로젝트에 만들어 둔 부품 다이제스트를 전역으로 이전
+```
+
+부품 데이터시트는 여러 프로젝트가 같이 쓰므로 항상 전역(`~/.claude/manuals/`)에 등록한다.
+원본 PDF는 `~/.claude/manuals/<id>/source.pdf`로 복사해 두어, 프로젝트 폴더를 옮기거나 지워도
+원본 페이지 조회가 끊기지 않는다.
+
+- **중복 판정.** 등록 전에 전역과 현재 프로젝트를 파일 지문(sha256)·ID·별칭으로 비교한다.
+  같은 파일이면 재사용으로 끝나고, 같은 부품의 다른 Rev면 두 Rev를 나란히 보여 주고 고르게 한다.
+- **KiCad 파일.** 심볼·풋프린트·3D 모델은 복사하지 않는다. KiCad 라이브러리 표를 읽어 어디에 있는지만
+  기록한다. 없으면 "없음"으로 두고 등록은 계속하며, 나중에 `--kicad <id>`로 채운다.
+  심볼 핀과 풋프린트 패드, 데이터시트 핀 표가 어긋나면 경고한다(등록은 막지 않는다).
+- **프로젝트 문구 금지.** 전역 다이제스트에는 데이터시트에 적힌 사실만 둔다. "본 보드는 QSOP-16" 같은
+  메모는 프로젝트 INDEX.md에 `global:<id> — <메모>` 한 줄로 남긴다.
+
+확인: 등록 뒤 `ls ~/.claude/manuals/<id>/`에 `digest.md`·`metadata.json`·`source.pdf`가 보이고,
+`--component --list`에 그 부품의 세 파일 상태가 한 줄로 나오면 된다.
+
+**기존 프로젝트 다이제스트 이전.** 프로젝트 안에 이미 만든 부품 다이제스트는 다시 요약하지 않고 옮긴다.
+먼저 계획 표를 보여 주고, 무엇을 옮길지(부품 자료만, 센서·장비 매뉴얼과 보드 자료는 남김) 확인을 받은 뒤 실행한다.
+원본 PDF가 없는 항목은 다이제스트만 옮긴다. 프로젝트 폴더는 마지막에 따로 확인을 받고 지운다.
+
+상세: `skills/manual-digest/references/component-mode.md` (이전은 11절)
+
 ## 스코프 결정 가이드
 
 | 상황 | 권장 스코프 |
