@@ -107,7 +107,7 @@ Orca 워크트리 생성 시 실행할 setup 훅(<code>orca.yaml</code>) 자동 
 </td>
 <td align="center" width="25%">
 <b>T1 Design</b><br>
-어느 프로젝트든 <b>HTML을 만들 때 T1 디자인(Kinetic Horizon)</b>을 입힙니다 — 미리 변환한 <code>tokens.css</code>(라이트+다크 CSS 변수)를 그대로 붙여 모든 HTML이 같은 색·글꼴을 씁니다 (메타 도구)<br>
+어느 프로젝트든 <b>HTML을 만들 때 T1 디자인(Kinetic Horizon)</b>을 입힙니다 — 미리 변환한 <code>tokens.css</code>(라이트+다크 CSS 변수)를 그대로 붙여 모든 HTML이 같은 색·글꼴을 쓰고, 기본 부품은 <b>shadcn/ui 기본 스타일</b>로 그립니다 (메타 도구)<br>
 1 스킬
 </td>
 </tr>
@@ -1469,7 +1469,7 @@ pjy-claude-skill/
 │   │   ├── plugin.json
 │   │   ├── skills/ (1개)
 │   │   │   └── t1-design/         ← SKILL.md + DESIGN.md(원본 복사본)
-│   │   │       └── assets/        ← tokens.css(라이트+유도 다크) + 로고 2종
+│   │   │       └── assets/        ← tokens.css(라이트+유도 다크) + components.css(shadcn 기본 부품) + shadcn-theme.css(React용) + 로고 2종
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (확인 방법, 다크 모드, 원본 동기화)
 │   └── react-vite/                ← React 19 + Vite 8 프론트엔드 플러그인
 │       ├── plugin.json

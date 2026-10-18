@@ -1,0 +1,74 @@
+/* shadcn/ui 가 설치된 React 프로젝트용 T1 테마.
+   globals.css(또는 index.css)에서 shadcn init 이 만든 :root {...} 와 .dark {...} 의 색 변수만 이 값으로 바꾼다.
+   @theme inline 블록·컴포넌트 파일은 그대로 둔다. tokens.css·components.css 는 함께 넣지 않는다 — --primary 등 이름이 겹친다.
+   글꼴은 index.html 에 Google Fonts <link>(tokens.css 첫 주석)를 넣고 @layer base 의 body 에 font-family: 'Plus Jakarta Sans', 제목에 'Outfit' 을 준다.
+   값은 tokens.css 의 --ui-* 역할 연결과 같은 색이다. 다크 값은 원본에 없어 유도했다(tokens.css 다크 주석 참조). */
+:root {
+  --radius: 0.5rem;
+  --background: #fff8f5;
+  --foreground: #1e1b19;
+  --card: #ffffff;
+  --card-foreground: #1e1b19;
+  --popover: #ffffff;
+  --popover-foreground: #1e1b19;
+  --primary: #f58220;
+  --primary-foreground: #5b2a00;
+  --secondary: #f4ece8;
+  --secondary-foreground: #1e1b19;
+  --muted: #faf2ee;
+  --muted-foreground: #564336;
+  --accent: #eee7e3;
+  --accent-foreground: #1e1b19;
+  --destructive: #ba1a1a;
+  --border: #eae2da;
+  --input: #eae2da;
+  --ring: #f58220;
+  --chart-1: #f58220;
+  --chart-2: #ffae00;
+  --chart-3: #964900;
+  --chart-4: #c99a00;
+  --chart-5: #723600;
+  --sidebar: #faf2ee;
+  --sidebar-foreground: #1e1b19;
+  --sidebar-primary: #f58220;
+  --sidebar-primary-foreground: #5b2a00;
+  --sidebar-accent: #eee7e3;
+  --sidebar-accent-foreground: #1e1b19;
+  --sidebar-border: #eae2da;
+  --sidebar-ring: #f58220;
+}
+
+.dark {
+  --background: #161311;
+  --foreground: #e9e1dd;
+  --card: #1e1b19;
+  --card-foreground: #e9e1dd;
+  --popover: #231f1d;
+  --popover-foreground: #e9e1dd;
+  --primary: #ffb786;
+  --primary-foreground: #502400;
+  --secondary: #231f1d;
+  --secondary-foreground: #e9e1dd;
+  --muted: #1e1b19;
+  --muted-foreground: #ddc1b0;
+  --accent: #2d2927;
+  --accent-foreground: #e9e1dd;
+  /* shadcn 파괴 버튼은 글자가 흰색 고정이라 tokens.css 의 #ffb4ab(옅은 분홍) 대신 한 톤 진한 #ff5449 를 쓴다 */
+  --destructive: #ff5449;
+  --border: #564336;
+  --input: #564336;
+  --ring: #f58220;
+  --chart-1: #f58220;
+  --chart-2: #ffae00;
+  --chart-3: #ffb786;
+  --chart-4: #f6bf22;
+  --chart-5: #ffdcc6;
+  --sidebar: #1e1b19;
+  --sidebar-foreground: #e9e1dd;
+  --sidebar-primary: #ffb786;
+  --sidebar-primary-foreground: #502400;
+  --sidebar-accent: #2d2927;
+  --sidebar-accent-foreground: #e9e1dd;
+  --sidebar-border: #564336;
+  --sidebar-ring: #f58220;
+}

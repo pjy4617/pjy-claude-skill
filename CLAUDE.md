@@ -184,11 +184,11 @@ plugins/
 │   ├── skills/graft-serena-doctor/
 │   │   └── assets/                ← check_wiring.py (3축 판정: graft 그래프 실존(INDEX.md 파일 기준)·카드층/배선층 분리 신선도·--deep 대기 / serena project.yml·language_servers·상위 설정 간섭 / rtk 설치·gain 충돌·훅. --fix는 project.yml만(.bak 백업), graft build·--deep·설치는 명령만 출력. --json/--strict/--selftest, 표준 라이브러리만)
 │   └── docs/USAGE_GUIDE.md
-├── t1-design/                     ← HTML에 T1 디자인 시스템(Kinetic Horizon) 적용 플러그인 (1 스킬, 에이전트 0, 메타 도구) — 어느 프로젝트든 HTML 작성 시 tokens.css를 그대로 붙여 색·글꼴·모서리·그림자를 고정. DESIGN.md는 ~/Repos/T1/esc-chip/docs/design/ 의 복사본(동기화 절차는 USAGE_GUIDE)
+├── t1-design/                     ← HTML에 T1 디자인 시스템(Kinetic Horizon) 적용 플러그인 (1 스킬, 에이전트 0, 메타 도구) — 어느 프로젝트든 HTML 작성 시 tokens.css를 그대로 붙여 색·글꼴·모서리·그림자를 고정하고, 기본 부품 모양은 shadcn/ui 기본 스타일. DESIGN.md는 ~/Repos/T1/esc-chip/docs/design/ 의 복사본(동기화 절차는 USAGE_GUIDE)
 │   ├── plugin.json
 │   ├── skills/t1-design/
 │   │   ├── DESIGN.md              ← 원본 복사본 (YAML 토큰 + 브랜드·컴포넌트 규칙)
-│   │   └── assets/                ← tokens.css(라이트 원본 + 톤 계열에서 유도한 다크, prefers-color-scheme·data-theme 둘 다) + t1_logo.jpg/t1_logo2.jpg
+│   │   └── assets/                ← tokens.css(라이트 원본 + 톤 계열에서 유도한 다크, prefers-color-scheme·data-theme 둘 다, shadcn 역할 --ui-*) + components.css(shadcn 기본 부품 순수 CSS) + shadcn-theme.css(shadcn 설치 React용 :root/.dark) + t1_logo.jpg/t1_logo2.jpg
 │   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json
