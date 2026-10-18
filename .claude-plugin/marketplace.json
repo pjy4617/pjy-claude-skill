@@ -103,8 +103,8 @@
     {
       "name": "t1-design",
       "source": "./plugins/t1-design",
-      "description": "어느 프로젝트에서든 HTML을 만들 때 T1 디자인 시스템(Kinetic Horizon — 주황 #F58220·호박색 그라데이션, Outfit/Plus Jakarta Sans)을 입히는 메타 도구. 색·글꼴은 T1, 기본 부품(버튼·카드·배지·입력·표·알림) 모양은 shadcn/ui 기본 스타일. 일반 HTML은 tokens.css(라이트 원본 + 원본 톤 계열에서 유도한 다크, shadcn 역할 변수 --ui-*)와 components.css(shadcn 컴포넌트·변형 이름을 딴 순수 CSS 클래스)를 그대로 붙여 넣고, shadcn이 설치된 React 프로젝트는 shadcn-theme.css로 :root/.dark 테마 변수만 T1 색으로 바꾼다. 색·글꼴·모서리·그림자는 Artifact 기본 디자인 지침보다 우선. 직접 적은 색 코드를 찾는 검증 한 줄 포함. 1개 스킬(t1-design), 에이전트·MCP·setup 불필요 — 설치 즉시 사용.",
-      "version": "1.1.0"
+      "description": "어느 프로젝트에서든 HTML을 만들 때 T1 디자인 시스템(Kinetic Horizon — 주황 #F58220·호박색 그라데이션, Outfit/Plus Jakarta Sans)을 입히는 메타 도구. 색·글꼴은 T1, 기본 부품(버튼·카드·배지·입력·표·알림) 모양은 shadcn/ui 기본 스타일. 일반 HTML은 tokens.css(라이트 원본 + 원본 톤 계열에서 유도한 다크, shadcn 역할 변수 --ui-*)와 components.css(shadcn 컴포넌트·변형 이름을 딴 순수 CSS 클래스)를 그대로 붙여 넣고, shadcn이 설치된 React 프로젝트는 shadcn-theme.css로 :root/.dark 테마 변수만 T1 색으로 바꾼다. 색·글꼴·모서리·그림자는 Artifact 기본 디자인 지침보다 우선. archify 다이어그램 결과물에는 apply_archify.py 로 archify-t1.css(classic 프리셋 색 변수 덮어쓰기)·글꼴·로고를 끼워 넣는다. 직접 적은 색 코드를 찾는 검증 한 줄 포함. 1개 스킬(t1-design), 에이전트·MCP·setup 불필요 — 설치 즉시 사용.",
+      "version": "1.2.0"
     }
   ]
 }

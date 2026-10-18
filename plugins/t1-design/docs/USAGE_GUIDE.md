@@ -42,6 +42,25 @@ archify 의 같은 이름 카드를 덮어 제목이 밀렸다. 접두사를 붙
 
 주 버튼은 주황 `#f58220` 바탕에 갈색 `#5b2a00` 글자다. 흰 글자는 대비가 2.59 로 기준(4.5)에 못 미쳐서, 원본 토큰의 짝(`primary-container` / `on-primary-container`, 4.56)을 썼다.
 
+## archify 다이어그램에 T1 입히기
+
+**요약.** archify 는 사용자 테마를 받는 입력이 없다. 그래서 archify 가 다 만든 HTML 에 T1 색을 덧칠한 사본을 만든다.
+비유하면 공장(archify)은 그대로 두고, 출고된 제품에 T1 포장지를 씌우는 것이다.
+
+```bash
+python3 plugins/t1-design/skills/t1-design/assets/apply_archify.py 다이어그램.html   # → 다이어그램.t1.html
+```
+
+- 넣는 것: Google Fonts 링크, `archify-t1.css`(archify 기본 프리셋 `classic` 의 색 변수 약 48개를 DESIGN.md 값으로 덮어쓰기, 라이트·다크), 제목 옆 T1 로고.
+- 원본은 고치지 않는다. 두 번 돌려도 한 번만 들어간다(`--selftest` 로 확인 가능).
+- archify 템플릿(`~/.agents/skills/archify/assets/template.html`)을 직접 고치는 방법은 쓰지 않았다. archify 를 업데이트하면 덮어써지기 때문이다.
+
+주의: T1 을 입힌 사본은 바이트가 원본과 달라 `archify check --require-provenance`(출고 증명 검사 — 결과물이 archify 가 만든 그대로인지 확인)가 실패한다.
+일반 `archify check` 는 통과한다. 출고 증명이 필요한 곳에는 원본을 넘긴다.
+
+확인: 원본과 `.t1.html` 을 나란히 열면 원본은 청록·회색, 사본은 크림 바탕에 주황 노드와 T1 로고다.
+OS 를 다크 모드로 바꾸면 사본도 짙은 갈색 바탕으로 바뀐다.
+
 ## 확인 방법
 
 1. 다른 프로젝트에서 새 세션을 연다.

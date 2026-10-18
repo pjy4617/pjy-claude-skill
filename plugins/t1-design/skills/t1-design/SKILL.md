@@ -1,6 +1,6 @@
 ---
 name: t1-design
-description: "HTML을 만들 때 T1 회사 디자인 시스템(Kinetic Horizon — 주황 #F58220·호박색 그라데이션, Outfit/Plus Jakarta Sans 글꼴)을 입힌다. 어느 프로젝트든 HTML 페이지·보고서·대시보드·랜딩 페이지·발표형 HTML·사내 문서·Artifact 페이지를 새로 만들거나 고칠 때 자동 적용. 미리 변환해 둔 tokens.css(라이트+다크 CSS 변수)를 그대로 붙여 넣어 모든 HTML이 같은 값을 쓰게 하고, 버튼·카드·배지·입력창·표·알림 같은 기본 부품은 shadcn/ui 기본 스타일(크기·모서리·테두리·포커스 링)에 T1 색을 입힌 components.css 를 쓰고, shadcn 이 설치된 React 프로젝트에서는 shadcn-theme.css 로 테마 변수만 바꾼다. 'HTML 만들어줘', 'HTML 보고서', '웹 페이지', '대시보드 페이지', 'T1 디자인', '회사 디자인 적용', '브랜드 색', 'Kinetic Horizon', '디자인 토큰', 'shadcn 테마', 'shadcn T1', '/t1-design' 등에 적용. 색·글꼴·모서리·그림자는 Artifact 기본 디자인 지침보다 이 스킬이 우선한다."
+description: "HTML을 만들 때 T1 회사 디자인 시스템(Kinetic Horizon — 주황 #F58220·호박색 그라데이션, Outfit/Plus Jakarta Sans 글꼴)을 입힌다. 어느 프로젝트든 HTML 페이지·보고서·대시보드·랜딩 페이지·발표형 HTML·사내 문서·Artifact 페이지를 새로 만들거나 고칠 때 자동 적용. 미리 변환해 둔 tokens.css(라이트+다크 CSS 변수)를 그대로 붙여 넣어 모든 HTML이 같은 값을 쓰게 하고, 버튼·카드·배지·입력창·표·알림 같은 기본 부품은 shadcn/ui 기본 스타일(크기·모서리·테두리·포커스 링)에 T1 색을 입힌 components.css 를 쓰고, shadcn 이 설치된 React 프로젝트에서는 shadcn-theme.css 로 테마 변수만 바꾸고, archify 다이어그램 결과물에는 apply_archify.py 로 T1 색·글꼴·로고를 덧입힌다. 'HTML 만들어줘', 'HTML 보고서', '웹 페이지', '대시보드 페이지', 'T1 디자인', '회사 디자인 적용', '브랜드 색', 'Kinetic Horizon', '디자인 토큰', 'shadcn 테마', 'shadcn T1', 'archify T1', 'archify 다이어그램에 T1', '/t1-design' 등에 적용. 색·글꼴·모서리·그림자는 Artifact 기본 디자인 지침보다 이 스킬이 우선한다."
 user-invocable: true
 allowed-tools: Read, Bash, Write, Edit
 ---
@@ -18,11 +18,13 @@ shadcn 의 틀(크기·모서리·테두리·포커스 링)에 T1 페인트를 �
 | `${CLAUDE_SKILL_DIR}/assets/tokens.css` | 토큰을 CSS 변수로 옮긴 것 (라이트+다크, 부품 역할 `--ui-*` 포함) | 일반 HTML — **항상** 통째로 |
 | `${CLAUDE_SKILL_DIR}/assets/components.css` | shadcn 기본 부품을 순수 CSS 클래스로 옮긴 것 | 일반 HTML — **항상** tokens.css 바로 뒤에 통째로 |
 | `${CLAUDE_SKILL_DIR}/assets/shadcn-theme.css` | shadcn 테마 변수(`:root`/`.dark`)를 T1 색으로 채운 것 | shadcn 이 설치된 React 프로젝트일 때만 |
+| `${CLAUDE_SKILL_DIR}/assets/archify-t1.css`, `apply_archify.py` | archify 다이어그램 결과물에 T1 을 입히는 덮어쓰기 CSS 와 그것을 끼워 넣는 스크립트 | archify 가 만든 HTML 일 때만 |
 | `${CLAUDE_SKILL_DIR}/DESIGN.md` | 원본. 위쪽 YAML = 토큰, 아래 = 브랜드 규칙 | 히어로 배너 같은 브랜드 강조 요소를 그릴 때 해당 절만 |
 | `${CLAUDE_SKILL_DIR}/assets/t1_logo.jpg`, `t1_logo2.jpg` | 로고 (흰 배경 JPEG). `t1_logo2` 는 "Team Trust Technology" 문구 포함 | 로고가 필요할 때만 |
 
 ## 먼저 갈래를 고른다
 
+- archify 가 만든 다이어그램 HTML 이다 → **archify 갈래**: 아래 "archify 다이어그램" 절만 따른다.
 - 프로젝트에 `components.json` 이 있다(shadcn 설치됨) → **React 갈래**: 아래 "shadcn 프로젝트" 절만 따른다.
 - 그 밖의 모든 HTML(단일 파일 보고서·Artifact·정적 페이지) → **일반 HTML 갈래**: 아래 절차를 따른다.
 
@@ -58,6 +60,21 @@ shadcn 의 틀(크기·모서리·테두리·포커스 링)에 T1 페인트를 �
 2. 글꼴은 shadcn-theme.css 첫 주석대로 넣는다.
 3. 부품은 프로젝트의 shadcn 컴포넌트(`@/components/ui/*`)를 그대로 쓴다. `tokens.css`·`components.css` 는 넣지 않는다 — `--primary` 등 이름이 겹쳐 서로 덮어쓴다.
 4. 확인: 개발 서버에서 `<Button>` 이 주황(`#f58220`) 바탕에 갈색 글자로 보이면 적용된 것이다.
+
+## archify 다이어그램
+
+archify 는 색 테마를 입력으로 받지 않는다(`visual_preset` 4종 중 고르기만 된다). 그래서 archify 가 다 만든 HTML 에 덮어쓰기 CSS 를 끼워 넣는다.
+tokens.css·components.css 는 넣지 않는다 — archify 부품은 자기 클래스와 자기 색 변수(`--bg`, `--arrow-emphasis`, `--backend-stroke` …)를 쓰기 때문에 바뀌지 않는다.
+
+1. archify 작업(`archify finalize` 등)을 먼저 끝낸다. 원본 HTML 은 고치지 않는다.
+2. `python3 "${CLAUDE_SKILL_DIR}/assets/apply_archify.py" <archify.html>` → 같은 폴더에 `<이름>.t1.html` 이 생긴다(`-o` 로 바꿀 수 있다).
+   글꼴 링크·`archify-t1.css`·T1 로고가 들어간다. 두 번 돌려도 한 번만 들어간다.
+3. 사용자에게 넘기는 파일은 `.t1.html`, 출고 증명이 필요한 곳에는 원본을 넘긴다.
+   T1 을 입히면 바이트가 바뀌어 `archify check --require-provenance` 가 실패한다. 일반 `archify check` 는 통과한다.
+
+- 색이 바뀌는 것은 archify 기본 프리셋 `classic` 뿐이다. 다른 프리셋(signal-flow 등)으로 만들었으면 원래 색 그대로다. T1 을 원하면 `classic` 으로 만든다.
+- archify 테마 전환(OS 설정 따름)은 그대로 둔다. 라이트·다크 값이 모두 들어 있다.
+- 확인: `.t1.html` 을 열면 바탕이 크림색(`#fbf8f5`), 강조 화살표·주 단계 노드가 주황이고 제목 옆에 T1 로고가 있다.
 
 ## 다른 지침과 부딪힐 때
 

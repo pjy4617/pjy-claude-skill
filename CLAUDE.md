@@ -188,7 +188,7 @@ plugins/
 │   ├── plugin.json
 │   ├── skills/t1-design/
 │   │   ├── DESIGN.md              ← 원본 복사본 (YAML 토큰 + 브랜드·컴포넌트 규칙)
-│   │   └── assets/                ← tokens.css(라이트 원본 + 톤 계열에서 유도한 다크, prefers-color-scheme·data-theme 둘 다, shadcn 역할 --ui-*) + components.css(shadcn 기본 부품 순수 CSS) + shadcn-theme.css(shadcn 설치 React용 :root/.dark) + t1_logo.jpg/t1_logo2.jpg
+│   │   └── assets/                ← tokens.css(라이트 원본 + 톤 계열에서 유도한 다크, prefers-color-scheme·data-theme 둘 다, shadcn 역할 --ui-*) + components.css(shadcn 기본 부품 순수 CSS) + shadcn-theme.css(shadcn 설치 React용 :root/.dark) + archify-t1.css·apply_archify.py(archify 결과물 후처리 — classic 프리셋 색 덮어쓰기·글꼴·로고, --selftest) + t1_logo.jpg/t1_logo2.jpg
 │   └── docs/USAGE_GUIDE.md
 └── react-vite/                    ← React 19 + Vite 8 프론트엔드 플러그인 (2 스킬 + 6 에이전트)
     ├── plugin.json

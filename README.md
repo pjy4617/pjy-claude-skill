@@ -1469,7 +1469,7 @@ pjy-claude-skill/
 │   │   ├── plugin.json
 │   │   ├── skills/ (1개)
 │   │   │   └── t1-design/         ← SKILL.md + DESIGN.md(원본 복사본)
-│   │   │       └── assets/        ← tokens.css(라이트+유도 다크) + components.css(shadcn 기본 부품) + shadcn-theme.css(React용) + 로고 2종
+│   │   │       └── assets/        ← tokens.css(라이트+유도 다크) + components.css(shadcn 기본 부품) + shadcn-theme.css(React용) + archify-t1.css·apply_archify.py(archify 다이어그램용) + 로고 2종
 │   │   └── docs/USAGE_GUIDE.md    ← 사용 가이드 (확인 방법, 다크 모드, 원본 동기화)
 │   └── react-vite/                ← React 19 + Vite 8 프론트엔드 플러그인
 │       ├── plugin.json

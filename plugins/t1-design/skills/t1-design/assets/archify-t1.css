@@ -1,0 +1,96 @@
+/* archify 다이어그램용 T1 테마 — archify 결과 HTML 의 </head> 바로 앞에 이 파일을 <style id="t1-archify-theme"> 로 넣는다.
+   직접 넣지 말고 apply_archify.py 를 쓴다(글꼴 링크·로고까지 한 번에, 두 번 돌려도 한 번만 들어간다).
+   archify 의 기본 프리셋(classic)이 쓰는 색 변수만 DESIGN.md 값으로 덮어쓴다. 다른 프리셋(signal-flow 등)은 원래 색 그대로다.
+   라이트·다크 둘 다 있으므로 archify 의 테마 전환(OS 설정 따름)을 고정하지 않는다.
+   주의: 결과물 바이트가 바뀌므로 `archify check --require-provenance` 는 실패한다. 일반 `archify check` 는 통과한다. */
+/* 기본 프리셋(classic)만 덮어쓴다. 다른 프리셋은 원래 색을 유지한다. */
+html[data-preset="classic"][data-theme="light"] {
+  --bg: #fbf8f5;               /* Surface Muted */
+  --grid: #f4ece8;             /* surface-container */
+  --canvas-dot: #e9e1dd;       /* surface-container-highest */
+  --text: #1c1917;             /* Neutral */
+  --text-muted: #564336;       /* on-surface-variant */
+  --text-dim: #8a7264;         /* outline */
+  --text-faint: #8a7264;
+  --panel: #ffffff;            /* Canvas Base */
+  --panel-border: #eae2da;     /* Border Subtle */
+  --lane-fill: rgba(250, 242, 238, 0.6);  /* surface-container-low */
+  --lane-stroke: #ddc1b0;      /* outline-variant */
+  --arrow: #8a7264;
+  --arrow-emphasis: #f58220;   /* Primary */
+  --mask: #ffffff;
+  /* 노드 분류 → 토큰 */
+  --backend-fill: rgba(245, 130, 32, 0.10);    --backend-stroke: #f58220;     /* 주 단계: primary */
+  --messagebus-fill: rgba(255, 174, 0, 0.16);  --messagebus-stroke: #815600;  /* 묶기·순차: secondary */
+  --security-fill: rgba(255, 218, 214, 0.55);  --security-stroke: #ba1a1a;    /* 검증·적용 안 함: error */
+  --database-fill: rgba(233, 225, 221, 0.6);   --database-stroke: #33302d;    /* worktree: inverse-surface */
+  --external-fill: rgba(244, 236, 232, 0.7);   --external-stroke: #8a7264;    /* 설치·보고: outline */
+  --frontend-fill: rgba(150, 73, 0, 0.08);     --frontend-stroke: #964900;    /* primary(어두운 톤) */
+  --cloud-fill: rgba(201, 154, 0, 0.12);       --cloud-stroke: #775a00;       /* tertiary */
+  --toolbar-bg: rgba(255, 255, 255, 0.92);     /* Level 3 오버레이 */
+  --toolbar-border: #eae2da;
+  --toolbar-text: #1c1917;
+  --toolbar-hover: #fff5eb;
+  --toolbar-menu-bg: #ffffff;
+}
+/* DESIGN.md 는 라이트 전용이다. 다크는 같은 토큰에서 밝기만 뒤집어 만들었다. */
+html[data-preset="classic"][data-theme="dark"] {
+  --bg: #1e1b19;               /* on-surface */
+  --grid: #33302d;             /* inverse-surface */
+  --canvas-dot: rgba(221, 193, 176, 0.12);
+  --text: #f7efeb;             /* inverse-on-surface */
+  --text-muted: #ddc1b0;       /* outline-variant */
+  --text-dim: #8a7264;
+  --text-faint: #a8968a;
+  --panel: rgba(51, 48, 45, 0.6);
+  --panel-border: #564336;
+  --lane-fill: rgba(51, 48, 45, 0.3);
+  --lane-stroke: #564336;
+  --arrow: #a8968a;
+  --arrow-emphasis: #ffae00;   /* Secondary */
+  --mask: #26221f;
+  --backend-fill: rgba(245, 130, 32, 0.16);    --backend-stroke: #f58220;
+  --messagebus-fill: rgba(255, 174, 0, 0.14);  --messagebus-stroke: #ffae00;
+  --security-fill: rgba(186, 26, 26, 0.22);    --security-stroke: #f2776d;  /* error 를 다크용으로 밝힌 파생색 */
+  --database-fill: rgba(247, 239, 235, 0.08);  --database-stroke: #f7efeb;
+  --external-fill: rgba(138, 114, 100, 0.18);  --external-stroke: #a8968a;
+  --frontend-fill: rgba(255, 183, 134, 0.12);  --frontend-stroke: #ffb786;
+  --cloud-fill: rgba(246, 191, 34, 0.12);      --cloud-stroke: #f6bf22;
+  --toolbar-bg: rgba(30, 27, 25, 0.85);
+  --toolbar-border: #564336;
+  --toolbar-text: #f7efeb;
+  --toolbar-hover: #33302d;
+  --toolbar-menu-bg: #26221f;
+}
+/* 글꼴: 제목 Outfit, 본문·다이어그램 Plus Jakarta Sans. 한글은 시스템 폰트로 넘어간다. */
+body {
+  font-family: 'Plus Jakarta Sans', 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'NanumGothic', sans-serif;
+}
+h1, h2, h3 {
+  font-family: 'Outfit', 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'NanumGothic', sans-serif;
+  letter-spacing: -0.01em;
+}
+html[data-preset="classic"] svg {
+  font-family: 'Plus Jakarta Sans', 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'NanumGothic', sans-serif;
+}
+/* 카드: Level 1 고도(호박색 그림자) + 16px 모서리 */
+html[data-preset="classic"][data-theme="light"] .card {
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px -2px rgba(245, 130, 32, 0.08), 0 2px 6px -1px rgba(28, 25, 23, 0.04);
+}
+@media print {
+  html[data-preset="classic"] {
+    --bg: #ffffff; --panel: #ffffff; --panel-border: #eae2da; --text: #1c1917;
+    --arrow-emphasis: #f58220;
+    --backend-fill: rgba(245, 130, 32, 0.10);   --backend-stroke: #f58220;
+    --messagebus-fill: rgba(255, 174, 0, 0.16); --messagebus-stroke: #815600;
+    --security-fill: rgba(255, 218, 214, 0.55); --security-stroke: #ba1a1a;
+    --database-fill: rgba(233, 225, 221, 0.6);  --database-stroke: #33302d;
+    --external-fill: rgba(244, 236, 232, 0.7);  --external-stroke: #8a7264;
+  }
+}
+/* T1 로고: JPG 흰 배경이 다크에서도 어색하지 않게 흰 타일 위에 올린다. 클래식에서는 점 대신 로고. */
+.t1-logo { height: 40px; width: auto; padding: 4px 6px; background: #ffffff; border: 1px solid #eae2da;
+  border-radius: 0.5rem; box-shadow: 0 4px 14px -2px rgba(245, 130, 32, 0.18); flex: none; }
+html[data-preset="classic"] .header-row .pulse-dot { display: none; }
+html:not([data-preset="classic"]) .t1-logo { display: none; }
