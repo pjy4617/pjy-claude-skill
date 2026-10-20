@@ -112,7 +112,7 @@ plugins/
 │   │   │   │                     + component-mode(--component 부품 모드: 전역 고정·원본 복사·sha256/ID/별칭 중복·개정판 판정, KiCad 심볼/풋프린트/3D는 위치만 기록)
 │   │   │   └── assets/            ← pdf_extract.py + kicad_locate.py (KiCad 라이브러리 표로 세 파일 위치 확인·핀/패드 대조) + migrate_components.py (--component --migrate: 프로젝트 부품 다이제스트를 재요약 없이 전역 이전, plan/apply/cleanup 3단계, review 남으면 apply 거부). 둘 다 --selftest, 표준 라이브러리만
 │   │   └── manual-digest-setup/   ← MCP 등록 + 디렉토리 + CLAUDE.md 마커 1회 초기화
-│   ├── evals/                     ← `claude plugin eval` 스위트 (PDF 문서 인제스트 흐름 전용, 8케이스 = 발동 6(부품 --check 1 포함) + 발동금지 2). 실행: `cd plugins/manual-digest && claude plugin eval . --ablation with-without --judge-model opus --allow-tools Bash` — `--allow-tools Bash` 필수(없으면 양쪽 arm 0점), `Write`/`Edit`는 샌드박스가 `.claude/` 경로에서 거부하므로 일부러 주지 않는다. 사전 요구: `socat`
+│   ├── evals/                     ← `claude plugin eval` 스위트 (PDF 문서 인제스트 흐름 전용, 9케이스 = 발동 7(부품 --check 1·--step/--lcsc 1 포함) + 발동금지 2). 실행: `cd plugins/manual-digest && claude plugin eval . --ablation with-without --judge-model opus --allow-tools Bash` — `--allow-tools Bash` 필수(없으면 양쪽 arm 0점), `Write`/`Edit`는 샌드박스가 `.claude/` 경로에서 거부하므로 일부러 주지 않는다. 사전 요구: `socat`
 │   └── docs/USAGE_GUIDE.md
 ├── pcb-design-digest/             ← PCB 설계/제조 데이터 다이제스트 플러그인 (2 스킬 + 1 에이전트, 메타 도구) — 거버 팹출력 + PADS(.pcb/.asc) + KiCad(.kicad_pcb/.kicad_sch/.kicad_pro)
 │   ├── plugin.json
