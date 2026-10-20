@@ -87,6 +87,8 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent
    "심볼·풋프린트·3D 까지 만들어 달라"는 뜻이다. 이미 등록된 같은 파일이면 등록은 건너뛰고 `--kicad` 만 돈다. 넘길 것과 순서는 `references/component-mode.md` 8절 `--kicad` 항목
 
 절차·판정 스니펫·다이제스트 형식·명령 상세는 **`references/component-mode.md`** 를 따른다.
+**이 스킬 디렉토리는 `${CLAUDE_SKILL_DIR}` 이다.** 이 경로 치환은 SKILL.md 에만 일어난다 — `references/*.md` 안의 `${CLAUDE_SKILL_DIR}` 는 글자 그대로 남으니
+여기 적힌 절대 경로로 바꿔 쓰고, 워커 프롬프트에도 절대 경로로 넣는다.
 기존 프로젝트 다이제스트 이전은 같은 문서 11절(`assets/migrate_components.py`)이다.
 `--component` 없이 "이 데이터시트 등록해줘"라고 하면, 입력이 부품 데이터시트로 보일 때 부품 모드를 제안한다.
 

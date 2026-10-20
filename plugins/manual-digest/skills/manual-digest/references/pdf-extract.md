@@ -8,7 +8,7 @@ PDF 매뉴얼은 이 스킬에 동봉된 **`assets/pdf_extract.py`** 로 처리�
 페이지인지만 먼저 확인한 뒤, 그 페이지만 연다. 지도를 보고 목적지만 찾아가는 것과 같다.
 
 ```bash
-S="${CLAUDE_SKILL_DIR}/assets/pdf_extract.py"   # 호출 시 실제 절대 경로로 치환된다
+S="${CLAUDE_SKILL_DIR}/assets/pdf_extract.py"   # 이 파일에서는 치환되지 않는다 — SKILL.md 가 알려 준 절대 경로로 바꾼다
 # Windows에서 `python3`가 MS Store alias로 exit 49면 `py -3` 또는 `python`으로 대체한다 (exit 2와 혼동 금지 — 49는 파이썬 자체가 없는 것)
 python3 "$S" --help
 ```

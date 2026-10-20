@@ -30,6 +30,8 @@ KiCad 심볼·풋프린트·3D 모델은 복사하지 않고 **어디에 있는�
 
 - ID = **제조사 품번의 기본형, 소문자.** 패키지·테이프·온도 접미사는 뺀다.
   예: `TPS2051CDBVR`는 `tps2051c`, `STM32C071RBT6`는 `stm32c071`, `LAN9252/ML`은 `lan9252`
+- **시리즈 데이터시트**(한 PDF 가 여러 정격·품번을 다룸, 예: SMD1206 퓨즈 시리즈)는 ID = **주문한 품번**(`--lcsc` 가 가리키는 것, 없으면 사용자가 말한 것)의 기본형, 시리즈명은 별칭이다.
+  같은 시리즈의 다른 품번을 나중에 등록하면 sha256 이 같아 `SAME_FILE` 로 잡히고 별칭 추가만 제안된다 — 같은 PDF 를 두 번 두지 않는다.
 - 품번이 애매한 수동·범용 부품은 `<종류>-<핵심값>-<LCSC번호>` — 예: `xtal-48mhz-c6732651`
 - `aliases` = 같은 데이터시트가 다루는 다른 품번(계열·주문 품번)을 소문자로. 예: `tps2051c`의 별칭 `tps2065c`, `tps2051cdbvr`.
   데이터시트 첫 페이지의 품번 목록과 주문 정보(Ordering Information) 표에서 뽑는다.
@@ -39,7 +41,8 @@ KiCad 심볼·풋프린트·3D 모델은 복사하지 않고 **어디에 있는�
 ## 4. 등록 전 판정 (메인이 직접 한다)
 
 워커에 위임하기 **전에** 메인이 판정한다. 사용자에게 물어야 할 수 있기 때문이다(워커는 질문할 수 없다).
-전역과 현재 프로젝트의 `metadata.json`을 모두 본다.
+전역과 현재 프로젝트의 `metadata.json`을 모두 본다. **아래 스니펫을 그대로 실행한다.** `ls`/`grep` 으로 대신하지 않는다 —
+sha256 비교와 프로젝트 쪽 확인을 함께 하는 것은 이 스니펫뿐이고, grep 은 다른 파일명으로 들어온 같은 PDF 를 놓친다.
 
 ```bash
 python3 - "<새 원본 절대 경로>" "<후보 id>" "<별칭1,별칭2>" <<'PY'
@@ -159,7 +162,7 @@ KiCad 파일은 **다이제스트 폴더에 복사하지 않는다.** KiCad는 �
 경로를 플러그인에 박지 않으므로 별도 설정이 없다.
 
 ```bash
-K="${CLAUDE_SKILL_DIR}/assets/kicad_locate.py"
+K="${CLAUDE_SKILL_DIR}/assets/kicad_locate.py"   # 이 파일에서는 치환되지 않는다 — SKILL.md 가 알려 준 절대 경로로 바꾼다
 python3 "$K" locate --symbol <[lib:]이름> [--footprint <[lib:]이름>] [--model <경로>] [--project <dir>] [--json]
 python3 "$K" verify ~/.claude/manuals/<id>/metadata.json [--json]
 python3 "$K" --selftest
@@ -243,7 +246,7 @@ lan9252    Rev E  심볼 있음 | 풋프린트 위치 끊김 | 3D 상자 근사
 대상은 **부품 데이터시트·RM·앱노트·정오표**뿐이다. 센서·장비 사용 매뉴얼, 보드 회로도, 평가보드 자료는 `keep`으로 남긴다.
 
 ```bash
-M="${CLAUDE_SKILL_DIR}/assets/migrate_components.py"
+M="${CLAUDE_SKILL_DIR}/assets/migrate_components.py"   # 치환되지 않는다 — SKILL.md 의 절대 경로로
 python3 "$M" plan    <프로젝트>    # 1. 계획 초안 + 표 (아무것도 옮기지 않는다)
 python3 "$M" apply   <프로젝트>    # 3. 계획대로 실행 (프로젝트 폴더는 남긴다)
 python3 "$M" cleanup <프로젝트>    # 5. 전역 사본을 확인한 뒤 옮긴 프로젝트 폴더만 지운다
