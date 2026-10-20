@@ -64,10 +64,10 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent
 | `/manual-digest --remove <id>` | 다이제스트 디렉토리 + INDEX.md 항목 제거 (CLAUDE.md는 건드리지 않음) |
 | `/manual-digest --atomize <id> [--max-lines N]` | 이미 등록된 매뉴얼의 `digest.md`(필요시 `index.md`)를 무손실 분할 |
 | `/manual-digest --deatomize <id>` | 분할본 제거, `digest.md` 단독 조회로 복귀 |
-| `/manual-digest --component <file>` | **부품 모드** 등록 — 전역 고정, 원본 복사, 중복·개정판 판정, KiCad 파일 위치 기록 |
+| `/manual-digest --component <file> [--step <stp>] [--lcsc <코드>]` | **부품 모드** 등록 — 전역 고정, 원본 복사, 중복·개정판 판정, KiCad 파일 위치 기록. `--step`(제조사 STEP) 이나 `--lcsc`(JLCPCB/LCSC 주문 코드) 가 하나라도 있으면 등록 뒤 `--kicad` 를 **자동으로 이어** 심볼·풋프린트·3D 까지 한 명령으로 끝낸다 |
 | `/manual-digest --component --check <file...>` | 등록 없이 판정만 (이미 있음 / 개정판 있음 / 새 부품) |
 | `/manual-digest --component --update <id> <file>` | 새 Rev 원본으로 갱신 (개정 이력 확인 → 재요약 → `revisions` 기록) |
-| `/manual-digest --component --kicad <id>` | 빠진 심볼·풋프린트·3D를 부품 생성 스킬로 만들고 위치 기록 |
+| `/manual-digest --component --kicad <id> [--step <stp>] [--lcsc <코드>]` | 빠진 심볼·풋프린트·3D를 부품 생성 스킬로 만들고 위치 기록. STEP 경로와 주문 코드를 생성 스킬에 그대로 넘긴다 |
 | `/manual-digest --component --list` | 부품마다 Rev와 KiCad 세 파일 상태(있음/없음/위치 끊김) 한 줄 |
 | `/manual-digest --component --migrate <프로젝트>` | 프로젝트에 만들어 둔 부품 다이제스트를 재요약 없이 전역으로 이전 (계획, 분류 확인, 실행, 문구 정리, 프로젝트 폴더 삭제 순) |
 
@@ -83,6 +83,8 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent
 3. 등록 전에 **전역+프로젝트 전체**를 sha256·ID·별칭으로 판정 → 같은 파일이면 재사용, 같은 부품 다른 파일이면 Rev 비교 후 사용자 선택
 4. 다이제스트는 부품 전용 고정 섹션(핀 기능 표는 전수)이고 **프로젝트 문구 금지**
 5. KiCad 심볼·풋프린트·3D 모델은 복사하지 않고 `assets/kicad_locate.py`로 **위치만** 기록 + 핀 대조(경고만). 없으면 "없음"으로 두고 등록은 계속한다
+6. `--step <stp>` / `--lcsc <코드>` 가 있으면 등록이 끝난 뒤 **`--kicad <id>` 를 묻지 않고 이어 돌린다.** 사용자가 STEP 과 주문 코드를 같이 준 것은
+   "심볼·풋프린트·3D 까지 만들어 달라"는 뜻이다. 이미 등록된 같은 파일이면 등록은 건너뛰고 `--kicad` 만 돈다. 넘길 것과 순서는 `references/component-mode.md` 8절 `--kicad` 항목
 
 절차·판정 스니펫·다이제스트 형식·명령 상세는 **`references/component-mode.md`** 를 따른다.
 기존 프로젝트 다이제스트 이전은 같은 문서 11절(`assets/migrate_components.py`)이다.
@@ -97,7 +99,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Agent
 Agent(
   subagent_type: "general-purpose",
   model:         "sonnet",              # Claude Sonnet 5 — 추출·요약 작업에 충분하다
-  name:          "manual-digest-<id>",
+  name:          "manual-digest-<id>",   # <id> 의 "." 은 "-" 로 바꾼다 (이름 검사가 거부한다)
   description:   "<id> 매뉴얼 다이제스트 생성",
   prompt:        <아래 필수 항목을 담은 self-contained 프롬프트>
 )
@@ -343,6 +345,7 @@ LLM 요약은 비결정적이지만 다음 보장:
 | 부품 모드: 같은 부품의 다른 Rev | Rev 비교 후 갱신 / 프로젝트에 따로 등록 / 다른 문서로 새 ID / 취소 중 선택 |
 | 부품 모드: 원본 복사본 때문에 `--update <id>`가 늘 "변경 없음" | 새 원본 경로를 받는 `--component --update <id> <file>`을 쓴다 |
 | 부품 모드: KiCad 사용자 설정 디렉토리 없음 | 위치를 판정하지 않고 `kicad` 칸을 비운 채 등록을 계속한다 |
+| 부품 모드: `--step`/`--lcsc` 를 줬는데 부품 생성 스킬이 없음 | 등록은 끝내고, STEP 경로와 주문 코드를 digest.md "KiCad 파일" 표에 적어 둔 채 "생성 도구 없음" 으로 보고한다. 값을 버리지 않는다 |
 | 메타데이터 Title 없음 | 파일명 기반 자동 생성, 사용자 확인 |
 | 1000p+ 대형 PDF | `toc`/`find`는 그대로 1회 호출(출력이 작다), `text`만 필요한 구간으로 나눠 호출 |
 | 추출 도구가 `invalid horizontal advance` 등 에러 반환 (구버전 PDF MCP 잔존 시) | **PDF 손상이 아니라 그 도구의 버그다.** `pdf_extract.py` 또는 `pdftotext -layout`으로 재시도 — 이미지 렌더링으로 넘어가지 않는다 |
